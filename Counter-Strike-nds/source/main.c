@@ -21,6 +21,7 @@
 #include "ai.h"
 #include "map.h"
 #include "party.h"
+#include "keyboard.h"
 
 //
 //////Level
@@ -416,6 +417,7 @@ int main(void)
 	CreateWaypoints();
 
 	initSoundSystem();
+	initKeyboard();
 
 	/*FILE *txt = NULL;
 	txt = fopen("info.txt", "r");

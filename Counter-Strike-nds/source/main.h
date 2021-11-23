@@ -401,11 +401,10 @@ typedef struct
 typedef struct //
 {
 	void *texture;
-	char letter[1];
+	char letter[2];
+	char letterUpperCase[2];
 	int xPos;
 	int yPos;
-	int xSize;
-	int ySize;
 } Key;
 
 typedef struct //

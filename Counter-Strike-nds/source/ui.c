@@ -1,6 +1,7 @@
 #include "main.h"
 #include "movements.h"
 #include "collisions.h"
+#include "keyboard.h"
 #include "network.h"
 #include "ui.h"
 #include "party.h"
@@ -26,6 +27,7 @@ int serverListOffset = 0;
 Vector2 LastTouch;
 
 bool isShowingMap = false;
+bool isShowingKeyBoard = true;
 
 Vector2 GetLastTouch()
 {
@@ -1199,558 +1201,570 @@ void drawBottomScreenUI()
     // Set view in 2D mode
     NE_2DViewInit();
 
-    // Draw sprites
-    for (int i = 0; i < BottomScreenSpriteCount; i++)
-        NE_SpriteDraw(BottomScreenSprites[i]);
-
-    // Draw menu background
-    NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
-    if (currentMenu == 1) // Map menu
+    if (isShowingKeyBoard)
     {
-        // Draw checkbox
-        int CheckBoxXPosition = AllCheckBoxs[0].xPos, CheckBoxYPosition = AllCheckBoxs[0].yPos, CheckBoxXSize = AllCheckBoxs[0].xSize, CheckBoxYSize = AllCheckBoxs[0].ySize;
-        NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 3, CheckBoxYPosition - 3, CheckBoxXPosition + CheckBoxXSize + 3, CheckBoxYPosition + CheckBoxYSize + 3, 2, BottomScreenSpritesMaterials[5], RGB15(4, 4, 4)); // Border
-        NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 1, CheckBoxYPosition - 1, CheckBoxXPosition + CheckBoxXSize + 1, CheckBoxYPosition + CheckBoxYSize + 1, 1, BottomScreenSpritesMaterials[5], RGB15(5, 5, 5)); // Background
-        if (AllCheckBoxs[0].value)
-            NE_2DDrawTexturedQuadColor(CheckBoxXPosition, CheckBoxYPosition, CheckBoxXPosition + CheckBoxXSize, CheckBoxYPosition + CheckBoxYSize, 0, BottomScreenSpritesMaterials[4], RGB15(31, 31, 31)); // CheckMark
-
-        for (int i = 0; i < MaxPlayer; i++)
-        {
-            if (AllPlayers[i].Id != -1 && AllPlayers[i].IsCounter != -1 && !AllPlayers[i].IsDead)
-            {
-                int xPos = map(AllPlayers[i].xPos, -44, 56, 2, 189);
-                int ypos = map(AllPlayers[i].zPos, -36, 67, 12, 190);
-                if (i == 0)
-                    NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 0)); // Background
-                else if (AllPlayers[i].IsCounter == AllPlayers[0].IsCounter)
-                    NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 31)); // Background
-                else
-                    NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(31, 0, 0)); // Background
-            }
-        }
-
-        // Draw buttons
-        for (int i = 0; i < ButtonToShow; i++)
-        {
-            if (!AllButtons[i].isHidden)
-            {
-                int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-            }
-        }
-
-        // Print texts
-        NE_TextPrint(0,        // Font slot
-                     26, 2,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Close");
-
-        NE_TextPrint(0,        // Font slot
-                     26, 9,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Update");
+        drawKeyBoard();
 
         NE_TextPrint(0,        // Font slot
                      27, 10,   // Coordinates x(column), y(row)
                      NE_White, // Color
-                     "map");
+                     "keyboard");
     }
-    else if (currentMenu == 0) // Draw main menu
+    else
     {
-        // Draw buttons
-        for (int i = 0; i < ButtonToShow; i++)
+
+        // Draw sprites
+        for (int i = 0; i < BottomScreenSpriteCount; i++)
+            NE_SpriteDraw(BottomScreenSprites[i]);
+
+        // Draw menu background
+        NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
+        if (currentMenu == 1) // Map menu
         {
-            if (!AllButtons[i].isHidden)
+            // Draw checkbox
+            int CheckBoxXPosition = AllCheckBoxs[0].xPos, CheckBoxYPosition = AllCheckBoxs[0].yPos, CheckBoxXSize = AllCheckBoxs[0].xSize, CheckBoxYSize = AllCheckBoxs[0].ySize;
+            NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 3, CheckBoxYPosition - 3, CheckBoxXPosition + CheckBoxXSize + 3, CheckBoxYPosition + CheckBoxYSize + 3, 2, BottomScreenSpritesMaterials[5], RGB15(4, 4, 4)); // Border
+            NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 1, CheckBoxYPosition - 1, CheckBoxXPosition + CheckBoxXSize + 1, CheckBoxYPosition + CheckBoxYSize + 1, 1, BottomScreenSpritesMaterials[5], RGB15(5, 5, 5)); // Background
+            if (AllCheckBoxs[0].value)
+                NE_2DDrawTexturedQuadColor(CheckBoxXPosition, CheckBoxYPosition, CheckBoxXPosition + CheckBoxXSize, CheckBoxYPosition + CheckBoxYSize, 0, BottomScreenSpritesMaterials[4], RGB15(31, 31, 31)); // CheckMark
+
+            for (int i = 0; i < MaxPlayer; i++)
             {
-                int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                if (AllPlayers[i].Id != -1 && AllPlayers[i].IsCounter != -1 && !AllPlayers[i].IsDead)
+                {
+                    int xPos = map(AllPlayers[i].xPos, -44, 56, 2, 189);
+                    int ypos = map(AllPlayers[i].zPos, -36, 67, 12, 190);
+                    if (i == 0)
+                        NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 0)); // Background
+                    else if (AllPlayers[i].IsCounter == AllPlayers[0].IsCounter)
+                        NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 31)); // Background
+                    else
+                        NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(31, 0, 0)); // Background
+                }
             }
-        }
 
-        // Print texts
-        NE_TextPrint(0,        // Font slot
-                     12, 2,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Main menu");
-
-        /*NE_TextPrint(0,        // Font slot
-                     3, 6,     // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Show map");*/
-
-        NE_TextPrint(0,        // Font slot
-                     3, 10,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Show Score");
-
-        NE_TextPrint(0,        // Font slot
-                     3, 14,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Open shop");
-
-        NE_TextPrint(0,        // Font slot
-                     3, 18,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Settings");
-
-        NE_TextPrint(0,        // Font slot
-                     3, 22,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Quit game");
-
-        NE_TextPrint(0,        // Font slot
-                     21, 6,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Controls");
-    }
-    else if (currentMenu == 2) // Draw scoreboard menu
-    {
-        if (!WaitForTeamResponse && localPlayer->IsCounter == -1)
-            ButtonToShow = 3;
-        else if (!WaitForTeamResponse) /////////////////////////////////////////////////////////////////////////////////////////////CHECK THIS
-            ButtonToShow = 1;
-
-        // Draw buttons
-        for (int i = 0; i < ButtonToShow; i++)
-        {
-            if (!AllButtons[i].isHidden)
+            // Draw buttons
+            for (int i = 0; i < ButtonToShow; i++)
             {
-                int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                if (!AllButtons[i].isHidden)
+                {
+                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
             }
-        }
 
-        // Draw white bars
-        NE_2DDrawQuad(0, 25, 256, 28, 19, RGB15(31, 31, 31));
-        NE_2DDrawQuad(126, 28, 130, 180, 19, RGB15(31, 31, 31));
-
-        if (!AllButtons[0].isHidden)
-        {
-            // Write texts
+            // Print texts
             NE_TextPrint(0,        // Font slot
-                         26, 1,    // Coordinates x(column), y(row)
+                         26, 2,    // Coordinates x(column), y(row)
                          NE_White, // Color
                          "Close");
+
+            NE_TextPrint(0,        // Font slot
+                         26, 9,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Update");
+
+            NE_TextPrint(0,        // Font slot
+                         27, 10,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "map");
         }
-
-        NE_TextPrint(0,        // Font slot
-                     11, 1,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Score table");
-
-        // Counter terrorists text
-        char CounterScoreText[30] = "Counter t : ";
-        if (CounterScore > 9)
-            sprintf(CounterScoreText + strlen(CounterScoreText), "%d ", CounterScore);
-        else
-            sprintf(CounterScoreText + strlen(CounterScoreText), "0%d ", CounterScore);
-
-        NE_TextPrint(0,        // Font slot
-                     1, 4,     // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     CounterScoreText);
-
-        // Show each counter terrorists player
-        int Count1 = 0;
-        for (int i = 0; i < MaxPlayer; i++)
+        else if (currentMenu == 0) // Draw main menu
         {
-            if (AllPlayers[i].IsCounter == 1)
+            // Draw buttons
+            for (int i = 0; i < ButtonToShow; i++)
             {
-                int y = 6 + Count1 * 3;
+                if (!AllButtons[i].isHidden)
+                {
+                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
+            }
 
-                char playerName[12];
-                // sprintf(playerName, "id : %d", AllPlayers[i].Id);
-                sprintf(playerName, AllPlayers[i].name);
+            // Print texts
+            NE_TextPrint(0,        // Font slot
+                         12, 2,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Main menu");
+
+            /*NE_TextPrint(0,        // Font slot
+                         3, 6,     // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Show map");*/
+
+            NE_TextPrint(0,        // Font slot
+                         3, 10,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Show Score");
+
+            NE_TextPrint(0,        // Font slot
+                         3, 14,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Open shop");
+
+            NE_TextPrint(0,        // Font slot
+                         3, 18,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Settings");
+
+            NE_TextPrint(0,        // Font slot
+                         3, 22,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Quit game");
+
+            NE_TextPrint(0,        // Font slot
+                         21, 6,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Controls");
+        }
+        else if (currentMenu == 2) // Draw scoreboard menu
+        {
+            if (!WaitForTeamResponse && localPlayer->IsCounter == -1)
+                ButtonToShow = 3;
+            else if (!WaitForTeamResponse) /////////////////////////////////////////////////////////////////////////////////////////////CHECK THIS
+                ButtonToShow = 1;
+
+            // Draw buttons
+            for (int i = 0; i < ButtonToShow; i++)
+            {
+                if (!AllButtons[i].isHidden)
+                {
+                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
+            }
+
+            // Draw white bars
+            NE_2DDrawQuad(0, 25, 256, 28, 19, RGB15(31, 31, 31));
+            NE_2DDrawQuad(126, 28, 130, 180, 19, RGB15(31, 31, 31));
+
+            if (!AllButtons[0].isHidden)
+            {
+                // Write texts
                 NE_TextPrint(0,        // Font slot
-                             1, y,     // Coordinates x(column), y(row)
+                             26, 1,    // Coordinates x(column), y(row)
                              NE_White, // Color
-                             playerName);
-                char playerValues[12];
-                sprintf(playerValues, "K : %d D : %d", AllPlayers[i].KillCount, AllPlayers[i].DeathCount);
-                NE_TextPrint(0,        // Font slot
-                             1, y + 1, // Coordinates x(column), y(row)
-                             NE_White, // Color
-                             playerValues);
-
-                Count1++;
+                             "Close");
             }
-        }
-
-        // Counter terrorists text
-        char TerroristsScoreText[30] = "Terrorists : ";
-        if (TerroristsScore > 9)
-            sprintf(TerroristsScoreText + strlen(TerroristsScoreText), "%d ", TerroristsScore);
-        else
-            sprintf(TerroristsScoreText + strlen(TerroristsScoreText), "0%d ", TerroristsScore);
-
-        NE_TextPrint(0,        // Font slot
-                     17, 4,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     TerroristsScoreText);
-
-        // Show each terrorists player
-        int Count2 = 0;
-        for (int i = 0; i < MaxPlayer; i++)
-        {
-            if (AllPlayers[i].IsCounter == 0)
-            {
-                int y = 6 + Count2 * 3;
-
-                char playerName[12];
-                // sprintf(playerName, "id : %d", AllPlayers[i].Id);
-                sprintf(playerName, AllPlayers[i].name);
-                NE_TextPrint(0,        // Font slot
-                             17, y,    // Coordinates x(column), y(row)
-                             NE_White, // Color
-                             playerName);
-                char playerValues[12];
-                sprintf(playerValues, "K : %d D : %d", AllPlayers[i].KillCount, AllPlayers[i].DeathCount);
-                NE_TextPrint(0,         // Font slot
-                             17, y + 1, // Coordinates x(column), y(row)
-                             NE_White,  // Color
-                             playerValues);
-
-                Count2++;
-            }
-        }
-
-        // Show join team texts
-        if (localPlayer->IsCounter == -1 && !WaitForTeamResponse)
-        {
-            NE_TextPrint(0,        // Font slot
-                         6, 22,    // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Join");
 
             NE_TextPrint(0,        // Font slot
-                         22, 22,   // Coordinates x(column), y(row)
+                         11, 1,    // Coordinates x(column), y(row)
                          NE_White, // Color
-                         "Join");
-        }
-    }
-    else if (currentMenu == 3) // Draw shop categories
-    {
-        // Draw buttons
-        for (int i = 0; i < ButtonToShow; i++)
-        {
-            if (!AllButtons[i].isHidden)
-            {
-                int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-            }
-        }
+                         "Score table");
 
-        // Draw white bars
-        NE_2DDrawQuad(ScreenCenterWidth - 1, 23, ScreenCenterWidth + 1, ScreenHeightFixed, 0, RGB15(31, 31, 31));
-        NE_2DDrawQuad(0, (198 - 23) / 3 - 1 + 23, ScreenWidth, (198 - 23) / 3 + 2 + 23, 0, RGB15(31, 31, 31));
-        NE_2DDrawQuad(0, (198 - 23) / 3 * 2 - 1 + 23, ScreenWidth, (198 - 23) / 3 * 2 + 2 + 23, 0, RGB15(31, 31, 31));
-
-        // Show texts
-        NE_TextPrint(0,        // Font slot
-                     14, 1,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Shop");
-
-        NE_TextPrint(0,        // Font slot
-                     4, 6,     // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "PISTOLS");
-
-        NE_TextPrint(0,        // Font slot
-                     5, 13,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "HEAVY");
-
-        NE_TextPrint(0,        // Font slot
-                     6, 21,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "SMG");
-
-        NE_TextPrint(0,        // Font slot
-                     21, 6,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "RIFLES");
-
-        NE_TextPrint(0,        // Font slot
-                     20, 13,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "EQUIPMENT");
-
-        NE_TextPrint(0,        // Font slot
-                     20, 21,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "GRENADES");
-    }
-    else if (currentMenu == 6) // Draw shop
-    {
-        // Draw buttons
-        for (int i = 0; i < ButtonToShow; i++)
-        {
-            if (!AllButtons[i].isHidden)
-            {
-                int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-            }
-        }
-
-        NE_2DDrawQuad(160, 26, 255, 144, 1, RGB15(4, 4, 4));                                   // Draw gun details background
-        NE_2DDrawTexturedQuad(26, 26, 118 + 26, 118 + 26, 1, BottomScreenSpritesMaterials[6]); // Draw gun
-
-        // Title
-        NE_TextPrint(0,        // Font slot
-                     14, 1,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Shop");
-
-        // Text for buy button
-        NE_TextPrint(0,        // Font slot
-                     14, 22,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Buy!");
-
-        // Text for lrft button
-        NE_TextPrint(0,        // Font slot
-                     7, 22,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "<-");
-
-        // Text for right button
-        NE_TextPrint(0,        // Font slot
-                     23, 22,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "->");
-
-        if (GetShopCategory() < 4) // If current shop category is guns
-        {
-            // Gun name
-            printLongText(21, 31, 4, AllGuns[SelectedGunShop].name);
-
-            // Gun damage
-            NE_TextPrint(0,        // Font slot
-                         21, 7,    // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Damage");
-            char DamageText[4];
-
-            sprintf(DamageText, "%d", AllGuns[SelectedGunShop].Damage);
-            NE_TextPrint(0,        // Font slot
-                         21, 8,    // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         DamageText);
-
-            // Gun fire rate
-            NE_TextPrint(0,        // Font slot
-                         21, 11,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Fire rate");
-            char FireRateText[5];
-            sprintf(FireRateText, "%d", AllGuns[SelectedGunShop].fireRate);
-            NE_TextPrint(0,        // Font slot
-                         21, 12,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         FireRateText);
-
-            // Gun price
-            NE_TextPrint(0,        // Font slot
-                         21, 15,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Price");
-            char PriceText[7];
-            sprintf(PriceText, "%d$", AllGuns[SelectedGunShop].Price);
-            NE_TextPrint(0,        // Font slot
-                         21, 16,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         PriceText);
-        }
-        else if (GetShopCategory() == 4) // If current shop category is equipements
-        {
-            // Gun name
-            printLongText(21, 31, 4, AllEquipements[SelectedGunShop - GunCount - shopGrenadeCount].name);
-
-            // Gun price
-            NE_TextPrint(0,        // Font slot
-                         21, 15,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Price");
-
-            char PriceText[7];
-            sprintf(PriceText, "%d$", AllEquipements[SelectedGunShop - GunCount - shopGrenadeCount].Price);
-            NE_TextPrint(0,        // Font slot
-                         21, 16,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         PriceText);
-
-            // Print description
-            printLongText(21, 31, 7, AllEquipements[SelectedGunShop - GunCount - shopGrenadeCount].description);
-        }
-        else if (GetShopCategory() == 5) // If current shop category is grenades
-        {
-            // Gun name
-            printLongText(21, 31, 4, AllGrenades[SelectedGunShop - GunCount].name);
-
-            // Gun price
-            NE_TextPrint(0,        // Font slot
-                         21, 15,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Price");
-
-            char PriceText[7];
-            sprintf(PriceText, "%d$", AllGrenades[SelectedGunShop - GunCount].Price);
-            NE_TextPrint(0,        // Font slot
-                         21, 16,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         PriceText);
-
-            // Print description
-            printLongText(21, 31, 7, AllGrenades[SelectedGunShop - GunCount].description);
-        }
-    }
-    else if (currentMenu == 7) // Draw game pad
-    {
-        // Draw buttons
-        for (int i = 0; i < ButtonToShow; i++)
-        {
-            if (!AllButtons[i].isHidden)
-            {
-                int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-            }
-        }
-
-        NE_2DDrawQuad(40, 30, 255, 194, 1, RGB15(4, 4, 4));                                        // touch pad area
-        NE_2DDrawTexturedQuad(4, 32, 4 + 36 - 4, 30 + 36 - 2, 1, BottomScreenSpritesMaterials[7]); // Jump button
-        NE_2DDrawTexturedQuad(4, 74, 4 + 36 - 4, 72 + 36 - 2, 1, BottomScreenSpritesMaterials[8]); // Reload button
-
-        // Print texts
-        NE_TextPrint(0,        // Font slot
-                     12, 2,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Game pad");
-    }
-    else if (currentMenu == 8) // Draw main menu
-    {
-        // Draw buttons
-        for (int i = 0; i < ButtonToShow; i++)
-        {
-            if (!AllButtons[i].isHidden)
-            {
-                int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-            }
-        }
-
-        // Print texts
-        NE_TextPrint(0,        // Font slot
-                     10, 2,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Counter Strike");
-
-        NE_TextPrint(0,        // Font slot
-                     1, 22,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "1.0");
-
-        NE_TextPrint(0,        // Font slot
-                     24, 22,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Fewnity");
-
-        NE_TextPrint(0,        // Font slot
-                     10, 6,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Single Player");
-
-        NE_TextPrint(0,        // Font slot
-                     11, 12,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Multiplayer");
-
-        NE_TextPrint(0,        // Font slot
-                     12, 18,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Settings");
-    }
-    else if (currentMenu == 9) // Draw main menu
-    {
-        // Draw buttons
-        for (int i = 0; i < ButtonToShow; i++)
-        {
-            if (!AllButtons[i].isHidden)
-            {
-                int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-            }
-        }
-
-        /*char textIp[1024] = "";
-        sprintf(textIp + strlen(textIp), "ipCount : %d", TotalIpCount);
-
-        NE_TextPrint(0,        // Font slot
-                     1, 10,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     textIp);*/
-
-        int maxRowServerList = 5;
-        // TotalIpCount = 6;
-        for (int i = serverListOffset; i < serverListOffset + maxRowServerList; i++)
-        {
-            if (i == TotalIpCount)
-                break;
-
-            int rowXPosition = 10, rowYPosition = (i - serverListOffset) * 16 + 44, rowXSize = ScreenWidth - 20, rowYSize = 16;
-            if (i % 2 == 0)
-            {
-                NE_2DDrawQuad(rowXPosition, rowYPosition, rowXPosition + rowXSize, rowYPosition + rowYSize, 1, RGB15(5, 5, 5)); // Button background
-            }
+            // Counter terrorists text
+            char CounterScoreText[30] = "Counter t : ";
+            if (CounterScore > 9)
+                sprintf(CounterScoreText + strlen(CounterScoreText), "%d ", CounterScore);
             else
+                sprintf(CounterScoreText + strlen(CounterScoreText), "0%d ", CounterScore);
+
+            NE_TextPrint(0,        // Font slot
+                         1, 4,     // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         CounterScoreText);
+
+            // Show each counter terrorists player
+            int Count1 = 0;
+            for (int i = 0; i < MaxPlayer; i++)
             {
-                NE_2DDrawQuad(rowXPosition, rowYPosition, rowXPosition + rowXSize, rowYPosition + rowYSize, 1, RGB15(4, 4, 4)); // Button background
+                if (AllPlayers[i].IsCounter == 1)
+                {
+                    int y = 6 + Count1 * 3;
+
+                    char playerName[12];
+                    // sprintf(playerName, "id : %d", AllPlayers[i].Id);
+                    sprintf(playerName, AllPlayers[i].name);
+                    NE_TextPrint(0,        // Font slot
+                                 1, y,     // Coordinates x(column), y(row)
+                                 NE_White, // Color
+                                 playerName);
+                    char playerValues[12];
+                    sprintf(playerValues, "K : %d D : %d", AllPlayers[i].KillCount, AllPlayers[i].DeathCount);
+                    NE_TextPrint(0,        // Font slot
+                                 1, y + 1, // Coordinates x(column), y(row)
+                                 NE_White, // Color
+                                 playerValues);
+
+                    Count1++;
+                }
             }
 
-            if (selectedServer == i)
-            {
-                // Print texts
-                NE_TextPrint(0,                                    // Font slot
-                             10, ((i - serverListOffset) * 2) + 6, // Coordinates x(column), y(row)
-                             NE_White,                             // Color
-                             allIps[i]);
-            }
+            // Counter terrorists text
+            char TerroristsScoreText[30] = "Terrorists : ";
+            if (TerroristsScore > 9)
+                sprintf(TerroristsScoreText + strlen(TerroristsScoreText), "%d ", TerroristsScore);
             else
+                sprintf(TerroristsScoreText + strlen(TerroristsScoreText), "0%d ", TerroristsScore);
+
+            NE_TextPrint(0,        // Font slot
+                         17, 4,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         TerroristsScoreText);
+
+            // Show each terrorists player
+            int Count2 = 0;
+            for (int i = 0; i < MaxPlayer; i++)
             {
-                NE_TextPrint(0,                                    // Font slot
-                             10, ((i - serverListOffset) * 2) + 6, // Coordinates x(column), y(row)
-                             RGB15(10, 10, 10),                    // Color
-                             allIps[i]);
+                if (AllPlayers[i].IsCounter == 0)
+                {
+                    int y = 6 + Count2 * 3;
+
+                    char playerName[12];
+                    // sprintf(playerName, "id : %d", AllPlayers[i].Id);
+                    sprintf(playerName, AllPlayers[i].name);
+                    NE_TextPrint(0,        // Font slot
+                                 17, y,    // Coordinates x(column), y(row)
+                                 NE_White, // Color
+                                 playerName);
+                    char playerValues[12];
+                    sprintf(playerValues, "K : %d D : %d", AllPlayers[i].KillCount, AllPlayers[i].DeathCount);
+                    NE_TextPrint(0,         // Font slot
+                                 17, y + 1, // Coordinates x(column), y(row)
+                                 NE_White,  // Color
+                                 playerValues);
+
+                    Count2++;
+                }
+            }
+
+            // Show join team texts
+            if (localPlayer->IsCounter == -1 && !WaitForTeamResponse)
+            {
+                NE_TextPrint(0,        // Font slot
+                             6, 22,    // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             "Join");
+
+                NE_TextPrint(0,        // Font slot
+                             22, 22,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             "Join");
             }
         }
+        else if (currentMenu == 3) // Draw shop categories
+        {
+            // Draw buttons
+            for (int i = 0; i < ButtonToShow; i++)
+            {
+                if (!AllButtons[i].isHidden)
+                {
+                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
+            }
 
-        // Print texts
-        NE_TextPrint(0,        // Font slot
-                     11, 2,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Multiplayer");
+            // Draw white bars
+            NE_2DDrawQuad(ScreenCenterWidth - 1, 23, ScreenCenterWidth + 1, ScreenHeightFixed, 0, RGB15(31, 31, 31));
+            NE_2DDrawQuad(0, (198 - 23) / 3 - 1 + 23, ScreenWidth, (198 - 23) / 3 + 2 + 23, 0, RGB15(31, 31, 31));
+            NE_2DDrawQuad(0, (198 - 23) / 3 * 2 - 1 + 23, ScreenWidth, (198 - 23) / 3 * 2 + 2 + 23, 0, RGB15(31, 31, 31));
 
-        NE_TextPrint(0,        // Font slot
-                     11, 3,    // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Server list");
+            // Show texts
+            NE_TextPrint(0,        // Font slot
+                         14, 1,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Shop");
 
-        NE_TextPrint(0,        // Font slot
-                     10, 17,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "^");
+            NE_TextPrint(0,        // Font slot
+                         4, 6,     // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "PISTOLS");
 
-        NE_TextPrint(0,        // Font slot
-                     22, 17,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "v");
+            NE_TextPrint(0,        // Font slot
+                         5, 13,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "HEAVY");
 
-        NE_TextPrint(0,        // Font slot
-                     13, 21,   // Coordinates x(column), y(row)
-                     NE_White, // Color
-                     "Connect");
+            NE_TextPrint(0,        // Font slot
+                         6, 21,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "SMG");
+
+            NE_TextPrint(0,        // Font slot
+                         21, 6,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "RIFLES");
+
+            NE_TextPrint(0,        // Font slot
+                         20, 13,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "EQUIPMENT");
+
+            NE_TextPrint(0,        // Font slot
+                         20, 21,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "GRENADES");
+        }
+        else if (currentMenu == 6) // Draw shop
+        {
+            // Draw buttons
+            for (int i = 0; i < ButtonToShow; i++)
+            {
+                if (!AllButtons[i].isHidden)
+                {
+                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
+            }
+
+            NE_2DDrawQuad(160, 26, 255, 144, 1, RGB15(4, 4, 4));                                   // Draw gun details background
+            NE_2DDrawTexturedQuad(26, 26, 118 + 26, 118 + 26, 1, BottomScreenSpritesMaterials[6]); // Draw gun
+
+            // Title
+            NE_TextPrint(0,        // Font slot
+                         14, 1,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Shop");
+
+            // Text for buy button
+            NE_TextPrint(0,        // Font slot
+                         14, 22,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Buy!");
+
+            // Text for lrft button
+            NE_TextPrint(0,        // Font slot
+                         7, 22,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "<-");
+
+            // Text for right button
+            NE_TextPrint(0,        // Font slot
+                         23, 22,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "->");
+
+            if (GetShopCategory() < 4) // If current shop category is guns
+            {
+                // Gun name
+                printLongText(21, 31, 4, AllGuns[SelectedGunShop].name);
+
+                // Gun damage
+                NE_TextPrint(0,        // Font slot
+                             21, 7,    // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             "Damage");
+                char DamageText[4];
+
+                sprintf(DamageText, "%d", AllGuns[SelectedGunShop].Damage);
+                NE_TextPrint(0,        // Font slot
+                             21, 8,    // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             DamageText);
+
+                // Gun fire rate
+                NE_TextPrint(0,        // Font slot
+                             21, 11,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             "Fire rate");
+                char FireRateText[5];
+                sprintf(FireRateText, "%d", AllGuns[SelectedGunShop].fireRate);
+                NE_TextPrint(0,        // Font slot
+                             21, 12,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             FireRateText);
+
+                // Gun price
+                NE_TextPrint(0,        // Font slot
+                             21, 15,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             "Price");
+                char PriceText[7];
+                sprintf(PriceText, "%d$", AllGuns[SelectedGunShop].Price);
+                NE_TextPrint(0,        // Font slot
+                             21, 16,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             PriceText);
+            }
+            else if (GetShopCategory() == 4) // If current shop category is equipements
+            {
+                // Gun name
+                printLongText(21, 31, 4, AllEquipements[SelectedGunShop - GunCount - shopGrenadeCount].name);
+
+                // Gun price
+                NE_TextPrint(0,        // Font slot
+                             21, 15,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             "Price");
+
+                char PriceText[7];
+                sprintf(PriceText, "%d$", AllEquipements[SelectedGunShop - GunCount - shopGrenadeCount].Price);
+                NE_TextPrint(0,        // Font slot
+                             21, 16,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             PriceText);
+
+                // Print description
+                printLongText(21, 31, 7, AllEquipements[SelectedGunShop - GunCount - shopGrenadeCount].description);
+            }
+            else if (GetShopCategory() == 5) // If current shop category is grenades
+            {
+                // Gun name
+                printLongText(21, 31, 4, AllGrenades[SelectedGunShop - GunCount].name);
+
+                // Gun price
+                NE_TextPrint(0,        // Font slot
+                             21, 15,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             "Price");
+
+                char PriceText[7];
+                sprintf(PriceText, "%d$", AllGrenades[SelectedGunShop - GunCount].Price);
+                NE_TextPrint(0,        // Font slot
+                             21, 16,   // Coordinates x(column), y(row)
+                             NE_White, // Color
+                             PriceText);
+
+                // Print description
+                printLongText(21, 31, 7, AllGrenades[SelectedGunShop - GunCount].description);
+            }
+        }
+        else if (currentMenu == 7) // Draw game pad
+        {
+            // Draw buttons
+            for (int i = 0; i < ButtonToShow; i++)
+            {
+                if (!AllButtons[i].isHidden)
+                {
+                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
+            }
+
+            NE_2DDrawQuad(40, 30, 255, 194, 1, RGB15(4, 4, 4));                                        // touch pad area
+            NE_2DDrawTexturedQuad(4, 32, 4 + 36 - 4, 30 + 36 - 2, 1, BottomScreenSpritesMaterials[7]); // Jump button
+            NE_2DDrawTexturedQuad(4, 74, 4 + 36 - 4, 72 + 36 - 2, 1, BottomScreenSpritesMaterials[8]); // Reload button
+
+            // Print texts
+            NE_TextPrint(0,        // Font slot
+                         12, 2,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Game pad");
+        }
+        else if (currentMenu == 8) // Draw main menu
+        {
+            // Draw buttons
+            for (int i = 0; i < ButtonToShow; i++)
+            {
+                if (!AllButtons[i].isHidden)
+                {
+                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
+            }
+
+            // Print texts
+            NE_TextPrint(0,        // Font slot
+                         10, 2,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Counter Strike");
+
+            NE_TextPrint(0,        // Font slot
+                         1, 22,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "1.0");
+
+            NE_TextPrint(0,        // Font slot
+                         24, 22,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Fewnity");
+
+            NE_TextPrint(0,        // Font slot
+                         10, 6,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Single Player");
+
+            NE_TextPrint(0,        // Font slot
+                         11, 12,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Multiplayer");
+
+            NE_TextPrint(0,        // Font slot
+                         12, 18,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Settings");
+        }
+        else if (currentMenu == 9) // Draw main menu
+        {
+            // Draw buttons
+            for (int i = 0; i < ButtonToShow; i++)
+            {
+                if (!AllButtons[i].isHidden)
+                {
+                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
+            }
+
+            /*char textIp[1024] = "";
+            sprintf(textIp + strlen(textIp), "ipCount : %d", TotalIpCount);
+
+            NE_TextPrint(0,        // Font slot
+                         1, 10,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         textIp);*/
+
+            int maxRowServerList = 5;
+            // TotalIpCount = 6;
+            for (int i = serverListOffset; i < serverListOffset + maxRowServerList; i++)
+            {
+                if (i == TotalIpCount)
+                    break;
+
+                int rowXPosition = 10, rowYPosition = (i - serverListOffset) * 16 + 44, rowXSize = ScreenWidth - 20, rowYSize = 16;
+                if (i % 2 == 0)
+                {
+                    NE_2DDrawQuad(rowXPosition, rowYPosition, rowXPosition + rowXSize, rowYPosition + rowYSize, 1, RGB15(5, 5, 5)); // Button background
+                }
+                else
+                {
+                    NE_2DDrawQuad(rowXPosition, rowYPosition, rowXPosition + rowXSize, rowYPosition + rowYSize, 1, RGB15(4, 4, 4)); // Button background
+                }
+
+                if (selectedServer == i)
+                {
+                    // Print texts
+                    NE_TextPrint(0,                                    // Font slot
+                                 10, ((i - serverListOffset) * 2) + 6, // Coordinates x(column), y(row)
+                                 NE_White,                             // Color
+                                 allIps[i]);
+                }
+                else
+                {
+                    NE_TextPrint(0,                                    // Font slot
+                                 10, ((i - serverListOffset) * 2) + 6, // Coordinates x(column), y(row)
+                                 RGB15(10, 10, 10),                    // Color
+                                 allIps[i]);
+                }
+            }
+
+            // Print texts
+            NE_TextPrint(0,        // Font slot
+                         11, 2,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Multiplayer");
+
+            NE_TextPrint(0,        // Font slot
+                         11, 3,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Server list");
+
+            NE_TextPrint(0,        // Font slot
+                         10, 17,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "^");
+
+            NE_TextPrint(0,        // Font slot
+                         22, 17,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "v");
+
+            NE_TextPrint(0,        // Font slot
+                         13, 21,   // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Connect");
+        }
     }
-
     // Change screen update mode (30 fps with 2 screens update or 60 fps with main game screen update)
     if (NeedChangeScreen)
     {
