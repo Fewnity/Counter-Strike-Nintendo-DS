@@ -1873,6 +1873,7 @@ void GameLoop()
 						checkShopForBot();
 						setBombForARandomPlayer();
 						setPlayersPositionAtSpawns();
+						setNewRoundHandWeapon();
 					}
 					else if (RoundState == 0)
 					{
@@ -1937,6 +1938,7 @@ void GameLoop()
 						checkShopForBot();
 						setBombForARandomPlayer();
 						setPlayersPositionAtSpawns();
+						setNewRoundHandWeapon();
 					}
 					else if (RoundState == 3)
 					{
@@ -2166,12 +2168,10 @@ void resetPlayer(int index)
 		{
 			player->AllGunsInInventory[i] = -1;
 		}
-
-		// checkShopForBot();
 	}
 
 	player->IsDead = false;
-	player->currentGunInInventory = 1;
+	// player->currentGunInInventory = 1;
 	ResetGunsAmmo(index);
 	if (index == 0)
 	{
@@ -2183,6 +2183,29 @@ void resetPlayer(int index)
 		player->PathCount = 0;
 		player->target = -1;
 		player->lastSeenTarget = -1;
+	}
+}
+
+void setNewRoundHandWeapon()
+{
+	for (int index = 0; index < MaxPlayer; index++)
+	{
+		Player *player = &AllPlayers[index];
+		if (index == 0 && player->haveBomb)
+		{
+			player->currentGunInInventory = 8;
+		}
+		else if (player->AllGunsInInventory[player->currentGunInInventory] == -1)
+		{
+			player->currentGunInInventory = 1;
+			if (player->AllGunsInInventory[player->currentGunInInventory] == -1)
+			{
+				player->currentGunInInventory = 0;
+			}
+		}
+
+		if (index == 0)
+			UpdateGunTexture();
 	}
 }
 

@@ -581,6 +581,7 @@ void setPlayerHealth(int playerIndex, int health);
 void setPlayersPositionAtSpawns();
 void resetPlayer(int index);
 void setBombForARandomPlayer();
+void setNewRoundHandWeapon();
 void makeHit(int hitBy, int playerHit);
 void buyGun();
 void CheckAfterRound();
