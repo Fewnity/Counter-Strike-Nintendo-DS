@@ -190,6 +190,12 @@ typedef struct
 	float y;
 } Vector2;
 
+typedef struct
+{
+	int x;
+	int y;
+} Vector2Int;
+
 typedef struct // 2D area (box) values for trigger
 {
 	float BoxXRangeA;
@@ -197,6 +203,12 @@ typedef struct // 2D area (box) values for trigger
 	float BoxZRangeA;
 	float BoxZRangeB;
 } CollisionBox2D;
+
+typedef struct // 2D area (box) values for trigger
+{
+	Vector2 angles[4];
+	Vector2Int anglesInt[4];
+} OcclusionZone;
 
 typedef struct //
 {
@@ -299,6 +311,7 @@ typedef struct // Physics values for raycasting
 
 typedef struct //
 {
+	int id;
 	int ZoneCount;
 	int AllVisibleZones[5];
 } Zone;
@@ -410,11 +423,12 @@ typedef struct //
 typedef struct //
 {
 	void *texture;
-	char name[4];
+	char name[6];
 	int action;
 	int xPos;
 	int yPos;
 	int xSize;
+	int xCenter;
 	int ySize;
 } OtherKey;
 
@@ -471,6 +485,10 @@ extern float CameraAngleY;
 extern float CameraOffsetY;
 extern float xWithoutYForMap;
 extern float zWithoutYForMap;
+extern float xWithoutYForOcclusionSide1;
+extern float zWithoutYForOcclusionSide1;
+extern float xWithoutYForOcclusionSide2;
+extern float zWithoutYForOcclusionSide2;
 
 extern int WallHitXPos;
 extern int WallHitYPos;
@@ -509,6 +527,11 @@ extern int currentPartyMode;
 extern int Connection;
 extern int checkPlayerDistanceFromAiTimer;
 extern Player *localPlayer;
+extern touchPosition touch;
+extern uint32 keys;
+extern uint32 keysdown;
+extern uint32 keysup;
+extern OcclusionZone AllOcclusionZone[7];
 
 //////All functions
 void CalculatePlayerPosition(int PlayerId);

@@ -105,6 +105,8 @@ void UpdateLookRotation(float CameraAngleY, float *x, float *y, float *z, float 
 {
     // Math formula to get a point position on sphere from the middle of the sphere with 2 angle
     float TempS = AllPlayers[GetCurrentCameraPlayer()].Angle / 512.0 * M_TWOPI;
+    float TempSside1 = (AllPlayers[GetCurrentCameraPlayer()].Angle - 70) / 512.0 * M_TWOPI;
+    float TempSside2 = (AllPlayers[GetCurrentCameraPlayer()].Angle + 70) / 512.0 * M_TWOPI;
     float TempSForAudio = (AllPlayers[GetCurrentCameraPlayer()].Angle - 128) / 512.0 * M_TWOPI;
     float TempSForMap = (AllPlayers[GetCurrentCameraPlayer()].Angle) / 512.0 * M_TWOPI;
     float TempT = (384 - CameraAngleY) / 512.0 * M_TWOPI;
@@ -125,6 +127,12 @@ void UpdateLookRotation(float CameraAngleY, float *x, float *y, float *z, float 
 
     xWithoutYForMap = -sin(TempSForMap);
     zWithoutYForMap = -cos(TempSForMap);
+
+    xWithoutYForOcclusionSide1 = -sin(TempSside1);
+    zWithoutYForOcclusionSide1 = -cos(TempSside1);
+
+    xWithoutYForOcclusionSide2 = -sin(TempSside2);
+    zWithoutYForOcclusionSide2 = -cos(TempSside2);
 }
 
 void UpdateLookRotationAI(float CameraAngleY, int playerId, float *x, float *y, float *z)

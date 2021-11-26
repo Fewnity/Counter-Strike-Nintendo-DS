@@ -97,7 +97,7 @@ float x, y, z;
 float xOffset, yOffset;
 float CameraAngleY = 128;
 float CameraOffsetY = 0.7;
-float xWithoutY, zWithoutY, xWithoutYForAudio, zWithoutYForAudio, xWithoutYForMap, zWithoutYForMap;
+float xWithoutY, zWithoutY, xWithoutYForAudio, zWithoutYForAudio, xWithoutYForMap, zWithoutYForMap, xWithoutYForOcclusionSide1, zWithoutYForOcclusionSide1, xWithoutYForOcclusionSide2, zWithoutYForOcclusionSide2;
 int CurrentCameraPlayer;
 bool NeedUpdateViewRotation = false;
 
@@ -201,7 +201,7 @@ bool IsExplode;
 
 //
 //////Debug
-bool isDebugTopScreen = false;
+bool isDebugTopScreen = true;
 bool isDebugBottomScreen = false;
 
 //
@@ -210,6 +210,8 @@ int RumbleTimer = 0;
 int Connection = -1;
 
 Player *localPlayer = &AllPlayers[0];
+
+OcclusionZone AllOcclusionZone[7];
 
 // Min x -44.812
 // Max x 56.8331
@@ -225,90 +227,120 @@ void Draw3DScene(void)
 
 	// Reset polygons Alpha/Light/Effect
 	NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-
-	// Draw map
-	for (int i = 0; i < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i++)
-		NE_ModelDraw(Model[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]]);
-
-	// for (int i = 0; i < 7; i++)
-	// NE_ModelDraw(Model[i]);
-
-	// Draw grenades and their effects
-	for (int i = 0; i < GrenadeCount; i++)
+	if (!isShowingMap)
 	{
-		if (grenades[i] != NULL)
-		{
-			if (grenades[i]->isVisible)
-				NE_ModelDraw(grenades[i]->Model);
-			// Set polygons alpha
-			NE_PolyFormat(grenades[i]->effectAlpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-			if (grenades[i]->EffectTimer != 0)
-			{
-				if (grenades[i]->GrenadeType == 1 && isInFullSmoke)
-					continue;
 
-				NE_ModelDraw(grenades[i]->EffectModel);
+		// Draw map
+		// for (int i = 0; i < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i++)
+		// NE_ModelDraw(Model[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]]);
+
+		for (int i = 0; i < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i++)
+		{
+			bool inFov = false;
+			if (checkZoneForOcclusion(&AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]], AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z))
+				inFov = true;
+			else
+			{
+				for (int i2 = 0; i2 < 4; i2++)
+				{
+					// if (PointInTriangle(AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].angles[i2].x, AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].angles[i2].y, AllPlayers[0].xPos, AllPlayers[0].zPos, xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos, xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos))
+					if (PointInTriangleInt(AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].x, AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].y, AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z, (xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos) * 8192.0, (zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos) * 8192.0, (xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos) * 8192.0, (zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos) * 8192.0))
+					{
+						inFov = true;
+						break;
+					}
+				}
+			}
+			if (inFov)
+				NE_ModelDraw(Model[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]]);
+		}
+
+		// for (int i = 0; i < 7; i++)
+		// NE_ModelDraw(Model[i]);
+
+		// Draw grenades and their effects
+		for (int i = 0; i < GrenadeCount; i++)
+		{
+			if (grenades[i] != NULL)
+			{
+				if (grenades[i]->isVisible)
+					NE_ModelDraw(grenades[i]->Model);
+				// Set polygons alpha
+				NE_PolyFormat(grenades[i]->effectAlpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+				if (grenades[i]->EffectTimer != 0)
+				{
+					if (grenades[i]->GrenadeType == 1 && isInFullSmoke)
+						continue;
+
+					bool inFov = PointInTriangleInt(grenades[i]->Model->x, grenades[i]->Model->z, AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z, (xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos) * 8192.0, (zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos) * 8192.0, (xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos) * 8192.0, (zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos) * 8192.0);
+
+					if (inFov)
+						NE_ModelDraw(grenades[i]->EffectModel);
+				}
 			}
 		}
-	}
-	isInFullSmoke = false;
-
-	// Reset polygons Alpha/Light/Effect
-	NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-
-	// If bomb is planted, draw bomb
-	if (BombPlanted)
-		NE_ModelDraw(Model[7]);
-
-	// Show wall bullet hit flash
-	if (ShowWallHitFlash > 0)
-	{
-		ShowWallHitFlash--;
-		NE_ModelDraw(Model[8]);
-	}
-
-	NE_ModelDraw(Model[9]);
-
-	// Draw bomb explosion
-	if (IsExplode)
-	{
-		// Calculate explosion effect alpha
-		int ExplosionAlpha = 31 - (int)(BombExplosionScale / 1.2);
-		if (ExplosionAlpha < 0)
-		{
-			ExplosionAlpha = 0;
-			IsExplode = false;
-		}
-		// Set polygons alpha
-		NE_PolyFormat(ExplosionAlpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-
-		// Draw explosion
-		NE_ModelDraw(Model[10]);
+		isInFullSmoke = false;
 
 		// Reset polygons Alpha/Light/Effect
 		NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-	}
 
-	// Draw players
-	for (int i = 1; i < MaxPlayer; i++)
-	{
-		if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead && CurrentCameraPlayer != i)
+		// If bomb is planted, draw bomb
+		if (BombPlanted)
+			NE_ModelDraw(Model[7]);
+
+		// Show wall bullet hit flash
+		if (ShowWallHitFlash > 0)
 		{
-			for (int i2 = 0; i2 < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i2++)
+			ShowWallHitFlash--;
+			NE_ModelDraw(Model[8]);
+		}
+
+		// NE_ModelDraw(Model[9]);
+
+		// Draw bomb explosion
+		if (IsExplode)
+		{
+			// Calculate explosion effect alpha
+			int ExplosionAlpha = 31 - (int)(BombExplosionScale / 1.2);
+			if (ExplosionAlpha < 0)
 			{
-				for (int i3 = 0; i3 < AllZones[AllPlayers[i].CurrentOcclusionZone].ZoneCount; i3++)
+				ExplosionAlpha = 0;
+				IsExplode = false;
+			}
+			// Set polygons alpha
+			NE_PolyFormat(ExplosionAlpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+
+			// Draw explosion
+			NE_ModelDraw(Model[10]);
+
+			// Reset polygons Alpha/Light/Effect
+			NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+		}
+
+		// Draw players
+		for (int i = 1; i < MaxPlayer; i++)
+		{
+			if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead && CurrentCameraPlayer != i)
+			{
+				for (int i2 = 0; i2 < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i2++)
 				{
-					if (AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i2] == AllZones[AllPlayers[i].CurrentOcclusionZone].AllVisibleZones[i3])
+					for (int i3 = 0; i3 < AllZones[AllPlayers[i].CurrentOcclusionZone].ZoneCount; i3++)
 					{
-						NE_ModelDraw(AllPlayers[i].PlayerModel);
-						i2 = AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount;
-						break;
+						if (AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i2] == AllZones[AllPlayers[i].CurrentOcclusionZone].AllVisibleZones[i3])
+						{
+							CalculatePlayerPosition(i); // TODO REMOVE THIS?
+							bool inFov = PointInTriangle(AllPlayers[i].xPos, AllPlayers[i].zPos, AllPlayers[0].xPos, AllPlayers[0].zPos, xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos, xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos);
+
+							if (inFov)
+								NE_ModelDraw(AllPlayers[i].PlayerModel);
+							i2 = AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount;
+							break;
+						}
 					}
 				}
 			}
 		}
 	}
-
 	/*for (int i = 1; i < MaxPlayer; i++)
 	{
 		if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead)
@@ -1251,6 +1283,7 @@ void GameLoop()
 
 	// Check touchscreen input for menus
 	ReadTouchScreen(keysdown, keys, keysup, &currentMenu, touch, &NeedChangeScreen, &AlwaysUpdateBottomScreen, &ButtonToShow, &UpdateBottomScreenOneFrame, &SendTeam);
+	readKeyboard();
 
 	if (localPlayer->IsCounter != -1)
 	{
@@ -2020,7 +2053,7 @@ void GameLoop()
 	}
 
 	// Loop using "AllPlayers" array for updating non local player (online players or bots) position smoothly
-	SetOnlinelPlayersPositions();
+	// SetOnlinelPlayersPositions();
 
 	if (RoundState != 0)
 	{

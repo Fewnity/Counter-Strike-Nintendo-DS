@@ -47,29 +47,34 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[0] = 0;
     AllZones[currentZone].AllVisibleZones[1] = 4;
     AllZones[currentZone].AllVisibleZones[2] = 6;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 1;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 0;
     AllZones[currentZone].AllVisibleZones[1] = 1;
     AllZones[currentZone].AllVisibleZones[2] = 4;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 2;
     AllZones[currentZone].ZoneCount = 2;
     AllZones[currentZone].AllVisibleZones[0] = 0;
     AllZones[currentZone].AllVisibleZones[1] = 1;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 3;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 1;
     AllZones[currentZone].AllVisibleZones[1] = 3;
     AllZones[currentZone].AllVisibleZones[2] = 4;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 4;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 0;
     AllZones[currentZone].AllVisibleZones[1] = 1;
     AllZones[currentZone].AllVisibleZones[2] = 2;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 5;
     AllZones[currentZone].ZoneCount = 4;
@@ -77,6 +82,7 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[1] = 1;
     AllZones[currentZone].AllVisibleZones[2] = 4;
     AllZones[currentZone].AllVisibleZones[3] = 6;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 6;
     AllZones[currentZone].ZoneCount = 4;
@@ -84,39 +90,46 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[1] = 3;
     AllZones[currentZone].AllVisibleZones[2] = 4;
     AllZones[currentZone].AllVisibleZones[3] = 6;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 7;
     AllZones[currentZone].ZoneCount = 2;
     AllZones[currentZone].AllVisibleZones[0] = 4;
     AllZones[currentZone].AllVisibleZones[1] = 6;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 8;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 4;
     AllZones[currentZone].AllVisibleZones[1] = 5;
     AllZones[currentZone].AllVisibleZones[2] = 6;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 9;
     AllZones[currentZone].ZoneCount = 2;
     AllZones[currentZone].AllVisibleZones[0] = 5;
     AllZones[currentZone].AllVisibleZones[1] = 6;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 10;
     AllZones[currentZone].ZoneCount = 2;
     AllZones[currentZone].AllVisibleZones[0] = 5;
     AllZones[currentZone].AllVisibleZones[1] = 6;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 11;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 2;
     AllZones[currentZone].AllVisibleZones[1] = 3;
     AllZones[currentZone].AllVisibleZones[2] = 5;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 12;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 1;
     AllZones[currentZone].AllVisibleZones[1] = 3;
     AllZones[currentZone].AllVisibleZones[2] = 4;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 13;
     AllZones[currentZone].ZoneCount = 4;
@@ -124,6 +137,7 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[1] = 2;
     AllZones[currentZone].AllVisibleZones[2] = 3;
     AllZones[currentZone].AllVisibleZones[3] = 5;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 14;
     AllZones[currentZone].ZoneCount = 5;
@@ -132,6 +146,7 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[2] = 3;
     AllZones[currentZone].AllVisibleZones[3] = 4;
     AllZones[currentZone].AllVisibleZones[4] = 5;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 15;
     AllZones[currentZone].ZoneCount = 4;
@@ -139,6 +154,7 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[1] = 3;
     AllZones[currentZone].AllVisibleZones[2] = 4;
     AllZones[currentZone].AllVisibleZones[3] = 5;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 16;
     AllZones[currentZone].ZoneCount = 4;
@@ -146,24 +162,28 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[1] = 2;
     AllZones[currentZone].AllVisibleZones[2] = 3;
     AllZones[currentZone].AllVisibleZones[3] = 5;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 17;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 1;
     AllZones[currentZone].AllVisibleZones[1] = 2;
     AllZones[currentZone].AllVisibleZones[2] = 3;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 18;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 0;
     AllZones[currentZone].AllVisibleZones[1] = 1;
     AllZones[currentZone].AllVisibleZones[2] = 3;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 19;
     AllZones[currentZone].ZoneCount = 3;
     AllZones[currentZone].AllVisibleZones[0] = 3;
     AllZones[currentZone].AllVisibleZones[1] = 4;
     AllZones[currentZone].AllVisibleZones[2] = 6;
+    AllZones[currentZone].id = currentZone;
 
     currentZone = 20;
     AllZones[currentZone].ZoneCount = 4;
@@ -171,6 +191,101 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[1] = 3;
     AllZones[currentZone].AllVisibleZones[2] = 4;
     AllZones[currentZone].AllVisibleZones[3] = 6;
+    AllZones[currentZone].id = currentZone;
+
+    /////////////////////////////////////////////////////
+    AllOcclusionZone[0].angles[0].x = -11.1;
+    AllOcclusionZone[0].angles[0].y = 83.1;
+
+    AllOcclusionZone[0].angles[1].x = -46.5;
+    AllOcclusionZone[0].angles[1].y = 83.1;
+
+    AllOcclusionZone[0].angles[2].x = -46.5;
+    AllOcclusionZone[0].angles[2].y = 20.7;
+
+    AllOcclusionZone[0].angles[3].x = -11.1;
+    AllOcclusionZone[0].angles[3].y = 20.7;
+    /////////////////////////////////////////////////////
+    AllOcclusionZone[1].angles[0].x = -6.8;
+    AllOcclusionZone[1].angles[0].y = 25.4;
+
+    AllOcclusionZone[1].angles[1].x = -45.8;
+    AllOcclusionZone[1].angles[1].y = 25.4;
+
+    AllOcclusionZone[1].angles[2].x = -45.8;
+    AllOcclusionZone[1].angles[2].y = -0.8;
+
+    AllOcclusionZone[1].angles[3].x = -6.8;
+    AllOcclusionZone[1].angles[3].y = -0.8;
+    /////////////////////////////////////////////////////
+    AllOcclusionZone[2].angles[0].x = -4.1;
+    AllOcclusionZone[2].angles[0].y = 3.5;
+
+    AllOcclusionZone[2].angles[1].x = -54.8;
+    AllOcclusionZone[2].angles[1].y = 3.5;
+
+    AllOcclusionZone[2].angles[2].x = -54.8;
+    AllOcclusionZone[2].angles[2].y = -43;
+
+    AllOcclusionZone[2].angles[3].x = -4.1;
+    AllOcclusionZone[2].angles[3].y = -43;
+    /////////////////////////////////////////////////////
+    AllOcclusionZone[3].angles[0].x = 36;
+    AllOcclusionZone[3].angles[0].y = 12.6;
+
+    AllOcclusionZone[3].angles[1].x = -9.1;
+    AllOcclusionZone[3].angles[1].y = 12.6;
+
+    AllOcclusionZone[3].angles[2].x = -9.1;
+    AllOcclusionZone[3].angles[2].y = -34.9;
+
+    AllOcclusionZone[3].angles[3].x = 36;
+    AllOcclusionZone[3].angles[3].y = -34.9;
+    /////////////////////////////////////////////////////
+    AllOcclusionZone[4].angles[0].x = 15.54;
+    AllOcclusionZone[4].angles[0].y = 68.4;
+
+    AllOcclusionZone[4].angles[1].x = -11.7;
+    AllOcclusionZone[4].angles[1].y = 68.4;
+
+    AllOcclusionZone[4].angles[2].x = -11.7;
+    AllOcclusionZone[4].angles[2].y = 4.43;
+
+    AllOcclusionZone[4].angles[3].x = 15.54;
+    AllOcclusionZone[4].angles[3].y = 4.43;
+    /////////////////////////////////////////////////////
+    AllOcclusionZone[5].angles[0].x = 58.3;
+    AllOcclusionZone[5].angles[0].y = 42;
+
+    AllOcclusionZone[5].angles[1].x = 29.4;
+    AllOcclusionZone[5].angles[1].y = 42;
+
+    AllOcclusionZone[5].angles[2].x = 29.4;
+    AllOcclusionZone[5].angles[2].y = -38.1;
+
+    AllOcclusionZone[5].angles[3].x = 58.3;
+    AllOcclusionZone[5].angles[3].y = -38.1;
+    /////////////////////////////////////////////////////
+    AllOcclusionZone[6].angles[0].x = 37.2;
+    AllOcclusionZone[6].angles[0].y = 66.2;
+
+    AllOcclusionZone[6].angles[1].x = 7.3;
+    AllOcclusionZone[6].angles[1].y = 66.2;
+
+    AllOcclusionZone[6].angles[2].x = 7.3;
+    AllOcclusionZone[6].angles[2].y = 7.8;
+
+    AllOcclusionZone[6].angles[3].x = 37.2;
+    AllOcclusionZone[6].angles[3].y = 7.8;
+
+    for (int i = 0; i < 7; i++)
+    {
+        for (int i2 = 0; i2 < 4; i2++)
+        {
+            AllOcclusionZone[i].anglesInt[i2].x = AllOcclusionZone[i].angles[i2].x * 8192.0;
+            AllOcclusionZone[i].anglesInt[i2].y = AllOcclusionZone[i].angles[i2].y * 8192.0;
+        }
+    }
 }
 
 void AddAllCollisions()
@@ -608,6 +723,18 @@ void CheckStairs(int StairsCount, int *CanJump, bool *isInDownStairs)
     }
 }
 
+bool checkZoneForOcclusion(OcclusionZone *zone, int posx, int posz)
+{
+    if (zone->anglesInt[0].x >= posx && zone->anglesInt[2].x <= posx)
+    {
+        if (zone->anglesInt[0].y >= posz && zone->anglesInt[2].y <= posz)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 // int LastStairs = 0;
 
 bool CheckStairsForGrenades(PhysicalGrenade *grenade, int StairsCount)
@@ -981,4 +1108,44 @@ int CheckWallHit(int playerId)
     }
 
     return 0;
+}
+
+float sign(float p1x, float p1y, float p2x, float p2y, float p3x, float p3y)
+{
+    return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
+}
+
+bool PointInTriangle(float px, float py, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y)
+{
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+
+    d1 = sign(px, py, p1x, p1y, p2x, p2y);
+    d2 = sign(px, py, p2x, p2y, p3x, p3y);
+    d3 = sign(px, py, p3x, p3y, p1x, p1y);
+
+    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(has_neg && has_pos);
+}
+
+int signInt(int p1x, int p1y, int p2x, int p2y, int p3x, int p3y)
+{
+    return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
+}
+
+bool PointInTriangleInt(int px, int py, int p1x, int p1y, int p2x, int p2y, int p3x, int p3y)
+{
+    int d1, d2, d3;
+    bool has_neg, has_pos;
+
+    d1 = sign(px, py, p1x, p1y, p2x, p2y);
+    d2 = sign(px, py, p2x, p2y, p3x, p3y);
+    d3 = sign(px, py, p3x, p3y, p1x, p1y);
+
+    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(has_neg && has_pos);
 }

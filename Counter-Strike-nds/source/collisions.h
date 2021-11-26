@@ -22,5 +22,10 @@ void CalculateAllTriggerColBoxs();
 int CheckWallHit(int playerId);
 int Raycast(int playerId);
 void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibility);
+bool PointInTriangle(float px, float py, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y);
+float sign(float p1x, float p1y, float p2x, float p2y, float p3x, float p3y);
+bool checkZoneForOcclusion(OcclusionZone *zone, int posx, int posz);
+int signInt(int p1x, int p1y, int p2x, int p2y, int p3x, int p3y);
+bool PointInTriangleInt(int px, int py, int p1x, int p1y, int p2x, int p2y, int p3x, int p3y);
 
 #endif // COLLISION_H_
