@@ -1,9 +1,12 @@
 #include "main.h"
 #include "sounds.h"
+#include "ui.h"
 
-#define keyCount 29 // 26
+#define keyCount 29
+#define otherKeyCount 1
 
 Key allKeys[keyCount];
+OtherKey allOtherKeys[otherKeyCount];
 
 void initKeyboard()
 {
@@ -184,20 +187,56 @@ void initKeyboard()
     allKeys[index].xPos = 3 + 3 * 8;
     allKeys[index].yPos = 1 + 2 * 2;
     index++;
+
+    index = 0;
+    strncpy(allOtherKeys[index].name, "space", 6);
+    allOtherKeys[index].xPos = 14;
+    allOtherKeys[index].yPos = 1 + 2 * 3;
+    allOtherKeys[index].xCenter = 19;
+    allOtherKeys[index].xSize = 30;
+    allOtherKeys[index].ySize = 2;
 }
 
 void drawKeyBoard()
 {
+    // Screen background
     NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
-
+    // Keyboard background
+    NE_2DDrawQuad(2, 2, 256 - 2, 70, 19, RGB15(4, 4, 4));
     for (int i = 0; i < keyCount; i++)
     {
         NE_TextPrint(0,                                // Font slot
                      allKeys[i].xPos, allKeys[i].yPos, // Coordinates x(column), y(row)
                      NE_White,                         // Color
                      allKeys[i].letter);
-        // NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
+        NE_2DDrawQuad((allKeys[i].xPos * 8) - 6, (allKeys[i].yPos * 8) - 3, (allKeys[i].xPos * 8) + 13, (allKeys[i].yPos * 8) + 12, 11, RGB15(7, 7, 7));
+        NE_2DDrawQuad((allKeys[i].xPos * 8) - 5, (allKeys[i].yPos * 8) - 2, (allKeys[i].xPos * 8) + 12, (allKeys[i].yPos * 8) + 11, 10, RGB15(6, 6, 6));
+    }
+
+    for (int i = 0; i < otherKeyCount; i++)
+    {
+        NE_TextPrint(0,                                          // Font slot
+                     allOtherKeys[i].xPos, allOtherKeys[i].yPos, // Coordinates x(column), y(row)
+                     NE_White,                                   // Color
+                     allOtherKeys[i].name);
+        NE_2DDrawQuad((allOtherKeys[i].xPos * 8) - allOtherKeys[i].xSize - 1 + allOtherKeys[i].xCenter, (allOtherKeys[i].yPos * 8) - allOtherKeys[i].ySize - 1, (allOtherKeys[i].xPos * 8) + allOtherKeys[i].xSize + 1 + allOtherKeys[i].xCenter, (allOtherKeys[i].yPos * 8) + 12, 11, RGB15(7, 7, 7));
+        NE_2DDrawQuad((allOtherKeys[i].xPos * 8) - allOtherKeys[i].xSize + allOtherKeys[i].xCenter, (allOtherKeys[i].yPos * 8) - allOtherKeys[i].ySize, (allOtherKeys[i].xPos * 8) + allOtherKeys[i].xSize + allOtherKeys[i].xCenter, (allOtherKeys[i].yPos * 8) + 11, 10, RGB15(6, 6, 6));
     }
 
     // NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
+}
+
+void readKeyboard()
+{
+    if (isShowingKeyBoard)
+    {
+        for (int i = 0; i < keyCount; i++)
+        {
+            if ((keysdown & KEY_TOUCH && touch.px >= (allKeys[i].xPos * 8) - 6 && touch.px <= (allKeys[i].xPos * 8) + 13 && touch.py >= (allKeys[i].yPos * 8) - 2 && touch.py <= (allKeys[i].yPos * 8) + 11))
+            {
+                sprintf(AllPlayers[0].name + strlen(AllPlayers[0].name), allKeys[i].letter);
+                // AllPlayers[0].name;
+            }
+        }
+    }
 }

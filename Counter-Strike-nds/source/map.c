@@ -31,7 +31,7 @@ void SetAngles(int mapIndex, float terroristsAngle, float CounterAngle)
 void AddSpawnPoint(int mapIndex, int team, int index, float x, float y, float z)
 {
     Map *map = &allMaps[mapIndex];
-    if (team == 0)
+    if (team == TERRORISTS)
     {
         map->allTerroristsSpawns[index].x = x;
         map->allTerroristsSpawns[index].y = y;

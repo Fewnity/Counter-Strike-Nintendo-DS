@@ -6,6 +6,20 @@
 extern int selectedServer;
 extern int ShopCategory;
 extern bool isShowingMap;
+extern bool isShowingKeyBoard;
+
+enum UiMenu
+{
+    GAME = 0,
+    SCORE = 2,
+    SHOPCATEGORIES = 3,
+    SHOP = 6,
+    SETTINGS,
+    QUIT,
+    CONTROLS = 7,
+    MAIN = 8,
+    SERVERS = 9
+};
 
 void SetButtonsRefForUI();
 void SetSpritesForUI();

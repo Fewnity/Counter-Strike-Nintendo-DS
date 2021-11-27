@@ -152,6 +152,26 @@
 #define WaypointA 14
 #define WaypointB 29
 
+#define NO_PLAYER -1
+#define EMPTY -1
+#define UNUSED -1
+
+enum connectionType
+{
+	UNSELECTED,
+	OFFLINE,
+	LOCAL,
+	IP1,
+	IP2
+};
+
+enum team
+{
+	SPECTATOR = -1,
+	TERRORISTS = 0,
+	COUNTERTERRORISTS = 1
+};
+
 //////All structs
 typedef struct // Physics values for raycasting
 {
@@ -227,7 +247,8 @@ typedef struct // Player values
 	float zDestination;
 	float Angle;
 	int AngleDestination;
-	int IsCounter;
+	// int IsCounter;
+	enum team Team;
 	int Money;
 	int Health;
 	int KillCount;
@@ -457,6 +478,7 @@ extern bool isDebugTopScreen;
 // extern AmmoMagazine AllAmmoMagazine[2];
 extern NE_Sprite *TopScreenSprites[5];
 extern char killText[33];
+extern NE_Camera *Camara;
 extern int RoundState;
 extern Zone AllZones[OcclusionZonesCount];
 extern int textToShowTimer;
@@ -481,6 +503,7 @@ extern int BottomScreenSpriteCount;
 extern CollisionBox2D AllTriggersCollisions[OcclusionZonesCount];
 extern NE_Material *GroundMaterial;
 extern int StairsCount;
+extern Stairs AllStairs[31];
 extern float CameraAngleY;
 extern float CameraOffsetY;
 extern float xWithoutYForMap;
@@ -524,7 +547,7 @@ extern int doubleTapTimer;
 extern Scope AllScopeLevels[2];
 extern bool PartyStarted;
 extern int currentPartyMode;
-extern int Connection;
+extern enum connectionType Connection;
 extern int checkPlayerDistanceFromAiTimer;
 extern Player *localPlayer;
 extern touchPosition touch;
@@ -532,6 +555,15 @@ extern uint32 keys;
 extern uint32 keysdown;
 extern uint32 keysup;
 extern OcclusionZone AllOcclusionZone[7];
+
+/*typedef enum
+{
+	UNSELECTED,
+	OFFLINE,
+	LOCAL,
+	IP1,
+	IP2
+} connectionType;*/
 
 //////All functions
 void CalculatePlayerPosition(int PlayerId);
@@ -557,7 +589,7 @@ NE_Palette **GetPalettes();
 Gun *GetGuns();
 
 void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckScore);
-void StartGame(int connectionType);
+void StartGame();
 void CheckJump();
 int GetCurrentMenu();
 void SetCurrentMenu(int value);
@@ -566,7 +598,7 @@ void SetUpdateBottomScreenOneFrame(int value);
 int GetButtonToShow();
 void SetButtonToShow(int value);
 void SetWaitForTeamResponse(bool value);
-void addMoneyToTeam(int Money, int Team);
+void addMoneyToTeam(int Money, enum team Team);
 bool GetAlwaysUpdateBottomScreen();
 bool GetNeedUpdateViewRotation();
 bool GetSendPosition();

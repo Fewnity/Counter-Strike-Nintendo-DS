@@ -8,7 +8,7 @@ void MovePlayer(int CurrentSpeed, float xWithoutY, float zWithoutY, uint32 keys,
 void RotatePlayer(uint32 keys, bool *NeedUpdateViewRotation, bool *SendPosition, float *CameraAngleY, int CurrentScopeLevel);
 void SetPlayersForMovements();
 void AddAnglesToPlayer(float xAngleToAdd, float yAngleToAdd);
-void UpdateLookRotation(float CameraAngleY, float *x, float *y, float *z, float *xWithoutY, float *zWithoutY, float *xWithoutYForAudio, float *zWithoutYForAudio);
+void UpdateLookRotation(float CameraAngleY);
 void UpdateLookRotationAI(float CameraAngleY, int playerId, float *x, float *y, float *z);
 void SetOnlinelPlayersPositions();
 void normalize(Vector3 *p);

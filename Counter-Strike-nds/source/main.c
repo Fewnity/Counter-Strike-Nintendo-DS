@@ -22,6 +22,7 @@
 #include "map.h"
 #include "party.h"
 #include "keyboard.h"
+#include "draw3d.h"
 
 //
 //////Level
@@ -49,7 +50,7 @@ int PlayerCount = 0;
 float OldxPos, OldyPos, OldzPos = 0;
 int Health = 100;
 int CanJump = 0;
-int CanJumpReal = 2;
+int CanJumpRealTimer = 2;
 bool Aiming;
 
 int frameCountDuringAir;
@@ -207,7 +208,16 @@ bool isDebugBottomScreen = false;
 //
 //////Rumble pack
 int RumbleTimer = 0;
-int Connection = -1;
+
+/*enum connectionType
+{
+	UNSELECTED,
+	OFFLINE,
+	LOCAL,
+	IP1,
+	IP2
+};*/
+enum connectionType Connection = UNSELECTED;
 
 Player *localPlayer = &AllPlayers[0];
 
@@ -218,139 +228,6 @@ OcclusionZone AllOcclusionZone[7];
 
 // Min z 66.496
 // Max z 41.601
-
-// Draw top screen
-void Draw3DScene(void)
-{
-	// Set camera for drawing
-	NE_CameraUse(Camara);
-
-	// Reset polygons Alpha/Light/Effect
-	NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-	if (!isShowingMap)
-	{
-
-		// Draw map
-		// for (int i = 0; i < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i++)
-		// NE_ModelDraw(Model[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]]);
-
-		for (int i = 0; i < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i++)
-		{
-			bool inFov = false;
-			if (checkZoneForOcclusion(&AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]], AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z))
-				inFov = true;
-			else
-			{
-				for (int i2 = 0; i2 < 4; i2++)
-				{
-					// if (PointInTriangle(AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].angles[i2].x, AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].angles[i2].y, AllPlayers[0].xPos, AllPlayers[0].zPos, xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos, xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos))
-					if (PointInTriangleInt(AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].x, AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].y, AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z, (xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos) * 8192.0, (zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos) * 8192.0, (xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos) * 8192.0, (zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos) * 8192.0))
-					{
-						inFov = true;
-						break;
-					}
-				}
-			}
-			if (inFov)
-				NE_ModelDraw(Model[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]]);
-		}
-
-		// for (int i = 0; i < 7; i++)
-		// NE_ModelDraw(Model[i]);
-
-		// Draw grenades and their effects
-		for (int i = 0; i < GrenadeCount; i++)
-		{
-			if (grenades[i] != NULL)
-			{
-				if (grenades[i]->isVisible)
-					NE_ModelDraw(grenades[i]->Model);
-				// Set polygons alpha
-				NE_PolyFormat(grenades[i]->effectAlpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-				if (grenades[i]->EffectTimer != 0)
-				{
-					if (grenades[i]->GrenadeType == 1 && isInFullSmoke)
-						continue;
-
-					bool inFov = PointInTriangleInt(grenades[i]->Model->x, grenades[i]->Model->z, AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z, (xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos) * 8192.0, (zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos) * 8192.0, (xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos) * 8192.0, (zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos) * 8192.0);
-
-					if (inFov)
-						NE_ModelDraw(grenades[i]->EffectModel);
-				}
-			}
-		}
-		isInFullSmoke = false;
-
-		// Reset polygons Alpha/Light/Effect
-		NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-
-		// If bomb is planted, draw bomb
-		if (BombPlanted)
-			NE_ModelDraw(Model[7]);
-
-		// Show wall bullet hit flash
-		if (ShowWallHitFlash > 0)
-		{
-			ShowWallHitFlash--;
-			NE_ModelDraw(Model[8]);
-		}
-
-		// NE_ModelDraw(Model[9]);
-
-		// Draw bomb explosion
-		if (IsExplode)
-		{
-			// Calculate explosion effect alpha
-			int ExplosionAlpha = 31 - (int)(BombExplosionScale / 1.2);
-			if (ExplosionAlpha < 0)
-			{
-				ExplosionAlpha = 0;
-				IsExplode = false;
-			}
-			// Set polygons alpha
-			NE_PolyFormat(ExplosionAlpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-
-			// Draw explosion
-			NE_ModelDraw(Model[10]);
-
-			// Reset polygons Alpha/Light/Effect
-			NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-		}
-
-		// Draw players
-		for (int i = 1; i < MaxPlayer; i++)
-		{
-			if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead && CurrentCameraPlayer != i)
-			{
-				for (int i2 = 0; i2 < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i2++)
-				{
-					for (int i3 = 0; i3 < AllZones[AllPlayers[i].CurrentOcclusionZone].ZoneCount; i3++)
-					{
-						if (AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i2] == AllZones[AllPlayers[i].CurrentOcclusionZone].AllVisibleZones[i3])
-						{
-							CalculatePlayerPosition(i); // TODO REMOVE THIS?
-							bool inFov = PointInTriangle(AllPlayers[i].xPos, AllPlayers[i].zPos, AllPlayers[0].xPos, AllPlayers[0].zPos, xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos, xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos);
-
-							if (inFov)
-								NE_ModelDraw(AllPlayers[i].PlayerModel);
-							i2 = AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount;
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-	/*for (int i = 1; i < MaxPlayer; i++)
-	{
-		if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead)
-		{
-			NE_ModelDraw(AllPlayers[i].PlayerModel);
-		}
-	}*/
-
-	drawTopScreenUI();
-}
 
 // Draw bottom screen
 void Draw3DScene2(void)
@@ -407,6 +284,7 @@ mm_word stream(mm_word length, mm_addr dest, mm_stream_formats format)
 	return length;
 }*/
 
+// Init the game (launch the engine, load textures, sounds, 3D models, init keyboard...)
 int main(void)
 {
 	// Need to include this???
@@ -429,6 +307,7 @@ int main(void)
 	NE_SetFov(70);											  // Set FOV
 	NE_ClippingPlanesSetI(floattof32(0.1), floattof32(90.0)); // Set render distance
 
+	// Init debug console
 	if (isDebugBottomScreen)
 		consoleDemoInit();
 
@@ -459,12 +338,9 @@ int main(void)
 	printf(line);*/
 
 	// Remove this later
-	SetPlayerForCollisions();
-	SetPlayersForMovements();
-	SetPlayerForUI();
-	SetButtonsRefForUI();
 	SetSpritesForUI();
 	SetCheckBoxsRefForUI();
+
 	setBotsNames();
 
 	// Load guns data
@@ -474,7 +350,7 @@ int main(void)
 
 	// Camera
 	Camara = NE_CameraCreate();
-	UpdateLookRotation(CameraAngleY, &x, &y, &z, &xWithoutY, &zWithoutY, &xWithoutYForAudio, &zWithoutYForAudio);
+	UpdateLookRotation(CameraAngleY);
 
 	// Set start camera position to look the map
 	localPlayer->CurrentOcclusionZone = 15;
@@ -692,11 +568,11 @@ int main(void)
 
 	sprintf(killText, "PlayerName01 killed PlayerName02");
 
-	// Set all player ID to -1
+	// Set all player ID to UNUSED
 	for (int i = 0; i < MaxPlayer; i++)
 	{
-		AllPlayers[i].Id = -1;
-		AllPlayers[i].IsCounter = -1;
+		AllPlayers[i].Id = UNUSED;
+		AllPlayers[i].Team = SPECTATOR;
 	}
 
 	// Lights
@@ -729,7 +605,7 @@ int main(void)
 		connectToServer("fewnity.000webhostapp.com", false, my_socket, false); //Server list
 	}*/
 
-	while (Connection == -1)
+	while (Connection == UNSELECTED)
 	{
 		scanKeys();
 		keys = keysHeld();
@@ -738,41 +614,43 @@ int main(void)
 		touchRead(&touch);
 
 		if ((keysdown & KEY_A) == KEY_A)
-			Connection = 0;
+			Connection = OFFLINE;
 		else if ((keysdown & KEY_B) == KEY_B)
-			Connection = 1;
+			Connection = IP1;
 		else if ((keysdown & KEY_Y) == KEY_Y)
-			Connection = 2;
+			Connection = IP2;
 		else if ((keysdown & KEY_X) == KEY_X)
-			Connection = 3;
+			Connection = LOCAL;
 
 		ReadTouchScreen(keysdown, keys, keysup, &currentMenu, touch, &NeedChangeScreen, &AlwaysUpdateBottomScreen, &ButtonToShow, &UpdateBottomScreenOneFrame, &SendTeam);
 		UpdateEngine();
 	}
 
-	StartGame(Connection);
+	StartGame();
 
 	return 0;
 }
 
-void StartGame(int connectionType)
+void StartGame()
 {
 	SetNeedChangeScreen(true);
 	ChangeMenu(2);
 
 	// Play without internet
-	if (connectionType == 0)
+	if (Connection == OFFLINE)
 	{
 		// PartyStarted = true;
 		applyRules = true;
 		ResetTakenBotsNames();
 		AddNewPlayer(0, true, false);
 		// Add bots
-		for (int i = 0; i < MaxPlayer - 1; i++)
-			AddNewPlayer(i + 1, false, true);
+		// for (int i = 0; i < MaxPlayer - 1; i++)
+		for (int i = 1; i < MaxPlayer; i++)
+			AddNewPlayer(i, false, true);
 
 		iprintf("\n");
 
+		// Set randomly players in a team
 		int rnd = random() % 2;
 		// int rndForBomb = random() % (PlayerCount / 2);
 		// int countForBomb = 0;
@@ -780,11 +658,11 @@ void StartGame(int connectionType)
 		{
 			if (rnd == i % 2)
 			{
-				AllPlayers[i].IsCounter = 1;
+				AllPlayers[i].Team = COUNTERTERRORISTS;
 			}
 			else
 			{
-				AllPlayers[i].IsCounter = 0;
+				AllPlayers[i].Team = TERRORISTS;
 				/*if (countForBomb == rndForBomb)
 				{
 					AllPlayers[i].haveBomb = true;
@@ -802,7 +680,7 @@ void StartGame(int connectionType)
 		PartySeconds = allPartyModes[currentPartyMode].trainingSecondsDuration;
 		PartyMinutes = allPartyModes[currentPartyMode].trainingMinutesDuration;
 		changeSecondMTimer = 60;
-		changeSecondMTimer = 60;
+		// changeSecondMTimer = 60;
 
 		while (true)
 		{
@@ -827,37 +705,17 @@ void StartGame(int connectionType)
 
 			printf("Connected\n\n");
 			my_socket = socket(AF_INET, SOCK_STREAM, 0);
-			if (connectionType == 1)
+			if (Connection == IP1)
 				connectToServer("88.127.205.17", false, my_socket, true); // Mère
-			else if (connectionType == 2)
+			else if (Connection == IP2)
 				connectToServer("88.127.205.50", false, my_socket, true); // Père
-			else if (connectionType == 3)
+			else if (Connection == LOCAL)
 				connectToServer("", true, my_socket, true); // Local mode (Android phone)
 		}
 	}
 }
 
 // Getters / setters
-
-Stairs *GetStairs()
-{
-	return AllStairs;
-}
-
-Wall *GetWalls()
-{
-	return AllWallsCollisions;
-}
-
-Player *GetPlayers()
-{
-	return AllPlayers;
-}
-
-Button *GetButtons()
-{
-	return AllButtons;
-}
 
 int GetCurrentMenu()
 {
@@ -1056,13 +914,13 @@ int GetCurrentCameraPlayer()
 
 void AskUpdateLookRotation()
 {
-	UpdateLookRotation(CameraAngleY, &x, &y, &z, &xWithoutY, &zWithoutY, &xWithoutYForAudio, &zWithoutYForAudio);
+	UpdateLookRotation(CameraAngleY);
 }
 
 void SetGunInInventory(int Value, int inventoryIndex)
 {
 	localPlayer->AllGunsInInventory[inventoryIndex] = Value;
-	if (localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] == -1)
+	if (localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] == UNUSED)
 		ChangeGunInInventoryForLocalPlayer(0);
 	else
 	{
@@ -1074,7 +932,7 @@ void SetGunInInventory(int Value, int inventoryIndex)
 void SetGunInInventoryForNonLocalPlayer(int playerIndex, int Value, int inventoryIndex)
 {
 	AllPlayers[playerIndex].AllGunsInInventory[inventoryIndex] = Value;
-	if (playerIndex == 0 && localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] == -1)
+	if (playerIndex == 0 && localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] == UNUSED)
 		ChangeGunInInventoryForLocalPlayer(0);
 }
 
@@ -1173,33 +1031,34 @@ void setPlayersPositionAtSpawns()
 	for (int i = 0; i < PlayerCount; i++)
 	{
 		Player *player = &AllPlayers[i];
-		if (player->IsCounter == 0)
+		Map *map = &allMaps[0];
+		if (player->Team == TERRORISTS)
 		{
-			player->PlayerModel->x = allMaps[0].allTerroristsSpawns[currentTerrorist].x * 4096.0;
-			player->PlayerModel->y = allMaps[0].allTerroristsSpawns[currentTerrorist].y * 4096.0;
-			player->PlayerModel->z = allMaps[0].allTerroristsSpawns[currentTerrorist].z * 4096.0;
+			player->PlayerModel->x = map->allTerroristsSpawns[currentTerrorist].x * 4096.0;
+			player->PlayerModel->y = map->allTerroristsSpawns[currentTerrorist].y * 4096.0;
+			player->PlayerModel->z = map->allTerroristsSpawns[currentTerrorist].z * 4096.0;
 			// Add this for non AI players
-			player->xDestination = allMaps[0].allTerroristsSpawns[currentTerrorist].x;
-			player->yDestination = allMaps[0].allTerroristsSpawns[currentTerrorist].y;
-			player->zDestination = allMaps[0].allTerroristsSpawns[currentTerrorist].z;
+			player->xDestination = map->allTerroristsSpawns[currentTerrorist].x;
+			player->yDestination = map->allTerroristsSpawns[currentTerrorist].y;
+			player->zDestination = map->allTerroristsSpawns[currentTerrorist].z;
 			currentTerrorist++;
 
-			player->Angle = allMaps[0].startPlayerAngleTerrorists;
-			player->AngleDestination = allMaps[0].startPlayerAngleTerrorists;
+			player->Angle = map->startPlayerAngleTerrorists;
+			player->AngleDestination = map->startPlayerAngleTerrorists;
 		}
-		else if (player->IsCounter == 1)
+		else if (player->Team == COUNTERTERRORISTS)
 		{
-			player->PlayerModel->x = allMaps[0].allCounterTerroristsSpawns[currentCounter].x * 4096.0;
-			player->PlayerModel->y = allMaps[0].allCounterTerroristsSpawns[currentCounter].y * 4096.0;
-			player->PlayerModel->z = allMaps[0].allCounterTerroristsSpawns[currentCounter].z * 4096.0;
+			player->PlayerModel->x = map->allCounterTerroristsSpawns[currentCounter].x * 4096.0;
+			player->PlayerModel->y = map->allCounterTerroristsSpawns[currentCounter].y * 4096.0;
+			player->PlayerModel->z = map->allCounterTerroristsSpawns[currentCounter].z * 4096.0;
 			// Add this for non AI players
-			player->xDestination = allMaps[0].allCounterTerroristsSpawns[currentCounter].x;
-			player->yDestination = allMaps[0].allCounterTerroristsSpawns[currentCounter].y;
-			player->zDestination = allMaps[0].allCounterTerroristsSpawns[currentCounter].z;
+			player->xDestination = map->allCounterTerroristsSpawns[currentCounter].x;
+			player->yDestination = map->allCounterTerroristsSpawns[currentCounter].y;
+			player->zDestination = map->allCounterTerroristsSpawns[currentCounter].z;
 			currentCounter++;
 
-			player->Angle = allMaps[0].startPlayerAngleCounterTerrorists;
-			player->AngleDestination = allMaps[0].startPlayerAngleCounterTerrorists;
+			player->Angle = map->startPlayerAngleCounterTerrorists;
+			player->AngleDestination = map->startPlayerAngleCounterTerrorists;
 		}
 
 		CalculatePlayerPosition(i);
@@ -1236,9 +1095,9 @@ void UpdateGunTexture()
 void UpdatePlayerTexture(int playerIndex)
 {
 	Player *player = &AllPlayers[playerIndex];
-	if (player->IsCounter == 1)
+	if (player->Team == COUNTERTERRORISTS)
 		NE_ModelSetMaterial(player->PlayerModel, PlayerMaterial);
-	else if (player->IsCounter == 0)
+	else if (player->Team == TERRORISTS)
 		NE_ModelSetMaterial(player->PlayerModel, PlayerMaterialTerrorist);
 }
 
@@ -1278,6 +1137,7 @@ void GameLoop()
 
 	// NeedUpdateViewRotation = false;
 
+	// Reduce double tab timer
 	if (doubleTapTimer > 0)
 		doubleTapTimer--;
 
@@ -1285,7 +1145,8 @@ void GameLoop()
 	ReadTouchScreen(keysdown, keys, keysup, &currentMenu, touch, &NeedChangeScreen, &AlwaysUpdateBottomScreen, &ButtonToShow, &UpdateBottomScreenOneFrame, &SendTeam);
 	readKeyboard();
 
-	if (localPlayer->IsCounter != -1)
+	// If local player is not a spectator
+	if (localPlayer->Team != SPECTATOR)
 	{
 		// Check input and rotate player
 		RotatePlayer(keys, &NeedUpdateViewRotation, &SendPosition, &CameraAngleY, CurrentScopeLevel);
@@ -1293,7 +1154,7 @@ void GameLoop()
 		// Update look rotation value
 		if (NeedUpdateViewRotation || CurrentCameraPlayer != 0)
 		{
-			UpdateLookRotation(CameraAngleY, &x, &y, &z, &xWithoutY, &zWithoutY, &xWithoutYForAudio, &zWithoutYForAudio);
+			UpdateLookRotation(CameraAngleY);
 			NeedUpdateViewRotation = false;
 		}
 
@@ -1301,20 +1162,24 @@ void GameLoop()
 		// Check if the player is on a stairs
 		CheckStairs(StairsCount, &CanJump, &isInDownStairs);
 
+		// Reduce jump timer
 		if (CanJump > 0)
 			CanJump--;
 
 		// Check for jump
 		if (RoundState != 0 && !localPlayer->IsDead)
 		{
-			if (localPlayer->PlayerPhysic->yspeed == 0 && CanJumpReal > 0)
-				CanJumpReal--;
+			// CanJumpRealTimer is used wait a little bit of time before the player can jump
+			// Set CanJumpReal timer
+			if (localPlayer->PlayerPhysic->yspeed == 0 && CanJumpRealTimer > 0)
+				CanJumpRealTimer--;
 			else if (localPlayer->PlayerPhysic->yspeed != 0)
-				CanJumpReal = 2;
+				CanJumpRealTimer = 2;
 
-			if (CanJumpReal != 0 && !isInDownStairs)
+			// If player is in the air, increase the frameCountDuringAir
+			if (CanJumpRealTimer != 0 && !isInDownStairs)
 				frameCountDuringAir++;
-			else if ((CanJumpReal == 0 || (isInDownStairs)) && frameCountDuringAir > 20)
+			else if ((CanJumpRealTimer == 0 || isInDownStairs) && frameCountDuringAir > 20) // Make jump land sound if the player was more than 0,33 secs in the air
 			{
 				frameCountDuringAir = 0;
 				Play2DSound(SFX_LAND, 140);
@@ -1323,8 +1188,10 @@ void GameLoop()
 			else
 				frameCountDuringAir = 0;
 
-			if ((keysdown & KEY_R || NeedJump) && (CanJumpReal == 0 || CanJump > 0))
+			// If the player can jump and if jump input is down
+			if ((keysdown & KEY_R || NeedJump) && (CanJumpRealTimer == 0 || CanJump > 0))
 			{
+				// Apply force on the player
 				NeedJump = false;
 				localPlayer->PlayerPhysic->yspeed = JumpForce;
 				CanJump = 0;
@@ -1364,40 +1231,46 @@ void GameLoop()
 	if (GunYRecoil > GunMinRecoil)
 		GunYRecoil--;
 
-	if (applyRules && Hit != -1 && localPlayer->ScanFinished)
+	// If in solo mode, the localplayer shoot a player
+	if (applyRules && Hit != NO_PLAYER && localPlayer->ScanFinished)
 	{
 		makeHit(0, Hit);
-		Hit = -1;
+		Hit = NO_PLAYER;
 	}
 
 	for (int i = 0; i < MaxPlayer; i++)
 	{
 		Player *player = &AllPlayers[i];
-		if (player->Id == -1)
+		if (player->Id == UNUSED)
 			continue;
 
 		// Gun timer
 		if (player->AllGunsInInventory[player->currentGunInInventory] < GunCount && player->GunWaitCount < AllGuns[player->AllGunsInInventory[player->currentGunInInventory]].fireRate)
 			player->GunWaitCount++;
 
-		if (player->AllGunsInInventory[player->currentGunInInventory] < GunCount && player->GunReloadWaitCount < AllGuns[player->AllGunsInInventory[player->currentGunInInventory]].ReloadTime && player->isReloading)
-			player->GunReloadWaitCount++;
-
-		if (player->GunReloadWaitCount == AllGuns[player->AllGunsInInventory[player->currentGunInInventory]].ReloadTime && player->isReloading)
+		// Gun reload timer
+		if (player->isReloading)
 		{
-			player->isReloading = false;
-			ReloadGun(i);
+			if (player->AllGunsInInventory[player->currentGunInInventory] < GunCount && player->GunReloadWaitCount < AllGuns[player->AllGunsInInventory[player->currentGunInInventory]].ReloadTime)
+				player->GunReloadWaitCount++;
+
+			// If reload timer is ended, reload gun and stop reloading
+			if (player->GunReloadWaitCount == AllGuns[player->AllGunsInInventory[player->currentGunInInventory]].ReloadTime)
+			{
+				player->isReloading = false;
+				ReloadGun(i);
+			}
 		}
 
 		if (player->IsDead)
 		{
-			if (i == 0)
+			/*if (i == 0)
 				Hit = -1;
 
 			player->justCheking = false;
 			player->ScanFinished = true;
 			player->target = -1;
-			player->lastSeenTarget = -1;
+			player->lastSeenTarget = -1;*/
 		}
 		else
 		{
@@ -1405,7 +1278,7 @@ void GameLoop()
 			if (!player->ScanFinished && CheckWallHit(i) == -1)
 			{
 				if (i == 0)
-					Hit = -1;
+					Hit = NO_PLAYER;
 				player->ScanFinished = true;
 
 				// For AI
@@ -1413,9 +1286,9 @@ void GameLoop()
 				{
 					printf("lose Target 1");
 					player->justCheking = false;
-					player->target = -1;
+					player->target = NO_PLAYER;
 
-					if (player->lastSeenTarget != -1)
+					if (player->lastSeenTarget != NO_PLAYER)
 					{
 						int nearestWaypoint = getNearestWaypoint(AllPlayers[player->lastSeenTarget].xPos, AllPlayers[player->lastSeenTarget].yPos, AllPlayers[player->lastSeenTarget].zPos);
 						StartChecking(i, nearestWaypoint);
@@ -1424,7 +1297,7 @@ void GameLoop()
 					{
 						StartChecking(i, random() % 57);
 					}
-					player->lastSeenTarget = -1;
+					player->lastSeenTarget = NO_PLAYER;
 
 					// TODO get a random one or to a nearest last seen player position waypoint
 				}
@@ -1443,9 +1316,9 @@ void GameLoop()
 					{
 						printf("lose Target 2");
 						player->justCheking = false;
-						player->target = -1;
+						player->target = NO_PLAYER;
 
-						if (player->lastSeenTarget != -1)
+						if (player->lastSeenTarget != NO_PLAYER)
 						{
 							int nearestWaypoint = getNearestWaypoint(AllPlayers[player->lastSeenTarget].xPos, AllPlayers[player->lastSeenTarget].yPos, AllPlayers[player->lastSeenTarget].zPos);
 							StartChecking(i, nearestWaypoint);
@@ -1463,7 +1336,7 @@ void GameLoop()
 		}
 	}
 
-	if (localPlayer->IsCounter != -1 && !localPlayer->IsDead && RoundState != 0)
+	if (localPlayer->Team != SPECTATOR && !localPlayer->IsDead && RoundState != 0)
 	{
 		// Gun shoot
 		if ((localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] < GunCount && ((keys & KEY_L && AllGuns[localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory]].holdFireButton) || (keysdown & KEY_L && !AllGuns[localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory]].holdFireButton)) && localPlayer->GunWaitCount >= AllGuns[localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory]].fireRate))
@@ -1518,7 +1391,7 @@ void GameLoop()
 		}
 		else if (localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] >= GunCount + shopGrenadeCount && (keys & KEY_L))
 		{
-			if (localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] == GunCount + shopGrenadeCount && CanPutBomb && RoundState == 1 && !BombPlanted && (CanJumpReal == 0 || CanJump > 0))
+			if (localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] == GunCount + shopGrenadeCount && CanPutBomb && RoundState == 1 && !BombPlanted && (CanJumpRealTimer == 0 || CanJump > 0))
 			{
 				// On bomb planting make a sound
 				if (localPlayer->bombTimer == bombPlantingTime)
@@ -1563,12 +1436,12 @@ void GameLoop()
 			PhysicalGrenade *newGrenade = CreateGrenade(localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory]);
 			lanchGrenade(newGrenade, x, y, z, localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z);
 
-			localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] = -1;
+			localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] = EMPTY;
 			ChangeGunInInventoryForLocalPlayer(1);
 
 			SendGrenade = true;
 		}
-		else if (keys & KEY_SELECT && canDefuseBomb && RoundState == 1 && !BombDefused && BombPlanted && localPlayer->IsCounter)
+		else if (keys & KEY_SELECT && canDefuseBomb && RoundState == 1 && !BombDefused && BombPlanted && localPlayer->Team == COUNTERTERRORISTS)
 		{
 			// On bomb defuse make a sound
 			if (localPlayer->bombTimer == bombDefuseTime)
@@ -1592,8 +1465,8 @@ void GameLoop()
 					if (LoseCountCounterTerrorists < 4)
 						LoseCountCounterTerrorists++;
 
-					addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney, 0);
-					addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, 1);
+					addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney, TERRORISTS);
+					addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, COUNTERTERRORISTS);
 
 					showPartyEventText(3);
 					PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
@@ -1677,7 +1550,7 @@ void GameLoop()
 			MovePlayer(CurrentSpeed, xWithoutY, zWithoutY, keys, &NeedBobbing);
 
 		// Gun headbobing
-		if (NeedBobbing && (CanJumpReal == 0 || CanJump > 0))
+		if (NeedBobbing && (CanJumpRealTimer == 0 || CanJump > 0))
 		{
 			BobbingOffset += BobbingSpeed;
 
@@ -1704,13 +1577,13 @@ void GameLoop()
 			if (keysdown & KEY_LEFT)
 			{
 				bool Found = false;
-				int FirstFound = -1;
+				int FirstFound = NO_PLAYER;
 				for (int i = 1; i < MaxPlayer; i++)
 				{
 					Player *player = &AllPlayers[i];
-					if (!player->IsDead && player->Id != -1 && (allPartyModes[currentPartyMode].canSeeOtherTeamView || player->IsCounter == localPlayer->IsCounter))
+					if (!player->IsDead && player->Id != UNUSED && (allPartyModes[currentPartyMode].canSeeOtherTeamView || player->Team == localPlayer->Team))
 					{
-						if (FirstFound == -1)
+						if (FirstFound == NO_PLAYER)
 							FirstFound = i;
 
 						if (i > CurrentCameraPlayer)
@@ -1723,7 +1596,7 @@ void GameLoop()
 					}
 				}
 
-				if (!Found && FirstFound != -1)
+				if (!Found && FirstFound != NO_PLAYER)
 				{
 					CurrentCameraPlayer = FirstFound;
 					UpdateGunTexture();
@@ -1732,13 +1605,13 @@ void GameLoop()
 			else if (keysdown & KEY_RIGHT)
 			{
 				bool Found = false;
-				int FirstFound = -1;
+				int FirstFound = NO_PLAYER;
 				for (int i = MaxPlayer - 1; i > 0; i--)
 				{
 					Player *player = &AllPlayers[i];
-					if (!player->IsDead && player->Id != -1 && (allPartyModes[currentPartyMode].canSeeOtherTeamView || player->IsCounter == localPlayer->IsCounter))
+					if (!player->IsDead && player->Id != UNUSED && (allPartyModes[currentPartyMode].canSeeOtherTeamView || player->Team == localPlayer->Team))
 					{
-						if (FirstFound == -1)
+						if (FirstFound == NO_PLAYER)
 							FirstFound = i;
 
 						if (i < CurrentCameraPlayer)
@@ -1751,7 +1624,7 @@ void GameLoop()
 					}
 				}
 
-				if (!Found && FirstFound != -1)
+				if (!Found && FirstFound != NO_PLAYER)
 				{
 					CurrentCameraPlayer = FirstFound;
 					UpdateGunTexture();
@@ -1802,7 +1675,7 @@ void GameLoop()
 
 			if (player->isPlantingBomb)
 			{
-				if (player->IsCounter == 0)
+				if (player->Team == TERRORISTS)
 				{
 					// On bomb planting make a sound
 					if (player->bombTimer == bombPlantingTime)
@@ -1828,7 +1701,7 @@ void GameLoop()
 						PartyMinutes = allPartyModes[currentPartyMode].bombWaitingMinutesDuration;
 						PartySeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
 						player->haveBomb = false;
-						SetGunInInventoryForNonLocalPlayer(i, -1, 8);
+						SetGunInInventoryForNonLocalPlayer(i, EMPTY, 8);
 						NE_ModelSetCoord(Model[7], BombPosition.x, BombPosition.y, BombPosition.z);
 						NE_ModelSetCoord(Model[10], BombPosition.x, BombPosition.y, BombPosition.z);
 						Model[7]->rz = BombPosition.r;
@@ -1853,7 +1726,7 @@ void GameLoop()
 					{
 						BombDefused = true;
 						player->isPlantingBomb = false;
-						currentDefuserIndex = -1;
+						currentDefuserIndex = NO_PLAYER;
 						CounterScore++;
 
 						if (LoseCountTerrorists > 0)
@@ -1862,8 +1735,8 @@ void GameLoop()
 						if (LoseCountCounterTerrorists < 4)
 							LoseCountCounterTerrorists++;
 
-						addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney, 0);
-						addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, 1);
+						addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney, TERRORISTS);
+						addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, COUNTERTERRORISTS);
 
 						showPartyEventText(3);
 						PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
@@ -1932,8 +1805,8 @@ void GameLoop()
 							if (LoseCountTerrorists < 4)
 								LoseCountTerrorists++;
 
-							addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, 0);
-							addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney + allPartyModes[currentPartyMode].loseIncrease * LoseCountTerrorists, 1);
+							addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, TERRORISTS);
+							addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney + allPartyModes[currentPartyMode].loseIncrease * LoseCountTerrorists, COUNTERTERRORISTS);
 
 							showPartyEventText(0);
 						}
@@ -1949,9 +1822,9 @@ void GameLoop()
 
 							if (!allPartyModes[currentPartyMode].noMoneyOnTimeEnd)
 							{
-								addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney, 0);
+								addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney, TERRORISTS);
 							}
-							addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, 1);
+							addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, COUNTERTERRORISTS);
 
 							showPartyEventText(1);
 						}
@@ -1965,7 +1838,7 @@ void GameLoop()
 
 						bombSet = false;
 						BombPlanted = false;
-						currentDefuserIndex = -1;
+						currentDefuserIndex = NO_PLAYER;
 						for (int i = 0; i < MaxPlayer; i++)
 						{
 							resetPlayer(i);
@@ -2019,7 +1892,7 @@ void GameLoop()
 				for (int i = 0; i < MaxPlayer; i++)
 				{
 					Player *player = &AllPlayers[i];
-					if (player->IsDead || player->Id == -1)
+					if (player->IsDead || player->Id == NO_PLAYER)
 						continue;
 
 					float Distance = (float)sqrt(pow(player->PlayerModel->x - BombPosition.x * 4096.0, 2.0) + pow(player->PlayerModel->y - BombPosition.y * 4096.0, 2.0) + pow(player->PlayerModel->z - BombPosition.z * 4096.0, 2.0)) / 8096.0;
@@ -2030,7 +1903,7 @@ void GameLoop()
 					{
 						int newHealh = player->Health - (int)map(Distance, 0.3, 21, 200, 0);
 						setPlayerHealth(i, newHealh);
-						checkAfterDamage(-1, i, false);
+						checkAfterDamage(NO_PLAYER, i, false);
 					}
 				}
 			}
@@ -2102,7 +1975,7 @@ void UpdateEngine()
 	}
 
 	// Update physics and animations
-	if (localPlayer->Id != -1)
+	if (localPlayer->Id != UNUSED)
 		NE_PhysicsUpdate(localPlayer->PlayerPhysic);
 	NE_WaitForVBL(NE_UPDATE_ANIMATIONS | NE_CAN_SKIP_VBL);
 }
@@ -2129,9 +2002,9 @@ void setBombForARandomPlayer()
 
 	for (int i = 0; i < MaxPlayer; i++)
 	{
-		SetGunInInventoryForNonLocalPlayer(i, -1, 8);
+		SetGunInInventoryForNonLocalPlayer(i, EMPTY, 8);
 		AllPlayers[i].haveBomb = false;
-		if (AllPlayers[i].Id != -1 && AllPlayers[i].IsCounter == 0)
+		if (AllPlayers[i].Id != UNUSED && AllPlayers[i].Team == TERRORISTS)
 		{
 			// AllPlayers[i].haveBomb = true; /////////////////////////////////////////////////////////////////////////////REMOVE
 			TerroristCount++;
@@ -2139,7 +2012,7 @@ void setBombForARandomPlayer()
 	}
 
 	// return; /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////TODO
-	if (localPlayer->IsCounter == 0)
+	if (localPlayer->Team == TERRORISTS)
 	{
 		localPlayer->haveBomb = true;
 		SetGunInInventory(28, 8);
@@ -2152,7 +2025,7 @@ void setBombForARandomPlayer()
 	for (int i = 1; i < MaxPlayer; i++)
 	{
 		Player *player = &AllPlayers[i];
-		if (player->Id != -1 && player->IsCounter == 0)
+		if (player->Id != UNUSED && player->Team == TERRORISTS)
 		{
 			if (giveBombTo == TerroristCount)
 			{
@@ -2165,12 +2038,12 @@ void setBombForARandomPlayer()
 	}
 }
 
-void addMoneyToTeam(int Money, int Team)
+void addMoneyToTeam(int Money, enum team Team)
 {
 	for (int i = 0; i < MaxPlayer; i++)
 	{
 		Player *player = &AllPlayers[i];
-		if (player->IsCounter == Team)
+		if (player->Team == Team)
 		{
 			player->Money += Money;
 			if (player->Money > allPartyModes[currentPartyMode].maxMoney)
@@ -2194,14 +2067,14 @@ void resetPlayer(int index)
 
 	if (player->IsDead || (allPartyModes[currentPartyMode].middlePartyTeamSwap && TerroristsScore + CounterScore == floor(allPartyModes[currentPartyMode].maxRound / 2.0)) || TerroristsScore + CounterScore == 0)
 	{
-		if (player->IsCounter == 0)
+		if (player->Team == TERRORISTS)
 			player->AllGunsInInventory[1] = DEFAULTTERRORISTGUN;
-		else if (player->IsCounter == 1)
+		else if (player->Team == COUNTERTERRORISTS)
 			player->AllGunsInInventory[1] = DEFAULTCOUNTERTERRORISTGUN;
 
 		for (int i = 2; i < inventoryCapacity - 1; i++)
 		{
-			player->AllGunsInInventory[i] = -1;
+			player->AllGunsInInventory[i] = EMPTY;
 		}
 	}
 
@@ -2216,8 +2089,8 @@ void resetPlayer(int index)
 	else
 	{
 		player->PathCount = 0;
-		player->target = -1;
-		player->lastSeenTarget = -1;
+		player->target = NO_PLAYER;
+		player->lastSeenTarget = NO_PLAYER;
 	}
 }
 
@@ -2230,10 +2103,10 @@ void setNewRoundHandWeapon()
 		{
 			player->currentGunInInventory = 8;
 		}
-		else if (player->AllGunsInInventory[player->currentGunInInventory] == -1)
+		else if (player->AllGunsInInventory[player->currentGunInInventory] == EMPTY)
 		{
 			player->currentGunInInventory = 1;
-			if (player->AllGunsInInventory[player->currentGunInInventory] == -1)
+			if (player->AllGunsInInventory[player->currentGunInInventory] == EMPTY)
 			{
 				player->currentGunInInventory = 0;
 			}
@@ -2318,25 +2191,42 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 		HittedClient->Health = 0;
 		// Set client has dead
 		HittedClient->IsDead = true;
-		if (&AllPlayers[currentDefuserIndex] == HittedClient)
-			currentDefuserIndex = -1;
 
+		// Reset raycast values on death
+		if (hittedPlayerIndex == 0)
+			Hit = NO_PLAYER;
+
+		HittedClient->justCheking = false;
+		HittedClient->ScanFinished = true;
+		HittedClient->target = NO_PLAYER;
+		HittedClient->lastSeenTarget = NO_PLAYER;
+
+		// If the killed player was a defuser, free the defuser place for other bots
+		if (&AllPlayers[currentDefuserIndex] == HittedClient)
+			currentDefuserIndex = NO_PLAYER;
+
+		// Increase player death count
 		HittedClient->DeathCount++;
 
+		// If the killer kills the right target, set current target as "null"
 		if (killerClient->target == HittedClient->Id)
 		{
-			killerClient->target = -1;
-			killerClient->lastSeenTarget = -1;
+			killerClient->target = NO_PLAYER;
+			killerClient->lastSeenTarget = NO_PLAYER;
 		}
+		// Stop dead player movements
 		if (HittedClient->isAi)
 		{
 			HittedClient->PathCount = 0;
 		}
 
-		if (shooterPlayerIndex != -1)
+		// If the killer is not null
+		if (shooterPlayerIndex != NO_PLAYER)
 		{
+			// Show a text to show with is the killer
 			showKillText(shooterPlayerIndex, hittedPlayerIndex);
-			if (allPartyModes[currentPartyMode].teamDamage && HittedClient->IsCounter == killerClient->IsCounter)
+			// Add penalties if the killer is in the same team as the dead player
+			if (allPartyModes[currentPartyMode].teamDamage && HittedClient->Team == killerClient->Team)
 			{
 				killerClient->KillCount--;
 				killerClient->Money -= allPartyModes[currentPartyMode].killPenalties;
@@ -2345,12 +2235,14 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 			}
 			else
 			{
+				// Increase killer kill count
 				killerClient->KillCount++;
 				// if (AllShopElements[killerClient.AllGunsInInventory[killerClient.currentGunInInventory]] is Gun)
 				// AddMoneyTo(killerClient, ((Gun)AllShopElements[killerClient.AllGunsInInventory[killerClient.currentGunInInventory]]).KillMoneyBonus[killerClient.ClientParty.PartyType]);
 			}
 		}
 
+		// Update bottom screen if scoreboard is showed
 		if (currentMenu == 2)
 			UpdateBottomScreenOneFrame += 8;
 
@@ -2363,19 +2255,22 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 			int CounterDeadCount = 0, TerroristDeadCount = 0, CounterTerroristsCount = 0, TerroristsCount = 0;
 
 			CheckTeamDeathCount(&TerroristsCount, &CounterTerroristsCount, &TerroristDeadCount, &CounterDeadCount);
-
+			// If all counter terrorists are dead
 			if (CounterDeadCount == CounterTerroristsCount)
 			{
+				// Add a point to terrorists teams
 				TerroristsScore++;
 
+				// Set kill bonus count for each teams
 				if (LoseCountTerrorists > 0)
 					LoseCountTerrorists--;
 
 				if (LoseCountCounterTerrorists < 4)
 					LoseCountCounterTerrorists++;
 
-				addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundMoney, 0);
-				addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney + allPartyModes[currentPartyMode].loseIncrease * LoseCountCounterTerrorists, 1);
+				// Add money to teams
+				addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundMoney, TERRORISTS);
+				addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney + allPartyModes[currentPartyMode].loseIncrease * LoseCountCounterTerrorists, COUNTERTERRORISTS);
 
 				// Set round to finished round state
 				PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
@@ -2386,16 +2281,19 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 			}
 			else if (TerroristDeadCount == TerroristsCount && !bombSet)
 			{
+				// Add a point to counter terrorists teams
 				CounterScore++;
 
+				// Set kill bonus count for each teams
 				if (LoseCountCounterTerrorists > 0)
 					LoseCountCounterTerrorists--;
 
 				if (LoseCountTerrorists < 4)
 					LoseCountTerrorists++;
 
-				addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundMoney, 1);
-				addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney + allPartyModes[currentPartyMode].loseIncrease * LoseCountTerrorists, 0);
+				// Add money to teams
+				addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundMoney, COUNTERTERRORISTS);
+				addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney + allPartyModes[currentPartyMode].loseIncrease * LoseCountTerrorists, TERRORISTS);
 
 				// Set round to finished round state
 				PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
@@ -2405,59 +2303,58 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 				CheckAfterRound();
 			}
 		}
-		else if (RoundState == -1)
+		else if (RoundState == -1) // If the party is in training mode
 		{
+			// Respawn the dead player
 			HittedClient->RespawnTimer = allPartyModes[currentPartyMode].trainingRespawnSecondsDuration * 60;
 			HittedClient->NeedRespawn = true;
 		}
 	}
 }
 
+void finishParty()
+{
+	// Set end timer
+	PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
+	PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
+	RoundState = 3;
+}
+
 void CheckAfterRound()
 {
 	// Check if a team won
-	if (TerroristsScore == floor(allPartyModes[currentPartyMode].maxRound / 2.0) + 1)
+	if (TerroristsScore == floor(allPartyModes[currentPartyMode].maxRound / 2.0) + 1 || CounterScore == floor(allPartyModes[currentPartyMode].maxRound / 2.0) + 1 || TerroristsScore + CounterScore == allPartyModes[currentPartyMode].maxRound)
 	{
-		PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
-		PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
-		RoundState = 3;
-	}
-	else if (CounterScore == floor(allPartyModes[currentPartyMode].maxRound / 2.0) + 1)
-	{
-		PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
-		PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
-		RoundState = 3;
-	}
-	else if (TerroristsScore + CounterScore == allPartyModes[currentPartyMode].maxRound)
-	{
-		PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
-		PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
-		RoundState = 3;
+		finishParty();
 	}
 	else if (allPartyModes[currentPartyMode].middlePartyTeamSwap && TerroristsScore + CounterScore == floor(allPartyModes[currentPartyMode].maxRound / 2.0)) // Or check team swap
 	{
+		// Swap team
 		for (int i = 0; i < MaxPlayer; i++)
 		{
 			Player *player = &AllPlayers[i];
-			if (player->IsCounter == 0)
+			if (player->Team == TERRORISTS)
 			{
-				player->IsCounter = 1;
+				player->Team = COUNTERTERRORISTS;
 			}
-			else if (player->IsCounter == 1)
+			else if (player->Team == COUNTERTERRORISTS)
 			{
-				player->IsCounter = 0;
+				player->Team = TERRORISTS;
 			}
 
 			player->Money = allPartyModes[currentPartyMode].startMoney;
 		}
+		// Reset lose count money bonus
 		LoseCountCounterTerrorists = 0;
 		LoseCountTerrorists = 0;
+		// Swap score
 		int TempsScoreTerrorists = TerroristsScore;
 		TerroristsScore = CounterScore;
 		CounterScore = TempsScoreTerrorists;
 	}
 }
 
+// Return the number of players and of dead players in both teams
 void CheckTeamDeathCount(int *TerroristsCount, int *CounterTerroristsCount, int *TerroristDeadCount, int *CounterDeadCount)
 {
 	*CounterDeadCount = 0;
@@ -2468,17 +2365,17 @@ void CheckTeamDeathCount(int *TerroristsCount, int *CounterTerroristsCount, int 
 	for (int iPlayer = 0; iPlayer < MaxPlayer; iPlayer++)
 	{
 		Player *player = &AllPlayers[iPlayer];
-		if (player->Id == -1)
+		if (player->Id == UNUSED)
 			continue;
 
-		if (player->IsCounter == 1)
+		if (player->Team == COUNTERTERRORISTS)
 		{
 			if (player->IsDead) // If a counter is dead, add one to counter dead count
 				*CounterDeadCount = *CounterDeadCount + 1;
 
 			*CounterTerroristsCount = *CounterTerroristsCount + 1;
 		}
-		else if (player->IsCounter == 0) // If a terrorist is dead, add one to terrorist dead count
+		else if (player->Team == TERRORISTS) // If a terrorist is dead, add one to terrorist dead count
 		{
 			if (player->IsDead)
 				*TerroristDeadCount = *TerroristDeadCount + 1;
@@ -2496,6 +2393,7 @@ void makeHit(int hitBy, int playerHit)
 	Player *hittedPlayer = &AllPlayers[playerHit];
 	Player *shooterPlayer = &AllPlayers[hitBy];
 
+	// Apply more or less damage with the location of the bullet
 	if (shooterPlayer->IsHeadShot)
 	{
 		hitType = 1;
@@ -2511,16 +2409,19 @@ void makeHit(int hitBy, int playerHit)
 		hitType = 3;
 
 	bool makeHeadSetSound = false;
+	// If an armor was touched
 	if ((hitType == 0 && hittedPlayer->armor != 0) || (hitType == 1 && hittedPlayer->haveHeadset))
 	{
+		// Reduce damage of the bullet
 		int oldDamage = Damage;
 		Damage *= AllGuns[shooterPlayer->startGunIdRaycast].penetration / 100.0;
+		// Remove headset
 		if (hitType == 1)
 		{
 			hittedPlayer->haveHeadset = false;
 			makeHeadSetSound = true;
 		}
-		else
+		else // Or reduce armor durability
 		{
 			hittedPlayer->armor -= oldDamage - Damage;
 			if (hittedPlayer->armor < 0)
@@ -2528,24 +2429,17 @@ void makeHit(int hitBy, int playerHit)
 		}
 	}
 
-	int newHealth = hittedPlayer->Health - Damage;
-
-	setPlayerHealth(playerHit, newHealth);
+	// Set hitted player life
+	setPlayerHealth(playerHit, hittedPlayer->Health - Damage);
 	checkAfterDamage(hitBy, playerHit, true);
 
-	/*if (AllPlayers[playerHit].Health == 0)
-	{
-		AllPlayers[0].KillCount++;
-		AllPlayers[playerHit].DeathCount++;
-		if (currentMenu == 2)
-			UpdateBottomScreenOneFrame += 8;
-	}*/
-
+	// Get sound volume and panning
 	int Panning, Volume;
 	GetPanning(hittedPlayer->Id, &Panning, &Volume, AllPlayers, xWithoutYForAudio, zWithoutYForAudio, 0.10);
 
+	// Play sounds
 	if (hitType == 0)
-		Play3DSound(SFX_FLESH_IMPACT, Volume, Panning); // Check with kevlar
+		Play3DSound(SFX_FLESH_IMPACT, Volume, Panning); // TODO Check kevlar sound
 	else if (hitType == 1)
 	{
 		if (!makeHeadSetSound)
@@ -2570,23 +2464,25 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
 		Player *player = &AllPlayers[i];
 
 		// Check for an empty player slot
-		if (player->Id == -1)
+		if (player->Id == UNUSED)
 		{
 			iprintf("\nCreating player Id: %d", NewId);
 			// Create player (3d model, physics, animations)
 			// NE_ModelAnimSetFrame(AllPlayers[i].PlayerModel, 2);
 
+			// Set player collision size
 			player->PlayerCollisionBox.xSize = 0.35;
 			player->PlayerCollisionBox.ySize = 0.9;
 			player->PlayerCollisionBox.zSize = 0.35;
 
+			// Set default weapon in his hand
 			player->currentGunInInventory = 1;
 			// Init inventory
 			player->AllGunsInInventory[0] = 0;
 			player->AllGunsInInventory[1] = 1;
 			for (int i2 = 2; i2 < inventoryCapacity; i2++)
 			{
-				player->AllGunsInInventory[i2] = -1;
+				player->AllGunsInInventory[i2] = EMPTY;
 			}
 			ResetGunsAmmo(i);
 
@@ -2642,8 +2538,8 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
 			// Init raycasting values
 			player->StopAt = 30;
 			player->ScanFinished = true;
-			player->target = -1;
-			player->lastSeenTarget = -1;
+			player->target = NO_PLAYER;
+			player->lastSeenTarget = NO_PLAYER;
 			// player->Money = allPartyModes[currentPartyMode].startMoney; //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// TODO
 			player->Money = 8000;
 

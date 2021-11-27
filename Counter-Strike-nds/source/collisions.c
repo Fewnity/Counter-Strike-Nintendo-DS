@@ -6,15 +6,7 @@
 #include "movements.h"
 #include "party.h"
 
-Stairs *AllStairsRef;
-Wall *AllWallsCollisionsRef;
-Player *AllPlayersRefForCollisions;
 PhysicalGrenade *grenades[GrenadeCount];
-
-void SetPlayerForCollisions()
-{
-    AllPlayersRefForCollisions = GetPlayers();
-}
 
 void CalculateAllTriggerColBoxs()
 {
@@ -290,7 +282,6 @@ void CalculateAllTriggerColBoxs()
 
 void AddAllCollisions()
 {
-    AllWallsCollisionsRef = GetWalls();
     CreateWall(9.38846, -1.4, -8.007592, 35.77919, 1, 33.08558, 3, 0);
     CreateWall(3.991, 0.285, 4.786, 2.423, 2.423, 2.423, 3, 1);
     CreateWall(5.41, 1.107, 5.980854, 0.4, 4, 30.68171, 3, 2);
@@ -505,7 +496,6 @@ void AddAllCollisions()
 
 void AddAllStairs()
 {
-    AllStairsRef = GetStairs();
     CreateStairs(-1.257, 5.2, 8.419, 21.325, 0, 3.211, 2, 0);
     CreateStairs(-1.252, -0.85, 3.576, 6.8, 0, 0.388, 1, 1);
     CreateStairs(5.3, 6.45, 21.313, 56.32, 3.24, 3.24, 1, 2);
@@ -541,7 +531,7 @@ void AddAllStairs()
 
 void CreateStairs(float xSideA, float xSideB, float zSideA, float zSideB, float startY, float endY, int direction, int index)
 {
-    Stairs *newStairs = &AllStairsRef[index];
+    Stairs *newStairs = &AllStairs[index];
 
     newStairs->xSideA = xSideA;
     newStairs->xSideB = xSideB;
@@ -554,7 +544,7 @@ void CreateStairs(float xSideA, float xSideB, float zSideA, float zSideB, float 
 
 void CreateWall(float xPos, float yPos, float zPos, float xSize, float ySize, float zSize, int Zone, int index)
 {
-    Wall *newWall = &AllWallsCollisionsRef[index];
+    Wall *newWall = &AllWallsCollisions[index];
 
     newWall->WallModel = NE_ModelCreate(NE_Static);
     newWall->WallPhysics = NE_PhysicsCreate(NE_BoundingBox);
@@ -593,7 +583,7 @@ void CalculatePlayerColBox(int PlayerId)
 
 void CalculateWallColBox(int WallId)
 {
-    Wall *newWall = &AllWallsCollisionsRef[WallId];
+    Wall *newWall = &AllWallsCollisions[WallId];
 
     float xSize = newWall->WallCollisionBox.xSize;
     float ySize = newWall->WallCollisionBox.ySize;
@@ -636,7 +626,7 @@ void checkPlayerOcclusionZone(int playerIndex, int playerCameraTarget)
 {
     // Player *player = &AllPlayers[playerIndex];
     // Player *player = &AllPlayers[playerIndex];
-    if (AllPlayersRefForCollisions[playerCameraTarget].xPos <= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxXRangeA && AllPlayersRefForCollisions[playerCameraTarget].xPos >= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxXRangeB && AllPlayersRefForCollisions[playerCameraTarget].zPos <= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxZRangeA && AllPlayersRefForCollisions[playerCameraTarget].zPos >= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxZRangeB)
+    if (AllPlayers[playerCameraTarget].xPos <= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxXRangeA && AllPlayers[playerCameraTarget].xPos >= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxXRangeB && AllPlayers[playerCameraTarget].zPos <= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxZRangeA && AllPlayers[playerCameraTarget].zPos >= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxZRangeB)
     {
         // printf("HEY");
         //*CurrentOcclusionZone = TriggersIndex;
@@ -647,7 +637,7 @@ void checkPlayerOcclusionZone(int playerIndex, int playerCameraTarget)
         // Check occlusion zones
         for (int TriggersIndex = 0; TriggersIndex < OcclusionZonesCount; TriggersIndex++)
         {
-            if (AllPlayersRefForCollisions[playerCameraTarget].xPos <= AllTriggersCollisions[TriggersIndex].BoxXRangeA && AllPlayersRefForCollisions[playerCameraTarget].xPos >= AllTriggersCollisions[TriggersIndex].BoxXRangeB && AllPlayersRefForCollisions[playerCameraTarget].zPos <= AllTriggersCollisions[TriggersIndex].BoxZRangeA && AllPlayersRefForCollisions[playerCameraTarget].zPos >= AllTriggersCollisions[TriggersIndex].BoxZRangeB)
+            if (AllPlayers[playerCameraTarget].xPos <= AllTriggersCollisions[TriggersIndex].BoxXRangeA && AllPlayers[playerCameraTarget].xPos >= AllTriggersCollisions[TriggersIndex].BoxXRangeB && AllPlayers[playerCameraTarget].zPos <= AllTriggersCollisions[TriggersIndex].BoxZRangeA && AllPlayers[playerCameraTarget].zPos >= AllTriggersCollisions[TriggersIndex].BoxZRangeB)
             {
                 AllPlayers[playerIndex].CurrentOcclusionZone = TriggersIndex;
                 break;
@@ -685,7 +675,7 @@ void CheckStairs(int StairsCount, int *CanJump, bool *isInDownStairs)
     bool firstScan = true;
     for (int i = LastStairs; i < StairsCount; i++)
     {
-        Stairs *stairs = &AllStairsRef[i];
+        Stairs *stairs = &AllStairs[i];
         // bool IsOn = AllPlayersRefForCollisions[0].zPos >= AllStairsRef[i].zSideA && AllPlayersRefForCollisions[0].zPos <= AllStairsRef[i].zSideB && AllPlayersRefForCollisions[0].xPos >= AllStairsRef[i].xSideA && AllPlayersRefForCollisions[0].xPos <= AllStairsRef[i].xSideB;
         if (localPlayer->zPos >= stairs->zSideA && localPlayer->zPos <= stairs->zSideB && localPlayer->xPos >= stairs->xSideA && localPlayer->xPos <= stairs->xSideB)
         {
@@ -746,7 +736,7 @@ bool CheckStairsForGrenades(PhysicalGrenade *grenade, int StairsCount)
         float xpos = grenade->Model->x / 4096.0;
         float ypos = grenade->Model->y / 4096.0;
         float zpos = grenade->Model->z / 4096.0;
-        Stairs *stairs = &AllStairsRef[i];
+        Stairs *stairs = &AllStairs[i];
 
         if (zpos >= stairs->zSideA && zpos <= stairs->zSideB && xpos >= stairs->xSideA && xpos <= stairs->xSideB)
         {
@@ -902,7 +892,7 @@ int Raycast(int playerId)
                         }
                     }
 
-                    if (testedPlayer->IsCounter == shooterPlayer->IsCounter && !allPartyModes[currentPartyMode].teamDamage)
+                    if (testedPlayer->Team == shooterPlayer->Team && !allPartyModes[currentPartyMode].teamDamage)
                         break;
 
                     if (NextYRayPoint - testedPlayer->PlayerCollisionBox.BoxYRangeB >= 5480)

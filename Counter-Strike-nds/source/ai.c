@@ -382,7 +382,7 @@ void checkForPlayer()
                     scannedPlayerCount++;
                     playerToCheck->allPlayerScanned[randomPlayerToCheck] = true;
 
-                    if (AllPlayers[randomPlayerToCheck].IsCounter == -1 || AllPlayers[randomPlayerToCheck].IsCounter == playerToCheck->IsCounter || randomPlayerToCheck == currentAiToCheck)
+                    if (AllPlayers[randomPlayerToCheck].Team == SPECTATOR || AllPlayers[randomPlayerToCheck].Team == playerToCheck->Team || randomPlayerToCheck == currentAiToCheck)
                     {
                         continue;
                     }
@@ -459,7 +459,7 @@ void checkForPlayer()
                         printf("(%d)GO TO BOMB SITE B\n", currentAiToCheck);
                     }
                 }
-                else if (playerToCheck->IsCounter == 1 && BombPlanted && currentDefuserIndex == -1)
+                else if (playerToCheck->Team == COUNTERTERRORISTS && BombPlanted && currentDefuserIndex == -1)
                 {
                     SetDefuser(currentAiToCheck);
                 }
@@ -481,7 +481,7 @@ void SetRandomDefuser()
         for (int i = 1; i < MaxPlayer; i++)
         {
             Player *player = &AllPlayers[i];
-            if (player->IsCounter == 1 && !player->IsDead && player->target == -1)
+            if (player->Team == COUNTERTERRORISTS && !player->IsDead && player->target == -1)
             {
                 canAffectDefuser = true;
                 break;
@@ -491,7 +491,7 @@ void SetRandomDefuser()
         {
             int newDefuser = random() % 6;
             Player *defuser = &AllPlayers[newDefuser];
-            while (defuser->IsCounter != 1 || defuser->IsDead || defuser->target != -1)
+            while (defuser->Team != COUNTERTERRORISTS || defuser->IsDead || defuser->target != -1)
             {
                 defuser = &AllPlayers[newDefuser];
                 newDefuser = random() % 6;
@@ -592,7 +592,7 @@ void checkShopForBot()
         Player *player = &AllPlayers[i];
         if (player->Id != -1 && player->isAi)
         {
-            if (player->IsCounter == 1)
+            if (player->Team == COUNTERTERRORISTS)
             {
                 int random = 1 + rand() % 3;
                 if (cheapestGunsCostCounter[random] <= player->Money && player->AllGunsInInventory[2] == -1)

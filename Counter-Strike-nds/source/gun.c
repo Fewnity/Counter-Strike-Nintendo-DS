@@ -889,7 +889,7 @@ void findGun(int gunCategory, int playerIndex)
     while (gunFound == -1)
     {
         int random2;
-        if (AllPlayers[playerIndex].IsCounter == 1)
+        if (AllPlayers[playerIndex].Team == COUNTERTERRORISTS)
         {
             random2 = rand() % gunCountCounter[gunCategory];
         }

@@ -10,14 +10,11 @@
 #include "gun.h"
 #include "grenade.h"
 
-Button *AllButtonsRefForUI;
 CheckBox *AllCheckBoxsRefForUI;
 NE_Sprite **TopScreenSpritesForUI;
 NE_Sprite **BottomScreenSpritesForUI;
 NE_Material **BottomScreenSpritesMaterialsForUI;
 NE_Palette **PalettesForUI;
-Player *AllPlayersRefForUI;
-Gun *AllGunsRefForUI;
 
 int ShopCategory = -1; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
 int WeaponCount;
@@ -27,21 +24,11 @@ int serverListOffset = 0;
 Vector2 LastTouch;
 
 bool isShowingMap = false;
-bool isShowingKeyBoard = true;
+bool isShowingKeyBoard = false;
 
 Vector2 GetLastTouch()
 {
     return LastTouch;
-}
-
-void SetPlayerForUI()
-{
-    AllPlayersRefForUI = GetPlayers();
-}
-
-void SetButtonsRefForUI()
-{
-    AllButtonsRefForUI = GetButtons();
 }
 
 void SetSpritesForUI()
@@ -50,7 +37,6 @@ void SetSpritesForUI()
     BottomScreenSpritesForUI = GetSpritesBottom();
     BottomScreenSpritesMaterialsForUI = GetBottomScreenSpritesMaterials();
     PalettesForUI = GetPalettes();
-    AllGunsRefForUI = GetGuns();
 }
 
 void SetCheckBoxsRefForUI()
@@ -74,7 +60,7 @@ void SetWeaponCountFromCategory()
 
     for (int i = 0; i < GunCount; i++)
     {
-        if (AllGunsRefForUI[i].gunCategory == ShopCategory && (AllPlayersRefForUI[0].IsCounter == AllGunsRefForUI[i].isForCounterTerrorists || AllGunsRefForUI[i].isForCounterTerrorists == -1))
+        if (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].isForCounterTerrorists || AllGuns[i].isForCounterTerrorists == -1))
             WeaponCount++;
     }
 }
@@ -147,51 +133,51 @@ void ChangeMenu(int menuId)
     if (menuId == 0)
     {
         // Show map button
-        /*AllButtonsRefForUI[0].xPos = 15;
-        AllButtonsRefForUI[0].yPos = 40;
-        AllButtonsRefForUI[0].xSize = 100;
-        AllButtonsRefForUI[0].ySize = 24;
-        AllButtonsRefForUI[0].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[0].parameter = 1;*/
+        /*AllButtons[0].xPos = 15;
+        AllButtons[0].yPos = 40;
+        AllButtons[0].xSize = 100;
+        AllButtons[0].ySize = 24;
+        AllButtons[0].OnClick = &ChangeMenu;
+        AllButtons[0].parameter = 1;*/
 
         // Show score button
-        AllButtonsRefForUI[0].xPos = 15;
-        AllButtonsRefForUI[0].yPos = 72;
-        AllButtonsRefForUI[0].xSize = 100;
-        AllButtonsRefForUI[0].ySize = 24;
-        AllButtonsRefForUI[0].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[0].parameter = 2;
+        AllButtons[0].xPos = 15;
+        AllButtons[0].yPos = 72;
+        AllButtons[0].xSize = 100;
+        AllButtons[0].ySize = 24;
+        AllButtons[0].OnClick = &ChangeMenu;
+        AllButtons[0].parameter = 2;
 
         // Open shop button
-        AllButtonsRefForUI[1].xPos = 15;
-        AllButtonsRefForUI[1].yPos = 104;
-        AllButtonsRefForUI[1].xSize = 100;
-        AllButtonsRefForUI[1].ySize = 24;
-        AllButtonsRefForUI[1].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[1].parameter = 3;
+        AllButtons[1].xPos = 15;
+        AllButtons[1].yPos = 104;
+        AllButtons[1].xSize = 100;
+        AllButtons[1].ySize = 24;
+        AllButtons[1].OnClick = &ChangeMenu;
+        AllButtons[1].parameter = 3;
 
         // Settings button
-        AllButtonsRefForUI[2].xPos = 15;
-        AllButtonsRefForUI[2].yPos = 136;
-        AllButtonsRefForUI[2].xSize = 100;
-        AllButtonsRefForUI[2].ySize = 24;
-        AllButtonsRefForUI[2].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[2].parameter = 4;
+        AllButtons[2].xPos = 15;
+        AllButtons[2].yPos = 136;
+        AllButtons[2].xSize = 100;
+        AllButtons[2].ySize = 24;
+        AllButtons[2].OnClick = &ChangeMenu;
+        AllButtons[2].parameter = 4;
 
         // Quit game button
-        AllButtonsRefForUI[3].xPos = 15;
-        AllButtonsRefForUI[3].yPos = 168;
-        AllButtonsRefForUI[3].xSize = 100;
-        AllButtonsRefForUI[3].ySize = 24;
-        AllButtonsRefForUI[3].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[3].parameter = 5;
+        AllButtons[3].xPos = 15;
+        AllButtons[3].yPos = 168;
+        AllButtons[3].xSize = 100;
+        AllButtons[3].ySize = 24;
+        AllButtons[3].OnClick = &ChangeMenu;
+        AllButtons[3].parameter = 5;
 
-        AllButtonsRefForUI[4].xPos = 141;
-        AllButtonsRefForUI[4].yPos = 40;
-        AllButtonsRefForUI[4].xSize = 100;
-        AllButtonsRefForUI[4].ySize = 24;
-        AllButtonsRefForUI[4].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[4].parameter = 7;
+        AllButtons[4].xPos = 141;
+        AllButtons[4].yPos = 40;
+        AllButtons[4].xSize = 100;
+        AllButtons[4].ySize = 24;
+        AllButtons[4].OnClick = &ChangeMenu;
+        AllButtons[4].parameter = 7;
 
         NE_SpriteVisible(BottomScreenSpritesForUI[2], false);
         SetButtonToShow(5);
@@ -210,12 +196,12 @@ void ChangeMenu(int menuId)
         AllCheckBoxsRefForUI[0].value = false;
 
         // Set exit button
-        AllButtonsRefForUI[0].xPos = 200;
-        AllButtonsRefForUI[0].yPos = 10;
-        AllButtonsRefForUI[0].xSize = 56;
-        AllButtonsRefForUI[0].ySize = 20;
-        AllButtonsRefForUI[0].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[0].parameter = 0;
+        AllButtons[0].xPos = 200;
+        AllButtons[0].yPos = 10;
+        AllButtons[0].xSize = 56;
+        AllButtons[0].ySize = 20;
+        AllButtons[0].OnClick = &ChangeMenu;
+        AllButtons[0].parameter = 0;
 
         SetButtonToShow(1);
 
@@ -225,30 +211,30 @@ void ChangeMenu(int menuId)
     else if (menuId == 2) // Score board screen
     {
         // Set exit button
-        AllButtonsRefForUI[0].xPos = 200;
-        AllButtonsRefForUI[0].yPos = 2;
-        AllButtonsRefForUI[0].xSize = 56;
-        AllButtonsRefForUI[0].ySize = 20;
-        AllButtonsRefForUI[0].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[0].parameter = 0;
+        AllButtons[0].xPos = 200;
+        AllButtons[0].yPos = 2;
+        AllButtons[0].xSize = 56;
+        AllButtons[0].ySize = 20;
+        AllButtons[0].OnClick = &ChangeMenu;
+        AllButtons[0].parameter = 0;
 
-        if (AllPlayersRefForUI[0].IsCounter == -1)
+        if (AllPlayers[0].Team == -1)
         {
             // Join counter button
-            AllButtonsRefForUI[1].xPos = 18; // 128-20-90
-            AllButtonsRefForUI[1].yPos = 169;
-            AllButtonsRefForUI[1].xSize = 90;
-            AllButtonsRefForUI[1].ySize = 20;
-            AllButtonsRefForUI[1].OnClick = &SetTeam;
-            AllButtonsRefForUI[1].parameter = 1;
+            AllButtons[1].xPos = 18; // 128-20-90
+            AllButtons[1].yPos = 169;
+            AllButtons[1].xSize = 90;
+            AllButtons[1].ySize = 20;
+            AllButtons[1].OnClick = &SetTeam;
+            AllButtons[1].parameter = 1;
 
             // Join terrorists button
-            AllButtonsRefForUI[2].xPos = 148; // 128+20
-            AllButtonsRefForUI[2].yPos = 169;
-            AllButtonsRefForUI[2].xSize = 90;
-            AllButtonsRefForUI[2].ySize = 20;
-            AllButtonsRefForUI[2].OnClick = &SetTeam;
-            AllButtonsRefForUI[2].parameter = 0;
+            AllButtons[2].xPos = 148; // 128+20
+            AllButtons[2].yPos = 169;
+            AllButtons[2].xSize = 90;
+            AllButtons[2].ySize = 20;
+            AllButtons[2].OnClick = &SetTeam;
+            AllButtons[2].parameter = 0;
 
             SetButtonToShow(3);
         }
@@ -262,12 +248,12 @@ void ChangeMenu(int menuId)
         for (int buttonIndex = 0; buttonIndex < 6; buttonIndex++)
         {
             // Set all categories buttons
-            AllButtonsRefForUI[buttonIndex].xPos = (ScreenWidth / 2) * (buttonIndex / 3);
-            AllButtonsRefForUI[buttonIndex].yPos = ((198 - 23) / 3) * (buttonIndex % 3) + 23;
-            AllButtonsRefForUI[buttonIndex].xSize = ScreenWidth / 2;
-            AllButtonsRefForUI[buttonIndex].ySize = (198 - 23) / 3;
-            AllButtonsRefForUI[buttonIndex].OnClick = &OpenShopCategory;
-            AllButtonsRefForUI[buttonIndex].parameter = buttonIndex;
+            AllButtons[buttonIndex].xPos = (ScreenWidth / 2) * (buttonIndex / 3);
+            AllButtons[buttonIndex].yPos = ((198 - 23) / 3) * (buttonIndex % 3) + 23;
+            AllButtons[buttonIndex].xSize = ScreenWidth / 2;
+            AllButtons[buttonIndex].ySize = (198 - 23) / 3;
+            AllButtons[buttonIndex].OnClick = &OpenShopCategory;
+            AllButtons[buttonIndex].parameter = buttonIndex;
         }
         SetButtonToShow(6);
     }
@@ -286,7 +272,7 @@ void ChangeMenu(int menuId)
         BottomScreenSpritesMaterialsForUI[6] = NE_MaterialCreate();
         PalettesForUI[10] = NE_PaletteCreate();
         if (ShopCategory < 4)
-            NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], AllGunsRefForUI[GetSelectedGunShop()].texture, 1);
+            NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], AllGuns[GetSelectedGunShop()].texture, 1);
         if (ShopCategory == 5)
             NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], GetAllGrenades()[GetSelectedGunShop() - GunCount].texture, 1);
 
@@ -294,28 +280,28 @@ void ChangeMenu(int menuId)
         NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
 
         // Buy button
-        AllButtonsRefForUI[0].xPos = 88;
-        AllButtonsRefForUI[0].yPos = 170;
-        AllButtonsRefForUI[0].xSize = 80;
-        AllButtonsRefForUI[0].ySize = 20;
-        AllButtonsRefForUI[0].OnClick = &BuyWeapon;
-        AllButtonsRefForUI[0].parameter = 0;
+        AllButtons[0].xPos = 88;
+        AllButtons[0].yPos = 170;
+        AllButtons[0].xSize = 80;
+        AllButtons[0].ySize = 20;
+        AllButtons[0].OnClick = &BuyWeapon;
+        AllButtons[0].parameter = 0;
 
         // Left button
-        AllButtonsRefForUI[1].xPos = 48;
-        AllButtonsRefForUI[1].yPos = 170;
-        AllButtonsRefForUI[1].xSize = 30;
-        AllButtonsRefForUI[1].ySize = 20;
-        AllButtonsRefForUI[1].OnClick = &ChangeWeapon;
-        AllButtonsRefForUI[1].parameter = 1;
+        AllButtons[1].xPos = 48;
+        AllButtons[1].yPos = 170;
+        AllButtons[1].xSize = 30;
+        AllButtons[1].ySize = 20;
+        AllButtons[1].OnClick = &ChangeWeapon;
+        AllButtons[1].parameter = 1;
 
         // Right button
-        AllButtonsRefForUI[2].xPos = 88 + 80 + 10;
-        AllButtonsRefForUI[2].yPos = 170;
-        AllButtonsRefForUI[2].xSize = 30;
-        AllButtonsRefForUI[2].ySize = 20;
-        AllButtonsRefForUI[2].OnClick = &ChangeWeapon;
-        AllButtonsRefForUI[2].parameter = 0;
+        AllButtons[2].xPos = 88 + 80 + 10;
+        AllButtons[2].yPos = 170;
+        AllButtons[2].xSize = 30;
+        AllButtons[2].ySize = 20;
+        AllButtons[2].OnClick = &ChangeWeapon;
+        AllButtons[2].parameter = 0;
 
         SetButtonToShow(3);
     }
@@ -333,64 +319,64 @@ void ChangeMenu(int menuId)
         NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[8], PalettesForUI[15], (void *)reload_bin, 1);
 
         // Jump button
-        AllButtonsRefForUI[0].xPos = 2;
-        AllButtonsRefForUI[0].yPos = 30;
-        AllButtonsRefForUI[0].xSize = 36;
-        AllButtonsRefForUI[0].ySize = 36;
-        AllButtonsRefForUI[0].OnClick = &SetNeedJump;
-        AllButtonsRefForUI[0].parameter = 0;
+        AllButtons[0].xPos = 2;
+        AllButtons[0].yPos = 30;
+        AllButtons[0].xSize = 36;
+        AllButtons[0].ySize = 36;
+        AllButtons[0].OnClick = &SetNeedJump;
+        AllButtons[0].parameter = 0;
 
         // Reload button
-        AllButtonsRefForUI[1].xPos = 2;
-        AllButtonsRefForUI[1].yPos = 72;
-        AllButtonsRefForUI[1].xSize = 36;
-        AllButtonsRefForUI[1].ySize = 36;
-        AllButtonsRefForUI[1].OnClick = &startReloadGun;
-        AllButtonsRefForUI[1].parameter = 0;
+        AllButtons[1].xPos = 2;
+        AllButtons[1].yPos = 72;
+        AllButtons[1].xSize = 36;
+        AllButtons[1].ySize = 36;
+        AllButtons[1].OnClick = &startReloadGun;
+        AllButtons[1].parameter = 0;
 
         // Right button
-        AllButtonsRefForUI[2].xPos = 2;
-        AllButtonsRefForUI[2].yPos = 114;
-        AllButtonsRefForUI[2].xSize = 36;
-        AllButtonsRefForUI[2].ySize = 36;
-        AllButtonsRefForUI[2].OnClick = &ChangeGunInInventoryForLocalPlayer;
-        AllButtonsRefForUI[2].parameter = 0;
+        AllButtons[2].xPos = 2;
+        AllButtons[2].yPos = 114;
+        AllButtons[2].xSize = 36;
+        AllButtons[2].ySize = 36;
+        AllButtons[2].OnClick = &ChangeGunInInventoryForLocalPlayer;
+        AllButtons[2].parameter = 0;
 
         // Left button
-        AllButtonsRefForUI[3].xPos = 2;
-        AllButtonsRefForUI[3].yPos = 156;
-        AllButtonsRefForUI[3].xSize = 36;
-        AllButtonsRefForUI[3].ySize = 36;
-        AllButtonsRefForUI[3].OnClick = &ChangeGunInInventoryForLocalPlayer;
-        AllButtonsRefForUI[3].parameter = 1;
+        AllButtons[3].xPos = 2;
+        AllButtons[3].yPos = 156;
+        AllButtons[3].xSize = 36;
+        AllButtons[3].ySize = 36;
+        AllButtons[3].OnClick = &ChangeGunInInventoryForLocalPlayer;
+        AllButtons[3].parameter = 1;
 
         SetButtonToShow(4);
     }
     else if (menuId == 8) // Main menu
     {
         // Single player button
-        AllButtonsRefForUI[0].xPos = 40;
-        AllButtonsRefForUI[0].yPos = 40;
-        AllButtonsRefForUI[0].xSize = ScreenWidth - 80;
-        AllButtonsRefForUI[0].ySize = 24;
-        AllButtonsRefForUI[0].OnClick = &StartGame; // TODO Change this
-        AllButtonsRefForUI[0].parameter = 0;
+        AllButtons[0].xPos = 40;
+        AllButtons[0].yPos = 40;
+        AllButtons[0].xSize = ScreenWidth - 80;
+        AllButtons[0].ySize = 24;
+        AllButtons[0].OnClick = &StartGame; // TODO Change this
+        AllButtons[0].parameter = 0;
 
         // Multiplayer button
-        AllButtonsRefForUI[1].xPos = 40;
-        AllButtonsRefForUI[1].yPos = 87;
-        AllButtonsRefForUI[1].xSize = ScreenWidth - 80;
-        AllButtonsRefForUI[1].ySize = 24;
-        AllButtonsRefForUI[1].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[1].parameter = 9;
+        AllButtons[1].xPos = 40;
+        AllButtons[1].yPos = 87;
+        AllButtons[1].xSize = ScreenWidth - 80;
+        AllButtons[1].ySize = 24;
+        AllButtons[1].OnClick = &ChangeMenu;
+        AllButtons[1].parameter = 9;
 
         // Settings button
-        AllButtonsRefForUI[2].xPos = 40;
-        AllButtonsRefForUI[2].yPos = 135;
-        AllButtonsRefForUI[2].xSize = ScreenWidth - 80;
-        AllButtonsRefForUI[2].ySize = 24;
-        AllButtonsRefForUI[2].OnClick = &ChangeMenu;
-        AllButtonsRefForUI[2].parameter = 4;
+        AllButtons[2].xPos = 40;
+        AllButtons[2].yPos = 135;
+        AllButtons[2].xSize = ScreenWidth - 80;
+        AllButtons[2].ySize = 24;
+        AllButtons[2].OnClick = &ChangeMenu;
+        AllButtons[2].parameter = 4;
 
         // Hide quit button
         NE_SpriteVisible(BottomScreenSpritesForUI[2], false);
@@ -400,28 +386,28 @@ void ChangeMenu(int menuId)
     else if (menuId == 9) // Multiplayer screen
     {
         // Start game button
-        AllButtonsRefForUI[0].xPos = 40;
-        AllButtonsRefForUI[0].yPos = 160;
-        AllButtonsRefForUI[0].xSize = ScreenWidth - 80;
-        AllButtonsRefForUI[0].ySize = 24;
-        AllButtonsRefForUI[0].OnClick = &connectFromServerList; // TODO Change this
-        AllButtonsRefForUI[0].parameter = -1;
+        AllButtons[0].xPos = 40;
+        AllButtons[0].yPos = 160;
+        AllButtons[0].xSize = ScreenWidth - 80;
+        AllButtons[0].ySize = 24;
+        AllButtons[0].OnClick = &connectFromServerList; // TODO Change this
+        AllButtons[0].parameter = -1;
 
         // Up button
-        AllButtonsRefForUI[1].xPos = 62;
-        AllButtonsRefForUI[1].yPos = 127;
-        AllButtonsRefForUI[1].xSize = 40;
-        AllButtonsRefForUI[1].ySize = 24;
-        AllButtonsRefForUI[1].OnClick = &changeServer; // TODO Change this
-        AllButtonsRefForUI[1].parameter = 0;
+        AllButtons[1].xPos = 62;
+        AllButtons[1].yPos = 127;
+        AllButtons[1].xSize = 40;
+        AllButtons[1].ySize = 24;
+        AllButtons[1].OnClick = &changeServer; // TODO Change this
+        AllButtons[1].parameter = 0;
 
         // Down button
-        AllButtonsRefForUI[2].xPos = 159;
-        AllButtonsRefForUI[2].yPos = 127;
-        AllButtonsRefForUI[2].xSize = 40;
-        AllButtonsRefForUI[2].ySize = 24;
-        AllButtonsRefForUI[2].OnClick = &changeServer; // TODO Change this
-        AllButtonsRefForUI[2].parameter = 1;
+        AllButtons[2].xPos = 159;
+        AllButtons[2].yPos = 127;
+        AllButtons[2].xSize = 40;
+        AllButtons[2].ySize = 24;
+        AllButtons[2].OnClick = &changeServer; // TODO Change this
+        AllButtons[2].parameter = 1;
 
         // Show quit button
         NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
@@ -475,7 +461,7 @@ void changeServer(int up)
 
 void BuyWeapon(int unused)
 {
-    if (Connection != 0)
+    if (Connection != OFFLINE)
     {
         SetSendBuyWeapon(true);
     }
@@ -489,14 +475,13 @@ void BuyWeapon(int unused)
 void ChangeWeapon(int Left)
 {
     int Selected = GetSelectedGunShop();
-    // int Selected = -1;
     bool FoundNewGun = false;
     int FirstGunFound = -1;
     if (Left == 0)
     {
         for (int i = 0; i < GunCount + equipementCount + shopGrenadeCount; i++)
         {
-            if ((ShopCategory < 4 && i < GunCount && (AllGunsRefForUI[i].gunCategory == ShopCategory && (AllPlayersRefForUI[0].IsCounter == AllGunsRefForUI[i].isForCounterTerrorists || AllGunsRefForUI[i].isForCounterTerrorists == -1))) || (ShopCategory == 5 && i >= GunCount && (AllPlayersRefForUI[0].IsCounter == GetAllGrenades()[i - GunCount].isForCounterTerrorists || GetAllGrenades()[i - GunCount].isForCounterTerrorists == -1)))
+            if ((ShopCategory < 4 && i < GunCount && (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].isForCounterTerrorists || AllGuns[i].isForCounterTerrorists == -1))) || (ShopCategory == 5 && i >= GunCount && (AllPlayers[0].Team == GetAllGrenades()[i - GunCount].isForCounterTerrorists || GetAllGrenades()[i - GunCount].isForCounterTerrorists == -1)))
             {
                 if (FirstGunFound == -1)
                     FirstGunFound = i;
@@ -514,7 +499,7 @@ void ChangeWeapon(int Left)
     {
         for (int i = GunCount + equipementCount + shopGrenadeCount; i > -1; i--)
         {
-            if ((ShopCategory < 4 && i < GunCount && (AllGunsRefForUI[i].gunCategory == ShopCategory && (AllPlayersRefForUI[0].IsCounter == AllGunsRefForUI[i].isForCounterTerrorists || AllGunsRefForUI[i].isForCounterTerrorists == -1))) || (ShopCategory == 5 && i >= GunCount && (AllPlayersRefForUI[0].IsCounter == GetAllGrenades()[i - GunCount].isForCounterTerrorists || GetAllGrenades()[i - GunCount].isForCounterTerrorists == -1)))
+            if ((ShopCategory < 4 && i < GunCount && (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].isForCounterTerrorists || AllGuns[i].isForCounterTerrorists == -1))) || (ShopCategory == 5 && i >= GunCount && (AllPlayers[0].Team == GetAllGrenades()[i - GunCount].isForCounterTerrorists || GetAllGrenades()[i - GunCount].isForCounterTerrorists == -1)))
             {
                 if (FirstGunFound == -1)
                     FirstGunFound = i;
@@ -537,7 +522,7 @@ void ChangeWeapon(int Left)
     BottomScreenSpritesMaterialsForUI[6] = NE_MaterialCreate();
     PalettesForUI[10] = NE_PaletteCreate();
     if (ShopCategory < 4)
-        NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], AllGunsRefForUI[Selected].texture, 1);
+        NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], AllGuns[Selected].texture, 1);
     else if (ShopCategory == 5)
         NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], GetAllGrenades()[Selected - GunCount].texture, 1);
 
@@ -548,9 +533,9 @@ void ChangeWeapon(int Left)
 void SetTeam(int i)
 {
     SetWaitForTeamResponse(true);
-    AllButtonsRefForUI[1].isHidden = true;
-    AllButtonsRefForUI[2].isHidden = true;
-    AllPlayersRefForUI[0].IsCounter = i; //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////REMOVE
+    AllButtons[1].isHidden = true;
+    AllButtons[2].isHidden = true;
+    AllPlayers[0].Team = i; //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////REMOVE
     SetTempTeam(i);
     SetSendTeam(true);
     // SetUpdateBottomScreenOneFrame(4);
@@ -577,9 +562,9 @@ void ReadTouchScreen(uint32 keysdown, uint32 keys, uint32 keysup, int *currentMe
         // Check for all buttons click
         for (int i = 0; i < *ButtonToShow; i++)
         {
-            if (!AllButtonsRefForUI[i].isHidden && (keysdown & KEY_TOUCH && touch.px >= AllButtonsRefForUI[i].xPos && touch.px <= AllButtonsRefForUI[i].xPos + AllButtonsRefForUI[i].xSize && touch.py >= AllButtonsRefForUI[i].yPos && touch.py <= AllButtonsRefForUI[i].yPos + AllButtonsRefForUI[i].ySize))
+            if (!AllButtons[i].isHidden && (keysdown & KEY_TOUCH && touch.px >= AllButtons[i].xPos && touch.px <= AllButtons[i].xPos + AllButtons[i].xSize && touch.py >= AllButtons[i].yPos && touch.py <= AllButtons[i].yPos + AllButtons[i].ySize))
             {
-                AllButtonsRefForUI[i].OnClick(AllButtonsRefForUI[i].parameter);
+                AllButtons[i].OnClick(AllButtons[i].parameter);
                 return;
             }
         }
@@ -720,7 +705,7 @@ void drawTopScreenUI()
         for (int i = 1; i < MaxPlayer; i++)
         {
             // If the other player is in game
-            if (AllPlayers[i].Id != -1 && AllPlayers[i].IsCounter != -1 && !AllPlayers[i].IsDead)
+            if (AllPlayers[i].Id != UNUSED && AllPlayers[i].Team != SPECTATOR && !AllPlayers[i].IsDead)
             {
                 // int xPos = map(AllPlayers[i].xPos, -44, 56, 2, 189);
                 // int ypos = map(AllPlayers[i].zPos, -36, 67, 12, 190);
@@ -732,7 +717,7 @@ void drawTopScreenUI()
                 float ypos3 = ScreenCenterHeight + ((ypos2 - ypos) * -zWithoutYForMap + (xPos2 - xPos) * -xWithoutYForMap) / 2;
 
                 // Set point color and draw it
-                if (AllPlayers[i].IsCounter == AllPlayers[0].IsCounter)
+                if (AllPlayers[i].Team == AllPlayers[0].Team)
                     NE_2DDrawTexturedQuadColor(xPos3 - 4, ypos3 - 2, xPos3 + 2, ypos3 + 4, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 31)); // Friends points
                 else
                     NE_2DDrawTexturedQuadColor(xPos3 - 4, ypos3 - 2, xPos3 + 2, ypos3 + 4, 1, BottomScreenSpritesMaterials[2], RGB15(31, 0, 0)); // Enemies points
@@ -771,14 +756,31 @@ void drawTopScreenUI()
             char CPU[40];
 
             // sprintf(CPU, "CPU : %d, Zone : %d", NE_GetCPUPercent(), localPlayer->CurrentOcclusionZone);
-            // sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
+            sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
+            // sprintf(CPU, "z : %d, Zone : %d", AllZones[AllPlayers[0].CurrentOcclusionZone], localPlayer->CurrentOcclusionZone);
+
             // sprintf(CPU, "curDefuserI : %d chkA%d chkB%d", currentDefuserIndex, bombCheckedInA, bombCheckedInB);
 
             // sprintf(CPU, "Cur gun : %d %d", AllPlayers[CurrentCameraPlayer].currentGunInInventory, AllPlayers[CurrentCameraPlayer].AllGunsInInventory[AllPlayers[CurrentCameraPlayer].currentGunInInventory]);
 
             // sprintf(CPU, "Dis 0 & 1 : %d, 1 target : %d", GetDistanceBewteenTwoPlayers(0, 1), AllPlayers[1].target);
+            // sprintf(CPU, "Pos : %f %f %f", xWithoutYForOcclusionSide1 + localPlayer->xPos, zWithoutYForOcclusionSide1 + localPlayer->zPos, xWithoutYForOcclusionSide2 + localPlayer->xPos);
+            // sprintf(CPU, "Pos : %f %f %f", xWithoutYForOcclusionSide1 + localPlayer->xPos, zWithoutYForOcclusionSide1 + localPlayer->zPos, xWithoutYForOcclusionSide2 + localPlayer->xPos);
 
-            sprintf(CPU, "Pos : %f %f %f", localPlayer->xPos, localPlayer->yPos, localPlayer->zPos);
+            /*bool inFov = false;
+            for (int i2 = 0; i2 < 4; i2++)
+            {
+                if (PointInTriangle(AllOcclusionZone[0].angles[i2].x, AllOcclusionZone[0].angles[i2].y, AllPlayers[0].xPos, AllPlayers[0].zPos, xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos, xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos))
+                {
+                    inFov = true;
+                    break;
+                }
+            }
+            sprintf(CPU, "IN FOV : %d", inFov);*/
+
+            /*CalculatePlayerPosition(2);
+            bool tes = PointInTriangle(AllPlayers[2].xPos, AllPlayers[2].zPos, AllPlayers[0].xPos, AllPlayers[0].zPos, xWithoutYForOcclusionSide1 * 10 + localPlayer->xPos, zWithoutYForOcclusionSide1 * 10 + localPlayer->zPos, xWithoutYForOcclusionSide2 * 10 + localPlayer->xPos, zWithoutYForOcclusionSide2 * 10 + localPlayer->zPos);
+            sprintf(CPU, "Pos : %d", tes);*/
             // sprintf(CPU, "Look : %f %f %f", x, y, z);
             // sprintf(CPU, "Look : %d %f", (int)localPlayer->Angle % 512, CameraAngleY);
 
@@ -839,7 +841,8 @@ void drawTopScreenUI()
             {
                 // sprintf(CPU2 + strlen(CPU2), "b%d: hB:%d pB%d bT%d +%d\n", i, AllPlayers[i].haveBomb, AllPlayers[i].isPlantingBomb, AllPlayers[i].bombTimer, AllPlayers[i].Health);
                 //  sprintf(CPU2 + strlen(CPU2), "b%d: g0:%d g1:%d +%d\n", i, AllPlayers[i].AllGunsInInventory[0], AllPlayers[i].AllGunsInInventory[1], AllPlayers[i].Health);
-                sprintf(CPU2 + strlen(CPU2), "b%d: s0:%d s1:%d s2:%d\n", i, AllPlayers[i].PlayerPhysic->xspeed, AllPlayers[i].PlayerPhysic->yspeed, AllPlayers[i].PlayerPhysic->zspeed);
+                // sprintf(CPU2 + strlen(CPU2), "b%d: s0:%d s1:%d s2:%d\n", i, AllPlayers[i].PlayerPhysic->xspeed, AllPlayers[i].PlayerPhysic->yspeed, AllPlayers[i].PlayerPhysic->zspeed);
+                sprintf(CPU2 + strlen(CPU2), "%s\n", AllPlayers[i].name);
             }
 
             NE_TextPrint(0,        // Font slot
@@ -985,7 +988,7 @@ void drawTopScreenUI()
             }
         }
         Player *selectPlayer = &AllPlayers[CurrentCameraPlayer];
-        if (selectPlayer->IsCounter != -1)
+        if (selectPlayer->Team != SPECTATOR)
         {
             if (!selectPlayer->IsDead)
             {
@@ -1072,7 +1075,7 @@ void drawTopScreenUI()
                 ShowMuzzle--;
         }
         // TODO MERGE UP AND DONW
-        /*if (GetPlayers()[0].IsCounter != -1)
+        /*if (GetPlayers()[0].Team != -1)
         {
             if (CurrentScopeLevel == 0) // Draw gun if player doesn't aim with his gun
             {
@@ -1129,7 +1132,7 @@ void drawTopScreenUI()
             if (grenades[i] != NULL && grenades[i]->GrenadeType == 1 && grenades[i]->Timer == 0)
             {
                 // Calculate distances
-                float smokeDistance = sqrtf(powf(GetPlayers()[0].PlayerModel->x - grenades[i]->Model->x, 2.0) + powf(GetPlayers()[0].PlayerModel->y - grenades[i]->Model->y, 2.0) + powf(GetPlayers()[0].PlayerModel->z - grenades[i]->Model->z, 2.0)) / 26000.0; // fFor smoke detection
+                float smokeDistance = sqrtf(powf(AllPlayers[0].PlayerModel->x - grenades[i]->Model->x, 2.0) + powf(AllPlayers[0].PlayerModel->y - grenades[i]->Model->y, 2.0) + powf(AllPlayers[0].PlayerModel->z - grenades[i]->Model->z, 2.0)) / 26000.0; // fFor smoke detection
 
                 // Set a minimum limit to the smoke detection distance
                 if (smokeDistance > 1)
@@ -1219,7 +1222,7 @@ void drawBottomScreenUI()
 
         // Draw menu background
         NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
-        if (currentMenu == 1) // Map menu
+        /*if (currentMenu == 1) // Map menu
         {
             // Draw checkbox
             int CheckBoxXPosition = AllCheckBoxs[0].xPos, CheckBoxYPosition = AllCheckBoxs[0].yPos, CheckBoxXSize = AllCheckBoxs[0].xSize, CheckBoxYSize = AllCheckBoxs[0].ySize;
@@ -1230,13 +1233,13 @@ void drawBottomScreenUI()
 
             for (int i = 0; i < MaxPlayer; i++)
             {
-                if (AllPlayers[i].Id != -1 && AllPlayers[i].IsCounter != -1 && !AllPlayers[i].IsDead)
+                if (AllPlayers[i].Id != -1 && AllPlayers[i].Team != SPECTATOR && !AllPlayers[i].IsDead)
                 {
                     int xPos = map(AllPlayers[i].xPos, -44, 56, 2, 189);
                     int ypos = map(AllPlayers[i].zPos, -36, 67, 12, 190);
                     if (i == 0)
                         NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 0)); // Background
-                    else if (AllPlayers[i].IsCounter == AllPlayers[0].IsCounter)
+                    else if (AllPlayers[i].Team == AllPlayers[0].Team)
                         NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 31)); // Background
                     else
                         NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(31, 0, 0)); // Background
@@ -1269,7 +1272,8 @@ void drawBottomScreenUI()
                          NE_White, // Color
                          "map");
         }
-        else if (currentMenu == 0) // Draw main menu
+        else */
+        if (currentMenu == 0) // Draw main menu
         {
             // Draw buttons
             for (int i = 0; i < ButtonToShow; i++)
@@ -1319,7 +1323,7 @@ void drawBottomScreenUI()
         }
         else if (currentMenu == 2) // Draw scoreboard menu
         {
-            if (!WaitForTeamResponse && localPlayer->IsCounter == -1)
+            if (!WaitForTeamResponse && localPlayer->Team == SPECTATOR)
                 ButtonToShow = 3;
             else if (!WaitForTeamResponse) /////////////////////////////////////////////////////////////////////////////////////////////CHECK THIS
                 ButtonToShow = 1;
@@ -1368,7 +1372,7 @@ void drawBottomScreenUI()
             int Count1 = 0;
             for (int i = 0; i < MaxPlayer; i++)
             {
-                if (AllPlayers[i].IsCounter == 1)
+                if (AllPlayers[i].Team == COUNTERTERRORISTS)
                 {
                     int y = 6 + Count1 * 3;
 
@@ -1406,7 +1410,7 @@ void drawBottomScreenUI()
             int Count2 = 0;
             for (int i = 0; i < MaxPlayer; i++)
             {
-                if (AllPlayers[i].IsCounter == 0)
+                if (AllPlayers[i].Team == TERRORISTS)
                 {
                     int y = 6 + Count2 * 3;
 
@@ -1429,7 +1433,7 @@ void drawBottomScreenUI()
             }
 
             // Show join team texts
-            if (localPlayer->IsCounter == -1 && !WaitForTeamResponse)
+            if (localPlayer->Team == SPECTATOR && !WaitForTeamResponse)
             {
                 NE_TextPrint(0,        // Font slot
                              6, 22,    // Coordinates x(column), y(row)
@@ -1684,7 +1688,7 @@ void drawBottomScreenUI()
                          NE_White, // Color
                          "Settings");
         }
-        else if (currentMenu == 9) // Draw main menu
+        else if (currentMenu == 9) // Draw server list
         {
             // Draw buttons
             for (int i = 0; i < ButtonToShow; i++)

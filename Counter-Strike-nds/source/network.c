@@ -313,7 +313,7 @@ void ReadServerData()
                     int ParsedPlayerId = -1;
                     sscanf(arr[0], "%d", &ParsedPlayerId);
 
-                    // Get IsCounter value
+                    // Get Team value
                     int ParsedIsCounter = -1;
                     sscanf(arr[2], "%d", &ParsedIsCounter);
 
@@ -321,7 +321,7 @@ void ReadServerData()
                     for (int i = 0; i < MaxPlayer; i++)
                         if (AllPlayers[i].Id == ParsedPlayerId)
                         {
-                            AllPlayers[i].IsCounter = ParsedIsCounter;
+                            AllPlayers[i].Team = ParsedIsCounter;
                             UpdatePlayerTexture(i);
                             break;
                         }
@@ -394,7 +394,7 @@ void ReadServerData()
                         localPlayer->PlayerPhysic->yspeed = 0;
                         localPlayer->PlayerPhysic->zspeed = 0;
                         NE_ModelSetCoord(localPlayer->PlayerModel, localPlayer->xPos, localPlayer->yPos, localPlayer->zPos);
-                        UpdateLookRotation(CameraAngleY, &x, &y, &z, &xWithoutY, &zWithoutY, &xWithoutYForAudio, &zWithoutYForAudio);
+                        UpdateLookRotation(CameraAngleY);
                     }
                     else
                     {

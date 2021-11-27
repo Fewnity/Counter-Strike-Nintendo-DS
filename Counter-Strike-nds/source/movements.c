@@ -101,7 +101,7 @@ void RotatePlayer(uint32 keys, bool *NeedUpdateViewRotation, bool *SendPosition,
     }
 }
 
-void UpdateLookRotation(float CameraAngleY, float *x, float *y, float *z, float *xWithoutY, float *zWithoutY, float *xWithoutYForAudio, float *zWithoutYForAudio)
+void UpdateLookRotation(float CameraAngleY)
 {
     // Math formula to get a point position on sphere from the middle of the sphere with 2 angle
     float TempS = AllPlayers[GetCurrentCameraPlayer()].Angle / 512.0 * M_TWOPI;
@@ -115,15 +115,15 @@ void UpdateLookRotation(float CameraAngleY, float *x, float *y, float *z, float 
     double cosTempS = cos(TempS);
     double SinTempS = sin(TempS);
 
-    *x = SinTempS * cosTempT;
-    *y = -sin(TempT);
-    *z = cosTempS * cosTempT;
+    x = SinTempS * cosTempT;
+    y = -sin(TempT);
+    z = cosTempS * cosTempT;
 
-    *xWithoutY = -SinTempS;
-    *zWithoutY = -cosTempS;
+    xWithoutY = -SinTempS;
+    zWithoutY = -cosTempS;
 
-    *xWithoutYForAudio = -sin(TempSForAudio);
-    *zWithoutYForAudio = -cos(TempSForAudio);
+    xWithoutYForAudio = -sin(TempSForAudio);
+    zWithoutYForAudio = -cos(TempSForAudio);
 
     xWithoutYForMap = -sin(TempSForMap);
     zWithoutYForMap = -cos(TempSForMap);
@@ -270,12 +270,12 @@ void SetOnlinelPlayersPositions()
                     if (applyRules)
                     {
                         player->LastWayPoint = player->Path[CurPath];
-                        if (player->haveBomb || (player->IsCounter == 1 && BombPlanted && !BombDefused))
+                        if (player->haveBomb || (player->Team == COUNTERTERRORISTS && BombPlanted && !BombDefused))
                         {
                             iprintf("\nLastPath: %d", player->LastWayPoint);
                             if (player->LastWayPoint == 14 || player->LastWayPoint == 29)
                             {
-                                if (player->IsCounter == 1 && bombPlantedAt != player->LastWayPoint)
+                                if (player->Team == COUNTERTERRORISTS && bombPlantedAt != player->LastWayPoint)
                                 {
                                     if (player->LastWayPoint == 14)
                                     {
@@ -289,7 +289,7 @@ void SetOnlinelPlayersPositions()
                                 }
                                 else
                                 {
-                                    if (player->IsCounter == 1)
+                                    if (player->Team == COUNTERTERRORISTS)
                                         printf("(%d)DEFUSING\n", i);
                                     else
                                         printf("(%d)PLANTING\n", i);
