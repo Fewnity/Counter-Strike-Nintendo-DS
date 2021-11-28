@@ -158,6 +158,7 @@ ui.o: C:/devkitPro/nitro-engine/examples/physics/basic/source/ui.c \
  C:/devkitPro/nitro-engine/examples/physics/basic/build/text_bmp_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/basic/source/movements.h \
  C:/devkitPro/nitro-engine/examples/physics/basic/source/collisions.h \
+ C:/devkitPro/nitro-engine/examples/physics/basic/source/keyboard.h \
  C:/devkitPro/nitro-engine/examples/physics/basic/source/network.h \
  C:/devkitPro/nitro-engine/examples/physics/basic/source/ui.h \
  C:/devkitPro/nitro-engine/examples/physics/basic/source/party.h \
@@ -324,6 +325,7 @@ C:/devkitPro/nitro-engine/examples/physics/basic/build/muzzle_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/build/text_bmp_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/source/movements.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/source/collisions.h:
+C:/devkitPro/nitro-engine/examples/physics/basic/source/keyboard.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/source/network.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/source/ui.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/source/party.h:

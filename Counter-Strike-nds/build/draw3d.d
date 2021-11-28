@@ -1,5 +1,5 @@
-main.o: C:/devkitPro/nitro-engine/examples/physics/basic/source/main.c \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/collisions.h \
+draw3d.o: \
+ C:/devkitPro/nitro-engine/examples/physics/basic/source/draw3d.c \
  C:/devkitPro/nitro-engine/examples/physics/basic/source/main.h \
  C:/devkitPro/nitro-engine/include/NEMain.h \
  C:/devkitPro/libnds/include/nds.h \
@@ -157,20 +157,9 @@ main.o: C:/devkitPro/nitro-engine/examples/physics/basic/source/main.c \
  C:/devkitPro/nitro-engine/examples/physics/basic/build/c4_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/basic/build/muzzle_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/basic/build/text_bmp_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/movements.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/sounds.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/network.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/ui.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/gun.h \
  C:/devkitPro/nitro-engine/examples/physics/basic/source/grenade.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/equipment.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/ai.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/map.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/party.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/keyboard.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/draw3d.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/saveManager.h
-C:/devkitPro/nitro-engine/examples/physics/basic/source/collisions.h:
+ C:/devkitPro/nitro-engine/examples/physics/basic/source/collisions.h \
+ C:/devkitPro/nitro-engine/examples/physics/basic/source/ui.h
 C:/devkitPro/nitro-engine/examples/physics/basic/source/main.h:
 C:/devkitPro/nitro-engine/include/NEMain.h:
 C:/devkitPro/libnds/include/nds.h:
@@ -328,16 +317,6 @@ C:/devkitPro/nitro-engine/examples/physics/basic/build/flashthrowed_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/build/c4_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/build/muzzle_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/build/text_bmp_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/movements.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/sounds.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/network.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/ui.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/gun.h:
 C:/devkitPro/nitro-engine/examples/physics/basic/source/grenade.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/equipment.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/ai.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/map.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/party.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/keyboard.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/draw3d.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/saveManager.h:
+C:/devkitPro/nitro-engine/examples/physics/basic/source/collisions.h:
+C:/devkitPro/nitro-engine/examples/physics/basic/source/ui.h:

@@ -304,7 +304,7 @@ typedef struct // Player values
 	float BobbingOffset;
 	bool HasBobbed;
 	int Step;
-	char name[20];
+	char name[21];
 	bool allPlayerScanned[MaxPlayer];
 } Player;
 
@@ -444,13 +444,14 @@ typedef struct //
 typedef struct //
 {
 	void *texture;
-	char name[6];
-	int action;
+	char name[8];
+	// int action;
 	int xPos;
 	int yPos;
 	int xSize;
 	int xCenter;
 	int ySize;
+	void (*OnClick)();
 } OtherKey;
 
 extern float flashaAnimation;

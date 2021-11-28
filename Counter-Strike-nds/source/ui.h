@@ -13,12 +13,14 @@ enum UiMenu
     GAME = 0,
     SCORE = 2,
     SHOPCATEGORIES = 3,
+    SETTINGS = 4,
+    QUIT = 5,
     SHOP = 6,
-    SETTINGS,
-    QUIT,
-    CONTROLS = 7,
+    CONTROLLER = 7,
     MAIN = 8,
-    SERVERS = 9
+    SERVERS = 9,
+    CHANGENAME = 10,
+    CHAT = 11
 };
 
 void SetButtonsRefForUI();
@@ -42,5 +44,6 @@ void drawBottomScreenUI();
 void changeServer(int up);
 void showPartyEventText(int event);
 void showKillText(int killerIndex, int deadPlayerIndex);
+void drawButtons();
 
 #endif // UI_H_

@@ -105,9 +105,10 @@ void printLongText(int minX, int maxX, int y, char *text)
 
 void ChangeMenu(int menuId)
 {
+    SetButtonToShow(0);
     int currentMenu = GetCurrentMenu();
 
-    if (currentMenu == 1) // Back button (map menu)
+    /*if (currentMenu == 1) // Back button (map menu)
     {
         if (GetAlwaysUpdateBottomScreen())
             SetNeedChangeScreen(true);
@@ -116,12 +117,13 @@ void ChangeMenu(int menuId)
         NE_SpriteVisible(BottomScreenSpritesForUI[1], false);
         NE_MaterialDelete(BottomScreenSpritesMaterialsForUI[1]);
     }
-    else if (menuId == 3 && currentMenu == 6) // Back button (map menu)
+    else */
+    if (menuId == SHOPCATEGORIES && currentMenu == SHOP) // Back button (map menu)
     {
         NE_MaterialDelete(BottomScreenSpritesMaterialsForUI[6]);
         NE_PaletteDelete(PalettesForUI[10]);
     }
-    else if (currentMenu == 7) // Back button (map menu)
+    else if (currentMenu == CONTROLLER) // Back button (map menu)
     {
         NE_MaterialDelete(BottomScreenSpritesMaterialsForUI[7]);
         NE_PaletteDelete(PalettesForUI[14]);
@@ -130,7 +132,7 @@ void ChangeMenu(int menuId)
     }
 
     SetCurrentMenu(menuId); /////REMOVE?
-    if (menuId == 0)
+    if (menuId == GAME)
     {
         // Show map button
         /*AllButtons[0].xPos = 15;
@@ -146,15 +148,15 @@ void ChangeMenu(int menuId)
         AllButtons[0].xSize = 100;
         AllButtons[0].ySize = 24;
         AllButtons[0].OnClick = &ChangeMenu;
-        AllButtons[0].parameter = 2;
+        AllButtons[0].parameter = SCORE;
 
-        // Open shop button
+        // Open shop categories button
         AllButtons[1].xPos = 15;
         AllButtons[1].yPos = 104;
         AllButtons[1].xSize = 100;
         AllButtons[1].ySize = 24;
         AllButtons[1].OnClick = &ChangeMenu;
-        AllButtons[1].parameter = 3;
+        AllButtons[1].parameter = SHOPCATEGORIES;
 
         // Settings button
         AllButtons[2].xPos = 15;
@@ -162,7 +164,7 @@ void ChangeMenu(int menuId)
         AllButtons[2].xSize = 100;
         AllButtons[2].ySize = 24;
         AllButtons[2].OnClick = &ChangeMenu;
-        AllButtons[2].parameter = 4;
+        AllButtons[2].parameter = SETTINGS;
 
         // Quit game button
         AllButtons[3].xPos = 15;
@@ -170,19 +172,20 @@ void ChangeMenu(int menuId)
         AllButtons[3].xSize = 100;
         AllButtons[3].ySize = 24;
         AllButtons[3].OnClick = &ChangeMenu;
-        AllButtons[3].parameter = 5;
+        AllButtons[3].parameter = QUIT;
 
+        // Game pad button
         AllButtons[4].xPos = 141;
         AllButtons[4].yPos = 40;
         AllButtons[4].xSize = 100;
         AllButtons[4].ySize = 24;
         AllButtons[4].OnClick = &ChangeMenu;
-        AllButtons[4].parameter = 7;
+        AllButtons[4].parameter = CONTROLLER;
 
         NE_SpriteVisible(BottomScreenSpritesForUI[2], false);
         SetButtonToShow(5);
     }
-    else if (menuId == 1) // map menu
+    /*else if (menuId == 1) // map menu
     {
         BottomScreenSpritesMaterialsForUI[1] = NE_MaterialCreate();
         NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[1], PalettesForUI[0], (void *)MapUI_bin, 0);
@@ -207,8 +210,8 @@ void ChangeMenu(int menuId)
 
         NE_SpriteVisible(BottomScreenSpritesForUI[0], true);
         NE_SpriteVisible(BottomScreenSpritesForUI[1], AllCheckBoxsRefForUI[0].value);
-    }
-    else if (menuId == 2) // Score board screen
+    }*/
+    else if (menuId == SCORE) // Score board screen
     {
         // Set exit button
         AllButtons[0].xPos = 200;
@@ -216,7 +219,7 @@ void ChangeMenu(int menuId)
         AllButtons[0].xSize = 56;
         AllButtons[0].ySize = 20;
         AllButtons[0].OnClick = &ChangeMenu;
-        AllButtons[0].parameter = 0;
+        AllButtons[0].parameter = GAME;
 
         if (AllPlayers[0].Team == -1)
         {
@@ -226,7 +229,7 @@ void ChangeMenu(int menuId)
             AllButtons[1].xSize = 90;
             AllButtons[1].ySize = 20;
             AllButtons[1].OnClick = &SetTeam;
-            AllButtons[1].parameter = 1;
+            AllButtons[1].parameter = COUNTERTERRORISTS;
 
             // Join terrorists button
             AllButtons[2].xPos = 148; // 128+20
@@ -234,14 +237,14 @@ void ChangeMenu(int menuId)
             AllButtons[2].xSize = 90;
             AllButtons[2].ySize = 20;
             AllButtons[2].OnClick = &SetTeam;
-            AllButtons[2].parameter = 0;
+            AllButtons[2].parameter = TERRORISTS;
 
             SetButtonToShow(3);
         }
         else
             SetButtonToShow(1);
     }
-    else if (menuId == 3) // Shop categories
+    else if (menuId == SHOPCATEGORIES) // Shop categories
     {
         NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
 
@@ -257,17 +260,34 @@ void ChangeMenu(int menuId)
         }
         SetButtonToShow(6);
     }
-    else if (menuId == 4) // Settings menu
+    else if (menuId == SETTINGS) // Settings menu
+    {
+        // Set exit button
+        AllButtons[0].xPos = 15;
+        AllButtons[0].yPos = 72;
+        AllButtons[0].xSize = 100;
+        AllButtons[0].ySize = 24;
+        AllButtons[0].OnClick = &ChangeMenu;
+        AllButtons[0].parameter = CHANGENAME;
+
+        SetButtonToShow(1);
+
+        // Quit button
+        NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
+    }
+    else if (menuId == CHANGENAME) // Settings menu
+    {
+        isShowingKeyBoard = true;
+
+        // Quit button
+        NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
+    }
+    else if (menuId == QUIT) // Quit menu
     {
         // Quit button
         NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
     }
-    else if (menuId == 5) // Quit menu
-    {
-        // Quit button
-        NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
-    }
-    else if (menuId == 6) // SHOP
+    else if (menuId == SHOP) // SHOP
     {
         BottomScreenSpritesMaterialsForUI[6] = NE_MaterialCreate();
         PalettesForUI[10] = NE_PaletteCreate();
@@ -305,7 +325,7 @@ void ChangeMenu(int menuId)
 
         SetButtonToShow(3);
     }
-    else if (menuId == 7) // Game pad menu
+    else if (menuId == CONTROLLER) // Game pad menu
     {
         // Game pad quit button
         NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
@@ -352,7 +372,7 @@ void ChangeMenu(int menuId)
 
         SetButtonToShow(4);
     }
-    else if (menuId == 8) // Main menu
+    else if (menuId == MAIN) // Main menu
     {
         // Single player button
         AllButtons[0].xPos = 40;
@@ -368,7 +388,7 @@ void ChangeMenu(int menuId)
         AllButtons[1].xSize = ScreenWidth - 80;
         AllButtons[1].ySize = 24;
         AllButtons[1].OnClick = &ChangeMenu;
-        AllButtons[1].parameter = 9;
+        AllButtons[1].parameter = SERVERS;
 
         // Settings button
         AllButtons[2].xPos = 40;
@@ -376,14 +396,14 @@ void ChangeMenu(int menuId)
         AllButtons[2].xSize = ScreenWidth - 80;
         AllButtons[2].ySize = 24;
         AllButtons[2].OnClick = &ChangeMenu;
-        AllButtons[2].parameter = 4;
+        AllButtons[2].parameter = SETTINGS;
 
         // Hide quit button
         NE_SpriteVisible(BottomScreenSpritesForUI[2], false);
 
         SetButtonToShow(3);
     }
-    else if (menuId == 9) // Multiplayer screen
+    else if (menuId == SERVERS) // Multiplayer screen
     {
         // Start game button
         AllButtons[0].xPos = 40;
@@ -572,15 +592,15 @@ void ReadTouchScreen(uint32 keysdown, uint32 keys, uint32 keysup, int *currentMe
         // Check back button click
         if (keysdown & KEY_TOUCH && touch.px >= 236 && touch.px <= 236 + 20 && touch.py >= 1 && touch.py <= 1 + 20)
         {
-            if (*currentMenu == 3 || (*currentMenu == 4 && PartyStarted) || *currentMenu == 5 || *currentMenu == 7) // Back to in game main menu
-                ChangeMenu(0);
-            else if (*currentMenu == 6) // Back button
-                ChangeMenu(3);
-            else if (*currentMenu == 9 || (*currentMenu == 4 && !PartyStarted)) // Back main menu
-                ChangeMenu(8);
+            if (*currentMenu == SHOPCATEGORIES || (*currentMenu == SETTINGS && Connection != UNSELECTED) || *currentMenu == QUIT || *currentMenu == CONTROLLER) // Back to in game main menu
+                ChangeMenu(GAME);
+            else if (*currentMenu == SHOP) // Back to shop categories
+                ChangeMenu(SHOPCATEGORIES);
+            else if (*currentMenu == SERVERS || (*currentMenu == SETTINGS && !PartyStarted)) // Back to main menu
+                ChangeMenu(MAIN);
         }
 
-        if (*currentMenu == 7 && keys & KEY_TOUCH && touch.px >= 40 && touch.px <= 255 && touch.py >= 30 && touch.py <= 194)
+        if (*currentMenu == CONTROLLER && keys & KEY_TOUCH && touch.px >= 40 && touch.px <= 255 && touch.py >= 30 && touch.py <= 194)
         {
             if (keysdown & KEY_TOUCH)
             {
@@ -661,7 +681,33 @@ void drawTopScreenUI()
         TextYOffset = -3;
 
     // Player *localPlayer = &AllPlayers[0];
-    if (isShowingMap)
+    if (isShowingKeyBoard)
+    {
+        NE_2DDrawQuad(0, 0, ScreenWidth, ScreenHeightFixed, 3, RGB15(3, 3, 3)); // Background
+        if (currentMenu == CHANGENAME)
+        {
+            NE_TextPrint(0,        // Font slot
+                         11, 2,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Change name");
+
+            char editedName[21];
+
+            // char editedName[40];
+            sprintf(editedName, "%s", localPlayer->name);
+
+            for (int i = strlen(editedName); i < 20; i++)
+            {
+                sprintf(editedName + strlen(editedName), "_");
+            }
+
+            NE_TextPrint(0,        // Font slot
+                         6, 12,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         editedName);
+        }
+    }
+    else if (isShowingMap)
     {
         // int xPos = map(localPlayer->xPos, -44, 56, 2, 189);
         // int ypos = map(localPlayer->zPos, -36, 67, 12, 190);
@@ -756,7 +802,7 @@ void drawTopScreenUI()
             char CPU[40];
 
             // sprintf(CPU, "CPU : %d, Zone : %d", NE_GetCPUPercent(), localPlayer->CurrentOcclusionZone);
-            sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
+            // sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
             // sprintf(CPU, "z : %d, Zone : %d", AllZones[AllPlayers[0].CurrentOcclusionZone], localPlayer->CurrentOcclusionZone);
 
             // sprintf(CPU, "curDefuserI : %d chkA%d chkB%d", currentDefuserIndex, bombCheckedInA, bombCheckedInB);
@@ -803,6 +849,7 @@ void drawTopScreenUI()
             // sprintf(CPU, "Shop : %d %d %d", GetShopCategory(), GetSelectedGunShop(), GetWeaponCountVar());
             // sprintf(CPU, "lastTouch : %f %f", GetLastTouch().x, GetLastTouch().y);
             // sprintf(CPU, "Size : %d", sizeof(int));
+            sprintf(CPU, "Current menu : %d", currentMenu);
             NE_TextPrint(0,        // Font slot
                          1, 1,     // Coordinates x(column), y(row)
                          NE_White, // Color
@@ -1208,10 +1255,10 @@ void drawBottomScreenUI()
     {
         drawKeyBoard();
 
-        NE_TextPrint(0,        // Font slot
+        /*NE_TextPrint(0,        // Font slot
                      27, 10,   // Coordinates x(column), y(row)
                      NE_White, // Color
-                     "keyboard");
+                     "keyboard");*/
     }
     else
     {
@@ -1222,69 +1269,9 @@ void drawBottomScreenUI()
 
         // Draw menu background
         NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
-        /*if (currentMenu == 1) // Map menu
+
+        if (currentMenu == GAME) // Draw main menu
         {
-            // Draw checkbox
-            int CheckBoxXPosition = AllCheckBoxs[0].xPos, CheckBoxYPosition = AllCheckBoxs[0].yPos, CheckBoxXSize = AllCheckBoxs[0].xSize, CheckBoxYSize = AllCheckBoxs[0].ySize;
-            NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 3, CheckBoxYPosition - 3, CheckBoxXPosition + CheckBoxXSize + 3, CheckBoxYPosition + CheckBoxYSize + 3, 2, BottomScreenSpritesMaterials[5], RGB15(4, 4, 4)); // Border
-            NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 1, CheckBoxYPosition - 1, CheckBoxXPosition + CheckBoxXSize + 1, CheckBoxYPosition + CheckBoxYSize + 1, 1, BottomScreenSpritesMaterials[5], RGB15(5, 5, 5)); // Background
-            if (AllCheckBoxs[0].value)
-                NE_2DDrawTexturedQuadColor(CheckBoxXPosition, CheckBoxYPosition, CheckBoxXPosition + CheckBoxXSize, CheckBoxYPosition + CheckBoxYSize, 0, BottomScreenSpritesMaterials[4], RGB15(31, 31, 31)); // CheckMark
-
-            for (int i = 0; i < MaxPlayer; i++)
-            {
-                if (AllPlayers[i].Id != -1 && AllPlayers[i].Team != SPECTATOR && !AllPlayers[i].IsDead)
-                {
-                    int xPos = map(AllPlayers[i].xPos, -44, 56, 2, 189);
-                    int ypos = map(AllPlayers[i].zPos, -36, 67, 12, 190);
-                    if (i == 0)
-                        NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 0)); // Background
-                    else if (AllPlayers[i].Team == AllPlayers[0].Team)
-                        NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 31)); // Background
-                    else
-                        NE_2DDrawTexturedQuadColor(xPos, ypos, xPos + 6, ypos + 6, 1, BottomScreenSpritesMaterials[2], RGB15(31, 0, 0)); // Background
-                }
-            }
-
-            // Draw buttons
-            for (int i = 0; i < ButtonToShow; i++)
-            {
-                if (!AllButtons[i].isHidden)
-                {
-                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-                }
-            }
-
-            // Print texts
-            NE_TextPrint(0,        // Font slot
-                         26, 2,    // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Close");
-
-            NE_TextPrint(0,        // Font slot
-                         26, 9,    // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Update");
-
-            NE_TextPrint(0,        // Font slot
-                         27, 10,   // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "map");
-        }
-        else */
-        if (currentMenu == 0) // Draw main menu
-        {
-            // Draw buttons
-            for (int i = 0; i < ButtonToShow; i++)
-            {
-                if (!AllButtons[i].isHidden)
-                {
-                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-                }
-            }
-
             // Print texts
             NE_TextPrint(0,        // Font slot
                          12, 2,    // Coordinates x(column), y(row)
@@ -1321,22 +1308,12 @@ void drawBottomScreenUI()
                          NE_White, // Color
                          "Controls");
         }
-        else if (currentMenu == 2) // Draw scoreboard menu
+        else if (currentMenu == SCORE) // Draw scoreboard menu
         {
             if (!WaitForTeamResponse && localPlayer->Team == SPECTATOR)
                 ButtonToShow = 3;
             else if (!WaitForTeamResponse) /////////////////////////////////////////////////////////////////////////////////////////////CHECK THIS
                 ButtonToShow = 1;
-
-            // Draw buttons
-            for (int i = 0; i < ButtonToShow; i++)
-            {
-                if (!AllButtons[i].isHidden)
-                {
-                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-                }
-            }
 
             // Draw white bars
             NE_2DDrawQuad(0, 25, 256, 28, 19, RGB15(31, 31, 31));
@@ -1446,18 +1423,8 @@ void drawBottomScreenUI()
                              "Join");
             }
         }
-        else if (currentMenu == 3) // Draw shop categories
+        else if (currentMenu == SHOPCATEGORIES) // Draw shop categories
         {
-            // Draw buttons
-            for (int i = 0; i < ButtonToShow; i++)
-            {
-                if (!AllButtons[i].isHidden)
-                {
-                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-                }
-            }
-
             // Draw white bars
             NE_2DDrawQuad(ScreenCenterWidth - 1, 23, ScreenCenterWidth + 1, ScreenHeightFixed, 0, RGB15(31, 31, 31));
             NE_2DDrawQuad(0, (198 - 23) / 3 - 1 + 23, ScreenWidth, (198 - 23) / 3 + 2 + 23, 0, RGB15(31, 31, 31));
@@ -1499,18 +1466,8 @@ void drawBottomScreenUI()
                          NE_White, // Color
                          "GRENADES");
         }
-        else if (currentMenu == 6) // Draw shop
+        else if (currentMenu == SHOP) // Draw shop
         {
-            // Draw buttons
-            for (int i = 0; i < ButtonToShow; i++)
-            {
-                if (!AllButtons[i].isHidden)
-                {
-                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-                }
-            }
-
             NE_2DDrawQuad(160, 26, 255, 144, 1, RGB15(4, 4, 4));                                   // Draw gun details background
             NE_2DDrawTexturedQuad(26, 26, 118 + 26, 118 + 26, 1, BottomScreenSpritesMaterials[6]); // Draw gun
 
@@ -1623,18 +1580,8 @@ void drawBottomScreenUI()
                 printLongText(21, 31, 7, AllGrenades[SelectedGunShop - GunCount].description);
             }
         }
-        else if (currentMenu == 7) // Draw game pad
+        else if (currentMenu == CONTROLLER) // Draw game pad
         {
-            // Draw buttons
-            for (int i = 0; i < ButtonToShow; i++)
-            {
-                if (!AllButtons[i].isHidden)
-                {
-                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-                }
-            }
-
             NE_2DDrawQuad(40, 30, 255, 194, 1, RGB15(4, 4, 4));                                        // touch pad area
             NE_2DDrawTexturedQuad(4, 32, 4 + 36 - 4, 30 + 36 - 2, 1, BottomScreenSpritesMaterials[7]); // Jump button
             NE_2DDrawTexturedQuad(4, 74, 4 + 36 - 4, 72 + 36 - 2, 1, BottomScreenSpritesMaterials[8]); // Reload button
@@ -1645,7 +1592,7 @@ void drawBottomScreenUI()
                          NE_White, // Color
                          "Game pad");
         }
-        else if (currentMenu == 8) // Draw main menu
+        else if (currentMenu == MAIN) // Draw main menu
         {
             // Draw buttons
             for (int i = 0; i < ButtonToShow; i++)
@@ -1688,18 +1635,8 @@ void drawBottomScreenUI()
                          NE_White, // Color
                          "Settings");
         }
-        else if (currentMenu == 9) // Draw server list
+        else if (currentMenu == SERVERS) // Draw server list
         {
-            // Draw buttons
-            for (int i = 0; i < ButtonToShow; i++)
-            {
-                if (!AllButtons[i].isHidden)
-                {
-                    int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
-                    NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
-                }
-            }
-
             /*char textIp[1024] = "";
             sprintf(textIp + strlen(textIp), "ipCount : %d", TotalIpCount);
 
@@ -1768,6 +1705,15 @@ void drawBottomScreenUI()
                          NE_White, // Color
                          "Connect");
         }
+        else if (currentMenu == SETTINGS) // Draw main menu
+        {
+            // Print texts
+            NE_TextPrint(0,        // Font slot
+                         3, 10,    // Coordinates x(column), y(row)
+                         NE_White, // Color
+                         "Change name");
+        }
+        drawButtons();
     }
     // Change screen update mode (30 fps with 2 screens update or 60 fps with main game screen update)
     if (NeedChangeScreen)
@@ -1775,5 +1721,17 @@ void drawBottomScreenUI()
         NeedChangeScreen = false;
         AlwaysUpdateBottomScreen = !AlwaysUpdateBottomScreen;
         UpdateBottomScreenOneFrame = 4;
+    }
+}
+
+void drawButtons()
+{
+    for (int i = 0; i < ButtonToShow; i++)
+    {
+        if (!AllButtons[i].isHidden)
+        {
+            int ButtonXPosition = AllButtons[i].xPos, ButtonYPosition = AllButtons[i].yPos, ButtonXSize = AllButtons[i].xSize, ButtonYSize = AllButtons[i].ySize;
+            NE_2DDrawQuad(ButtonXPosition, ButtonYPosition, ButtonXPosition + ButtonXSize, ButtonYPosition + ButtonYSize, 1, RGB15(5, 5, 5)); // Button background
+        }
     }
 }

@@ -367,11 +367,11 @@ void checkForPlayer()
             // int randomPlayerToCheck = 0;
             int distancePlayers = 999;
             // distancePlayers = GetDistanceBewteenTwoPlayers(randomPlayerToCheck, currentAiToCheck);
-            if (randomPlayerToCheck != -1)
+            if (randomPlayerToCheck != NO_PLAYER)
                 distancePlayers = GetDistanceBewteenTwoPlayers(randomPlayerToCheck, currentAiToCheck);
 
             int scannedPlayerCount = 0;
-            if (distancePlayers >= 20 && playerToCheck->ScanFinished && playerToCheck->lastSeenTarget == -1 && playerToCheck->target == -1)
+            if (distancePlayers >= 20 && playerToCheck->ScanFinished && playerToCheck->lastSeenTarget == NO_PLAYER && playerToCheck->target == NO_PLAYER)
             {
                 while (scannedPlayerCount < MaxPlayer)
                 {
@@ -404,7 +404,7 @@ void checkForPlayer()
             {
                 prepareAiRaycast(currentAiToCheck, randomPlayerToCheck, true);
 
-                if (Raycast(currentAiToCheck) != -1)
+                if (Raycast(currentAiToCheck) != NO_PLAYER)
                 {
                     playerToCheck->GunWaitCount = -30;
                     playerToCheck->target = randomPlayerToCheck;
@@ -415,15 +415,15 @@ void checkForPlayer()
                 {
                     // printf("lose Target 3\n");
                     playerToCheck->justCheking = false;
-                    playerToCheck->target = -1;
+                    playerToCheck->target = NO_PLAYER;
                     // If bot finished his path, get a new one if no player is found
                     // TODO get a random one or to a nearest last seen player position waypoint
-                    if (playerToCheck->lastSeenTarget != -1)
+                    if (playerToCheck->lastSeenTarget != NO_PLAYER)
                     {
                         Player *lastSeenTargetPlayer = &AllPlayers[playerToCheck->lastSeenTarget];
                         int nearestWaypoint = getNearestWaypoint(lastSeenTargetPlayer->xPos, lastSeenTargetPlayer->yPos, lastSeenTargetPlayer->zPos);
                         StartChecking(currentAiToCheck, nearestWaypoint);
-                        playerToCheck->lastSeenTarget = -1;
+                        playerToCheck->lastSeenTarget = NO_PLAYER;
                     }
                     else if (playerToCheck->PathCount == 0)
                     {
@@ -437,13 +437,13 @@ void checkForPlayer()
                 Player *lastSeenTargetPlayer = &AllPlayers[playerToCheck->lastSeenTarget];
                 int nearestWaypoint = getNearestWaypoint(lastSeenTargetPlayer->xPos, lastSeenTargetPlayer->yPos, lastSeenTargetPlayer->zPos);
                 StartChecking(currentAiToCheck, nearestWaypoint);
-                playerToCheck->target = -1;
-                playerToCheck->lastSeenTarget = -1;
+                playerToCheck->target = NO_PLAYER;
+                playerToCheck->lastSeenTarget = NO_PLAYER;
             }
             else if (playerToCheck->PathCount == 0 && playerToCheck->ScanFinished)
             {
-                playerToCheck->target = -1;
-                playerToCheck->lastSeenTarget = -1;
+                playerToCheck->target = NO_PLAYER;
+                playerToCheck->lastSeenTarget = NO_PLAYER;
 
                 if (playerToCheck->haveBomb)
                 {
@@ -459,7 +459,7 @@ void checkForPlayer()
                         printf("(%d)GO TO BOMB SITE B\n", currentAiToCheck);
                     }
                 }
-                else if (playerToCheck->Team == COUNTERTERRORISTS && BombPlanted && currentDefuserIndex == -1)
+                else if (playerToCheck->Team == COUNTERTERRORISTS && BombPlanted && currentDefuserIndex == NO_PLAYER)
                 {
                     SetDefuser(currentAiToCheck);
                 }
@@ -475,13 +475,13 @@ void checkForPlayer()
 
 void SetRandomDefuser()
 {
-    if (currentDefuserIndex == -1)
+    if (currentDefuserIndex == NO_PLAYER)
     {
         bool canAffectDefuser = false;
         for (int i = 1; i < MaxPlayer; i++)
         {
             Player *player = &AllPlayers[i];
-            if (player->Team == COUNTERTERRORISTS && !player->IsDead && player->target == -1)
+            if (player->Team == COUNTERTERRORISTS && !player->IsDead && player->target == NO_PLAYER)
             {
                 canAffectDefuser = true;
                 break;
@@ -491,14 +491,14 @@ void SetRandomDefuser()
         {
             int newDefuser = random() % 6;
             Player *defuser = &AllPlayers[newDefuser];
-            while (defuser->Team != COUNTERTERRORISTS || defuser->IsDead || defuser->target != -1)
+            while (defuser->Team != COUNTERTERRORISTS || defuser->IsDead || defuser->target != NO_PLAYER)
             {
                 defuser = &AllPlayers[newDefuser];
                 newDefuser = random() % 6;
             }
             currentDefuserIndex = newDefuser;
             defuser->PathCount = -1;
-            defuser->lastSeenTarget = -1;
+            defuser->lastSeenTarget = NO_PLAYER;
         }
     }
 }
@@ -542,7 +542,7 @@ void checkTarget()
     // for (int i = 0; i < 2; i++)
     {
         Player *player = &AllPlayers[i];
-        if (player->target != -1 && player->ScanFinished && player->isAi)
+        if (player->target != NO_PLAYER && player->ScanFinished && player->isAi)
         {
             Vector3 Direction;
             Player *targetPlayer = &AllPlayers[player->target];
@@ -590,16 +590,16 @@ void checkShopForBot()
     // for (int i = 0; i < MaxPlayer; i++)
     {
         Player *player = &AllPlayers[i];
-        if (player->Id != -1 && player->isAi)
+        if (player->Id != UNUSED && player->isAi)
         {
             if (player->Team == COUNTERTERRORISTS)
             {
                 int random = 1 + rand() % 3;
-                if (cheapestGunsCostCounter[random] <= player->Money && player->AllGunsInInventory[2] == -1)
+                if (cheapestGunsCostCounter[random] <= player->Money && player->AllGunsInInventory[2] == EMPTY)
                 {
                     findGun(random, i);
                 }
-                else if (cheapestGunsCostCounter[0] <= player->Money && player->AllGunsInInventory[1] == -1)
+                else if (cheapestGunsCostCounter[0] <= player->Money && player->AllGunsInInventory[1] == EMPTY)
                 {
                     findGun(0, i);
                 }
@@ -607,11 +607,11 @@ void checkShopForBot()
             else
             {
                 int random = 1 + rand() % 3;
-                if (cheapestGunsCostTerrorists[random] <= player->Money && player->AllGunsInInventory[2] == -1)
+                if (cheapestGunsCostTerrorists[random] <= player->Money && player->AllGunsInInventory[2] == EMPTY)
                 {
                     findGun(random, i);
                 }
-                else if (cheapestGunsCostTerrorists[0] <= player->Money && player->AllGunsInInventory[1] == -1)
+                else if (cheapestGunsCostTerrorists[0] <= player->Money && player->AllGunsInInventory[1] == EMPTY)
                 {
                     findGun(0, i);
                 }

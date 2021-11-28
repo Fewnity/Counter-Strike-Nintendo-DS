@@ -23,6 +23,7 @@
 #include "party.h"
 #include "keyboard.h"
 #include "draw3d.h"
+#include "saveManager.h"
 
 //
 //////Level
@@ -2488,7 +2489,8 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
 
 			if (IsLocalPlayer)
 			{
-				strcpy(player->name, "LocalPlayer");
+				// strcpy(player->name, "LocalPlayer");
+				Load();
 				player->PlayerModel = NE_ModelCreate(NE_Static);
 				player->PlayerPhysic = NE_PhysicsCreate(NE_BoundingBox);
 				NE_PhysicsSetModel(player->PlayerPhysic, (void *)player->PlayerModel); // Physics object and Model assigned to it

@@ -6,5 +6,10 @@
 
 void initKeyboard();
 void drawKeyBoard();
+void readKeyboard();
+void makeSpace();
+void makeDelete();
+void confirmKeyboard();
+void cancelKeyboard();
 
 #endif // KEYBOARD_H_
