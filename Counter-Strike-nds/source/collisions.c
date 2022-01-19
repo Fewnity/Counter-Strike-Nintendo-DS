@@ -2,6 +2,7 @@
 #include "collisions.h"
 #include "network.h"
 #include "ai.h"
+#include "gun.h"
 #include "sounds.h"
 #include "movements.h"
 #include "party.h"
@@ -185,6 +186,7 @@ void CalculateAllTriggerColBoxs()
     AllZones[currentZone].AllVisibleZones[3] = 6;
     AllZones[currentZone].id = currentZone;
 
+    // Add clipping zones
     /////////////////////////////////////////////////////
     AllOcclusionZone[0].angles[0].x = -11.1;
     AllOcclusionZone[0].angles[0].y = 83.1;
@@ -237,10 +239,10 @@ void CalculateAllTriggerColBoxs()
     AllOcclusionZone[4].angles[0].x = 15.54;
     AllOcclusionZone[4].angles[0].y = 68.4;
 
-    AllOcclusionZone[4].angles[1].x = -11.7;
+    AllOcclusionZone[4].angles[1].x = -13;
     AllOcclusionZone[4].angles[1].y = 68.4;
 
-    AllOcclusionZone[4].angles[2].x = -11.7;
+    AllOcclusionZone[4].angles[2].x = -13;
     AllOcclusionZone[4].angles[2].y = 4.43;
 
     AllOcclusionZone[4].angles[3].x = 15.54;
@@ -274,12 +276,13 @@ void CalculateAllTriggerColBoxs()
     {
         for (int i2 = 0; i2 < 4; i2++)
         {
-            AllOcclusionZone[i].anglesInt[i2].x = AllOcclusionZone[i].angles[i2].x * 8192.0;
-            AllOcclusionZone[i].anglesInt[i2].y = AllOcclusionZone[i].angles[i2].y * 8192.0;
+            AllOcclusionZone[i].anglesInt[i2].x = AllOcclusionZone[i].angles[i2].x * 4096.0;
+            AllOcclusionZone[i].anglesInt[i2].y = AllOcclusionZone[i].angles[i2].y * 4096.0;
         }
     }
 }
 
+// Add walls for collisions
 void AddAllCollisions()
 {
     CreateWall(9.38846, -1.4, -8.007592, 35.77919, 1, 33.08558, 3, 0);
@@ -335,7 +338,7 @@ void AddAllCollisions()
     CreateWall(-23.02901, 4.519009, -25.66659, 1.620493, 1.219922, 1.21636, 2, 50);
     CreateWall(-23.8313, 3.102336, -25.47028, 3.225069, 1.615268, 1.608994, 2, 51);
     CreateWall(9.870321, 1.493199, -8.82, 8.488289, 4.839397, 1, 3, 52);
-    CreateWall(19.71741, 1.488101, -10.13818, 11.26746, 4.849592, 1.627839, 3, 53);
+    CreateWall(19.71741, 1.488101, -10.13818, 11.26746, 4.849592, 1.627839, -1, 53); //
     CreateWall(34.23705, 3.871293, -0.4494247, 19.34229, 9.615976, 20.9745, -1, 54);
     CreateWall(8.829233, 0.6898834, -10.13725, 1.602546, 3.232767, 1.615795, 3, 55);
     CreateWall(7.217544, 0.2866741, -16.19459, 2.415168, 2.426349, 2.424468, 3, 56);
@@ -494,6 +497,7 @@ void AddAllCollisions()
     CreateWall(-21.006, 6.713649, 14.14657, 0.8, 0.895143, 0.8783064, 1, 209);
 }
 
+// Add stairs
 void AddAllStairs()
 {
     CreateStairs(-1.257, 5.2, 8.419, 21.325, 0, 3.211, 2, 0);
@@ -529,6 +533,7 @@ void AddAllStairs()
     CreateStairs(-23.845, -22.226, -26.263, -25.927, 6.052, 6.439, 0, 30);
 }
 
+// Create a stairs
 void CreateStairs(float xSideA, float xSideB, float zSideA, float zSideB, float startY, float endY, int direction, int index)
 {
     Stairs *newStairs = &AllStairs[index];
@@ -542,6 +547,7 @@ void CreateStairs(float xSideA, float xSideB, float zSideA, float zSideB, float 
     newStairs->direction = direction;
 }
 
+// Create a wall
 void CreateWall(float xPos, float yPos, float zPos, float xSize, float ySize, float zSize, int Zone, int index)
 {
     Wall *newWall = &AllWallsCollisions[index];
@@ -550,37 +556,41 @@ void CreateWall(float xPos, float yPos, float zPos, float xSize, float ySize, fl
     newWall->WallPhysics = NE_PhysicsCreate(NE_BoundingBox);
     newWall->WallPhysics->physicsgroupCount = 2;
     newWall->WallPhysics->physicsgroup[1] = 1;
-    NE_ModelSetCoord(newWall->WallModel, xPos, yPos, zPos);
+    NE_ModelSetCoord(newWall->WallModel, xPos, yPos, zPos);               // Set wall model position
     NE_PhysicsSetModel(newWall->WallPhysics, (void *)newWall->WallModel); // Physics object and Model assigned to it
-    NE_PhysicsSetSize(newWall->WallPhysics, xSize, ySize, zSize);
-    newWall->xPos = xPos * 8192.0;
-    newWall->yPos = yPos * 8192.0;
-    newWall->zPos = zPos * 8192.0;
+    NE_PhysicsSetSize(newWall->WallPhysics, xSize, ySize, zSize);         // Set physics size
+    // Set wall position
+    newWall->position.x = xPos * 8192.0;
+    newWall->position.y = yPos * 8192.0;
+    newWall->position.z = zPos * 8192.0;
     newWall->ZoneCollision = Zone;
     newWall->WallCollisionBox.xSize = newWall->WallPhysics->xsize;
     newWall->WallCollisionBox.ySize = newWall->WallPhysics->ysize;
     newWall->WallCollisionBox.zSize = newWall->WallPhysics->zsize;
+    // newWall->WallCollisionBox
     CalculateWallColBox(index);
+    // Disable physics
     NE_PhysicsEnable(newWall->WallPhysics, false);
 }
 
-// Calculate a box from physics value for raycasting
-void CalculatePlayerColBox(int PlayerId)
+// Calculate a box from physics values for raycasting
+void CalculatePlayerColBox(int PlayerIndex)
 {
-    CalculatePlayerPosition(PlayerId);
-    Player *player = &AllPlayers[PlayerId];
+    CalculatePlayerPosition(PlayerIndex);
+    Player *player = &AllPlayers[PlayerIndex];
 
     float xSize = player->PlayerCollisionBox.xSize;
     float ySize = player->PlayerCollisionBox.ySize;
     float zSize = player->PlayerCollisionBox.zSize;
-    player->PlayerCollisionBox.BoxXRangeA = (player->xPos + xSize) * 4096.0;
-    player->PlayerCollisionBox.BoxXRangeB = (player->xPos - xSize) * 4096.0;
-    player->PlayerCollisionBox.BoxYRangeA = (player->yPos + ySize) * 4096.0;
-    player->PlayerCollisionBox.BoxYRangeB = (player->yPos - ySize) * 4096.0;
-    player->PlayerCollisionBox.BoxZRangeA = (player->zPos + zSize) * 4096.0;
-    player->PlayerCollisionBox.BoxZRangeB = (player->zPos - zSize) * 4096.0;
+    player->PlayerCollisionBox.BoxXRangeA = (player->position.x + xSize) * 4096.0;
+    player->PlayerCollisionBox.BoxXRangeB = (player->position.x - xSize) * 4096.0;
+    player->PlayerCollisionBox.BoxYRangeA = (player->position.y + ySize) * 4096.0;
+    player->PlayerCollisionBox.BoxYRangeB = (player->position.y - ySize) * 4096.0;
+    player->PlayerCollisionBox.BoxZRangeA = (player->position.z + zSize) * 4096.0;
+    player->PlayerCollisionBox.BoxZRangeB = (player->position.z - zSize) * 4096.0;
 }
 
+// Calculate a box from wall size values for raycasting
 void CalculateWallColBox(int WallId)
 {
     Wall *newWall = &AllWallsCollisions[WallId];
@@ -588,12 +598,19 @@ void CalculateWallColBox(int WallId)
     float xSize = newWall->WallCollisionBox.xSize;
     float ySize = newWall->WallCollisionBox.ySize;
     float zSize = newWall->WallCollisionBox.zSize;
-    newWall->WallCollisionBox.BoxXRangeA = newWall->xPos + xSize;
-    newWall->WallCollisionBox.BoxXRangeB = newWall->xPos - xSize;
-    newWall->WallCollisionBox.BoxYRangeA = newWall->yPos + ySize;
-    newWall->WallCollisionBox.BoxYRangeB = newWall->yPos - ySize;
-    newWall->WallCollisionBox.BoxZRangeA = newWall->zPos + zSize;
-    newWall->WallCollisionBox.BoxZRangeB = newWall->zPos - zSize;
+    newWall->WallCollisionBox.BoxXRangeA = newWall->position.x + xSize;
+    newWall->WallCollisionBox.BoxXRangeB = newWall->position.x - xSize;
+    newWall->WallCollisionBox.BoxYRangeA = newWall->position.y + ySize;
+    newWall->WallCollisionBox.BoxYRangeB = newWall->position.y - ySize;
+    newWall->WallCollisionBox.BoxZRangeA = newWall->position.z + zSize;
+    newWall->WallCollisionBox.BoxZRangeB = newWall->position.z - zSize;
+    /*newWall->WallCollisionBox.corner1.x = 0;
+    newWall->WallCollisionBox.corner1.y = 0;
+    newWall->WallCollisionBox.corner1.z = 0;
+
+    newWall->WallCollisionBox.corner2.x = 0;
+    newWall->WallCollisionBox.corner2.y = 0;
+    newWall->WallCollisionBox.corner2.z = 0;*/
 }
 
 void CalculateTriggerColBox(float xPos, float zPos, float xSize, float zSize, int TriggerId)
@@ -605,39 +622,45 @@ void CalculateTriggerColBox(float xPos, float zPos, float xSize, float zSize, in
     trigger->BoxZRangeB = zPos - zSize / 2.0;
 }
 
-void SetBombZone(float xPos, float zPos, float xSize, float zSize, int TriggerId, CollisionBox2D AllBombsTriggersCollisions[])
+// Set bomb zone of the map
+void SetBombZone(float xPos, float zPos, float xSize, float zSize, int TriggerId, int waypoint)
 {
-    CollisionBox2D *trigger = &AllBombsTriggersCollisions[TriggerId];
-    trigger->BoxXRangeA = xPos + xSize / 2.0;
-    trigger->BoxXRangeB = xPos - xSize / 2.0;
-    trigger->BoxZRangeA = zPos + zSize / 2.0;
-    trigger->BoxZRangeB = zPos - zSize / 2.0;
+    Site *site = &AllBombsTriggersCollisions[TriggerId];
+    site->collisionBox.BoxXRangeA = xPos + xSize / 2.0;
+    site->collisionBox.BoxXRangeB = xPos - xSize / 2.0;
+    site->collisionBox.BoxZRangeA = zPos + zSize / 2.0;
+    site->collisionBox.BoxZRangeB = zPos - zSize / 2.0;
+    site->waypoint = waypoint;
 }
 
-void SetBombDefuseZone(float xPos, float zPos, float xSize, float zSize, CollisionBox2D *DefuseZoneCollisions)
+// Set bomb defuse zone with bomb position
+void SetBombDefuseZone(float xPos, float zPos, CollisionBox2D *DefuseZoneCollisions)
 {
-    DefuseZoneCollisions->BoxXRangeA = xPos + xSize / 2.0;
-    DefuseZoneCollisions->BoxXRangeB = xPos - xSize / 2.0;
-    DefuseZoneCollisions->BoxZRangeA = zPos + zSize / 2.0;
-    DefuseZoneCollisions->BoxZRangeB = zPos - zSize / 2.0;
+    DefuseZoneCollisions->BoxXRangeA = xPos + 1;
+    DefuseZoneCollisions->BoxXRangeB = xPos - 1;
+    DefuseZoneCollisions->BoxZRangeA = zPos + 1;
+    DefuseZoneCollisions->BoxZRangeB = zPos - 1;
+}
+
+void SetBombTakingZone(float xPos, float zPos, CollisionBox2D *DefuseZoneCollisions)
+{
+    DefuseZoneCollisions->BoxXRangeA = xPos + 0.8;
+    DefuseZoneCollisions->BoxXRangeB = xPos - 0.8;
+    DefuseZoneCollisions->BoxZRangeA = zPos + 0.8;
+    DefuseZoneCollisions->BoxZRangeB = zPos - 0.8;
 }
 
 void checkPlayerOcclusionZone(int playerIndex, int playerCameraTarget)
 {
-    // Player *player = &AllPlayers[playerIndex];
-    // Player *player = &AllPlayers[playerIndex];
-    if (AllPlayers[playerCameraTarget].xPos <= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxXRangeA && AllPlayers[playerCameraTarget].xPos >= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxXRangeB && AllPlayers[playerCameraTarget].zPos <= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxZRangeA && AllPlayers[playerCameraTarget].zPos >= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxZRangeB)
+    if (AllPlayers[playerIndex].position.x <= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxXRangeA && AllPlayers[playerIndex].position.x >= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxXRangeB && AllPlayers[playerIndex].position.z <= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxZRangeA && AllPlayers[playerIndex].position.z >= AllTriggersCollisions[AllPlayers[playerIndex].CurrentOcclusionZone].BoxZRangeB)
     {
-        // printf("HEY");
-        //*CurrentOcclusionZone = TriggersIndex;
-        // break;
     }
     else
     {
         // Check occlusion zones
         for (int TriggersIndex = 0; TriggersIndex < OcclusionZonesCount; TriggersIndex++)
         {
-            if (AllPlayers[playerCameraTarget].xPos <= AllTriggersCollisions[TriggersIndex].BoxXRangeA && AllPlayers[playerCameraTarget].xPos >= AllTriggersCollisions[TriggersIndex].BoxXRangeB && AllPlayers[playerCameraTarget].zPos <= AllTriggersCollisions[TriggersIndex].BoxZRangeA && AllPlayers[playerCameraTarget].zPos >= AllTriggersCollisions[TriggersIndex].BoxZRangeB)
+            if (AllPlayers[playerIndex].position.x <= AllTriggersCollisions[TriggersIndex].BoxXRangeA && AllPlayers[playerIndex].position.x >= AllTriggersCollisions[TriggersIndex].BoxXRangeB && AllPlayers[playerIndex].position.z <= AllTriggersCollisions[TriggersIndex].BoxZRangeA && AllPlayers[playerIndex].position.z >= AllTriggersCollisions[TriggersIndex].BoxZRangeB)
             {
                 AllPlayers[playerIndex].CurrentOcclusionZone = TriggersIndex;
                 break;
@@ -646,59 +669,103 @@ void checkPlayerOcclusionZone(int playerIndex, int playerCameraTarget)
     }
 }
 
-void CheckZones(CollisionBox2D AllTriggersCollisions[], CollisionBox2D AllBombsTriggersCollisions[], CollisionBox2D bombDefuseZone, bool *CanPutBomb, bool *canDefuseBomb)
+// Check where the bomb is, return the waypoint of the bomb
+int checkBombZoneWaypoint()
+{
+    for (int TriggersIndex = 0; TriggersIndex < 2; TriggersIndex++)
+    {
+        Site *site = &AllBombsTriggersCollisions[TriggersIndex];
+        if (localPlayer->position.x <= site->collisionBox.BoxXRangeA && localPlayer->position.x >= site->collisionBox.BoxXRangeB && localPlayer->position.z <= site->collisionBox.BoxZRangeA && localPlayer->position.z >= site->collisionBox.BoxZRangeB)
+        {
+            return site->waypoint;
+        }
+    }
+    return -1;
+}
+
+void CheckZones(CollisionBox2D AllTriggersCollisions[], CollisionBox2D bombDefuseZone, bool *CanPutBomb, bool *canDefuseBomb)
 {
     checkPlayerOcclusionZone(0, GetCurrentCameraPlayer());
 
     for (int i = 1; i < MaxPlayer; i++)
     {
-        if (AllPlayers[i].Id != -1)
+        if (AllPlayers[i].Id != UNUSED)
             checkPlayerOcclusionZone(i, i);
     }
 
     // Check bomb zones
     for (int TriggersIndex = 0; TriggersIndex < 2; TriggersIndex++)
-        if (localPlayer->xPos <= AllBombsTriggersCollisions[TriggersIndex].BoxXRangeA && localPlayer->xPos >= AllBombsTriggersCollisions[TriggersIndex].BoxXRangeB && localPlayer->zPos <= AllBombsTriggersCollisions[TriggersIndex].BoxZRangeA && localPlayer->zPos >= AllBombsTriggersCollisions[TriggersIndex].BoxZRangeB)
+    {
+        Site *site = &AllBombsTriggersCollisions[TriggersIndex];
+        if (localPlayer->position.x <= site->collisionBox.BoxXRangeA && localPlayer->position.x >= site->collisionBox.BoxXRangeB && localPlayer->position.z <= site->collisionBox.BoxZRangeA && localPlayer->position.z >= site->collisionBox.BoxZRangeB)
         {
             *CanPutBomb = true;
             break;
         }
+    }
 
-    if (localPlayer->xPos <= bombDefuseZone.BoxXRangeA && localPlayer->xPos >= bombDefuseZone.BoxXRangeB && localPlayer->zPos <= bombDefuseZone.BoxZRangeA && localPlayer->zPos >= bombDefuseZone.BoxZRangeB)
+    if (localPlayer->position.x <= bombDefuseZone.BoxXRangeA && localPlayer->position.x >= bombDefuseZone.BoxXRangeB && localPlayer->position.z <= bombDefuseZone.BoxZRangeA && localPlayer->position.z >= bombDefuseZone.BoxZRangeB)
         *canDefuseBomb = true;
+}
+
+void checkTakingBombZone(CollisionBox2D bombDefuseZone)
+{
+    if (!bombDropped)
+        return;
+
+    for (int i = 0; i < MaxPlayer; i++)
+    {
+        Player *player = &AllPlayers[i];
+        if (player->IsDead || player->Id == UNUSED || player->Team == COUNTERTERRORISTS)
+            continue;
+
+        if (player->position.x <= bombDefuseZone.BoxXRangeA && player->position.x >= bombDefuseZone.BoxXRangeB && player->position.z <= bombDefuseZone.BoxZRangeA && player->position.z >= bombDefuseZone.BoxZRangeB)
+        {
+            player->haveBomb = true;
+            SetGunInInventoryForNonLocalPlayer(0, 28, 8);
+            bombDropped = false;
+
+            for (int playerIndex2 = 0; playerIndex2 < MaxPlayer; playerIndex2++)
+            {
+                Player *player2 = &AllPlayers[playerIndex2];
+                player2->searchForDroppedBomb = false;
+            }
+            break;
+        }
+    }
 }
 
 int LastStairs = 0;
 
-void CheckStairs(int StairsCount, int *CanJump, bool *isInDownStairs)
+void CheckStairs(int *CanJump, bool *isInDownStairs)
 {
     bool firstScan = true;
     for (int i = LastStairs; i < StairsCount; i++)
     {
         Stairs *stairs = &AllStairs[i];
         // bool IsOn = AllPlayersRefForCollisions[0].zPos >= AllStairsRef[i].zSideA && AllPlayersRefForCollisions[0].zPos <= AllStairsRef[i].zSideB && AllPlayersRefForCollisions[0].xPos >= AllStairsRef[i].xSideA && AllPlayersRefForCollisions[0].xPos <= AllStairsRef[i].xSideB;
-        if (localPlayer->zPos >= stairs->zSideA && localPlayer->zPos <= stairs->zSideB && localPlayer->xPos >= stairs->xSideA && localPlayer->xPos <= stairs->xSideB)
+        if (localPlayer->position.z >= stairs->zSideA && localPlayer->position.z <= stairs->zSideB && localPlayer->position.x >= stairs->xSideA && localPlayer->position.x <= stairs->xSideB)
         {
             float yVal = 0;
             if (stairs->direction == 0)
-                yVal = map(localPlayer->zPos, stairs->zSideA, stairs->zSideB, stairs->endY, stairs->startY);
+                yVal = map(localPlayer->position.z, stairs->zSideA, stairs->zSideB, stairs->endY, stairs->startY);
             else if (stairs->direction == 1)
-                yVal = map(localPlayer->xPos, stairs->xSideA, stairs->xSideB, stairs->endY, stairs->startY);
+                yVal = map(localPlayer->position.x, stairs->xSideA, stairs->xSideB, stairs->endY, stairs->startY);
             else if (stairs->direction == 2)
-                yVal = map(localPlayer->zPos, stairs->zSideA, stairs->zSideB, stairs->startY, stairs->endY);
+                yVal = map(localPlayer->position.z, stairs->zSideA, stairs->zSideB, stairs->startY, stairs->endY);
             else
-                yVal = map(localPlayer->xPos, stairs->xSideA, stairs->xSideB, stairs->startY, stairs->endY);
+                yVal = map(localPlayer->position.x, stairs->xSideA, stairs->xSideB, stairs->startY, stairs->endY);
 
-            if (localPlayer->yPos < yVal && yVal - localPlayer->yPos < 3)
+            if (localPlayer->position.y < yVal && yVal - localPlayer->position.y < 3)
             {
                 if (localPlayer->PlayerPhysic->yspeed < 100)
                     localPlayer->PlayerPhysic->yspeed = 0;
 
-                localPlayer->yPos = yVal;
-                NE_ModelSetCoord(localPlayer->PlayerModel, localPlayer->xPos, localPlayer->yPos, localPlayer->zPos);
+                localPlayer->position.y = yVal;
+                NE_ModelSetCoord(localPlayer->PlayerModel, localPlayer->position.x, localPlayer->position.y, localPlayer->position.z);
                 *CanJump = 10;
             }
-            if (localPlayer->yPos == yVal)
+            if (localPlayer->position.y == yVal)
                 *isInDownStairs = true;
 
             LastStairs = i;
@@ -725,13 +792,10 @@ bool checkZoneForOcclusion(OcclusionZone *zone, int posx, int posz)
     return false;
 }
 
-// int LastStairs = 0;
-
-bool CheckStairsForGrenades(PhysicalGrenade *grenade, int StairsCount)
+bool CheckStairsForGrenades(PhysicalGrenade *grenade)
 {
     bool firstScan = true;
     for (int i = grenade->LastStairs; i < StairsCount; i++)
-    // for (int i = 0; i < StairsCount; i++)
     {
         float xpos = grenade->Model->x / 4096.0;
         float ypos = grenade->Model->y / 4096.0;
@@ -806,18 +870,17 @@ void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibili
     float distance2D = sqrtf(powf(targetPlayer->PlayerModel->x - shooterPlayer->PlayerModel->x, 2.0) + powf(targetPlayer->PlayerModel->z - shooterPlayer->PlayerModel->z, 2.0));
     Vector3 Direction;
     Direction.x = targetPlayer->PlayerModel->x - shooterPlayer->PlayerModel->x;
-    Direction.y = targetPlayer->PlayerModel->y - (shooterPlayer->PlayerModel->y + CameraOffsetY * 4096.0);
+    Direction.y = targetPlayer->PlayerModel->y - (shooterPlayer->PlayerModel->y + CameraOffsetYMultiplied);
     Direction.z = targetPlayer->PlayerModel->z - shooterPlayer->PlayerModel->z;
-    shooterPlayer->AngleDestination = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 256.0;
-    shooterPlayer->Angle = shooterPlayer->AngleDestination;
+
+    float tempAngle = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 256.0;
     float CameraAngleToGrenadeDirection = atan2f(distance2D, Direction.y) * 512.0 / (M_TWOPI);
 
     float x2 = 0, y2 = 0, z2 = 0;
-    UpdateLookRotationAI(CameraAngleToGrenadeDirection, fromPlayerIndex, &x2, &y2, &z2);
-
+    UpdateLookRotationAI(CameraAngleToGrenadeDirection, tempAngle, &x2, &y2, &z2);
     if (!checkVisibility)
     {
-        if ((targetPlayer->isAi && targetPlayer->target != -1) || (!targetPlayer->isAi && targetPlayer->PlayerPhysic->xspeed + targetPlayer->PlayerPhysic->yspeed + targetPlayer->PlayerPhysic->zspeed == 0))
+        if ((targetPlayer->isAi && targetPlayer->target != NO_PLAYER) || (!targetPlayer->isAi && targetPlayer->PlayerPhysic->xspeed + targetPlayer->PlayerPhysic->yspeed + targetPlayer->PlayerPhysic->zspeed == 0))
         {
             x2 += ((rand() % 200) - 100) / 1600.0;
             y2 += ((rand() % 200) - 100) / 1600.0;
@@ -832,38 +895,269 @@ void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibili
     }
 
     CalculatePlayerPosition(fromPlayerIndex);
-    shooterPlayer->startXPosRaycast = shooterPlayer->xPos;
-    shooterPlayer->startYPosRaycast = shooterPlayer->yPos;
-    shooterPlayer->startZPosRaycast = shooterPlayer->zPos;
-
-    shooterPlayer->startXRotRaycast = x2;
-    shooterPlayer->startYRotRaycast = y2;
-    shooterPlayer->startZRotRaycast = z2;
-    shooterPlayer->startGunIdRaycast = shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory];
+    setRaycastValues(shooterPlayer, x2, y2, z2);
 
     shooterPlayer->justCheking = checkVisibility;
 }
 
-int Raycast(int playerId)
+void setRaycastValues(Player *shooterPlayer, float xRot, float yRot, float zRot)
 {
-    Player *shooterPlayer = &AllPlayers[playerId];
+    shooterPlayer->startRaycastPosition.x = shooterPlayer->position.x;
+    shooterPlayer->startRaycastPosition.y = shooterPlayer->position.y;
+    shooterPlayer->startRaycastPosition.z = shooterPlayer->position.z;
+
+    shooterPlayer->startRaycastRotation.x = xRot;
+    shooterPlayer->startRaycastRotation.y = yRot;
+    shooterPlayer->startRaycastRotation.z = zRot;
+    shooterPlayer->startGunIdRaycast = getPlayerCurrentGunIndex(shooterPlayer);
+}
+
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+bool getHitDistance(Vector3Int corner1, Vector3Int corner2, Vector3 dirfrac, Vector3Int startPosition, float *t)
+{
+    int t1 = (corner1.x - startPosition.x) * dirfrac.x;
+    int t2 = (corner2.x - startPosition.x) * dirfrac.x;
+    int t3 = (corner1.y - startPosition.y) * dirfrac.y;
+    int t4 = (corner2.y - startPosition.y) * dirfrac.y;
+    int t5 = (corner1.z - startPosition.z) * dirfrac.z;
+    int t6 = (corner2.z - startPosition.z) * dirfrac.z;
+
+    int tmin = MAX(MAX(MIN(t1, t2), MIN(t3, t4)), MIN(t5, t6));
+    int tmax = MIN(MIN(MAX(t1, t2), MAX(t3, t4)), MAX(t5, t6));
+
+    // if tmax < 0, ray (line) is intersecting AABB, but the whole AABB is behind us, if tmin > tmax, ray doesn't intersect AABB
+    if (tmax < 0 || tmin > tmax)
+    {
+    }
+    else
+    {
+        if (*t > tmin)
+        {
+            *t = tmin;
+            return true;
+        }
+    }
+    return false;
+}
+
+// new cpu 35% total, 15% all distance
+// old 48% total, 28% medium distance, long distance 95%, no walls 105%
+// Performance 2x to 7x highter than before
+int Raycast(int playerIndex)
+{
+    // if (playerId != 0)
+    // return -1;
+
+    Player *shooterPlayer = &AllPlayers[playerIndex];
     shooterPlayer->IsHeadShot = false;
     shooterPlayer->IsLegShot = false;
-    int HitPlayerId = -1;
+    int HitPlayerIndex = NO_PLAYER;
 
-    // Calculate for each player the collision box
-    for (int PlayerIndex = 0; PlayerIndex < MaxPlayer; PlayerIndex++) // TODO if index given != current index
-        if (PlayerIndex != playerId)
-            CalculatePlayerColBox(PlayerIndex);
+    // Get an array of all walls to test
+    int WallCountToTest = 0;
+    int AllWallsToCheck[wallCount];
+    for (int i2 = 0; i2 < wallCount; i2++)
+    {
+        if (AllWallsCollisions[i2].ZoneCollision != -1)
+        {
+            for (int i3 = 0; i3 < AllZones[shooterPlayer->CurrentOcclusionZone].ZoneCount; i3++)
+            {
+                if (AllZones[shooterPlayer->CurrentOcclusionZone].AllVisibleZones[i3] == AllWallsCollisions[i2].ZoneCollision)
+                {
+                    AllWallsToCheck[WallCountToTest] = i2;
+                    WallCountToTest++;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            AllWallsToCheck[WallCountToTest] = i2;
+            WallCountToTest++;
+        }
+    }
+
+    float t = 99999 * 8192;
+    float tPlayer = 99999 * 10000;
+    int nearestWallIndex = NO_PLAYER;
+    int nearestPlayerIndex = NO_PLAYER;
+
+    Vector3 dirfrac;
+    dirfrac.x = 1.0f / shooterPlayer->startRaycastRotation.x;
+    dirfrac.y = 1.0f / shooterPlayer->startRaycastRotation.y;
+    dirfrac.z = 1.0f / shooterPlayer->startRaycastRotation.z;
+
+    Vector3Int startPosition;
+    startPosition.x = shooterPlayer->startRaycastPosition.x * 8192;
+    startPosition.y = (shooterPlayer->startRaycastPosition.y + CameraOffsetY) * 8192;
+    startPosition.z = shooterPlayer->startRaycastPosition.z * 8192;
+
+    for (int wallIndex = 0; wallIndex < WallCountToTest; wallIndex++)
+    {
+        Vector3Int corner1;
+        Vector3Int corner2;
+
+        int WallIndex = AllWallsToCheck[wallIndex];
+        corner1.x = AllWallsCollisions[WallIndex].WallCollisionBox.BoxXRangeA;
+        corner1.y = AllWallsCollisions[WallIndex].WallCollisionBox.BoxYRangeA;
+        corner1.z = AllWallsCollisions[WallIndex].WallCollisionBox.BoxZRangeA;
+
+        corner2.x = AllWallsCollisions[WallIndex].WallCollisionBox.BoxXRangeB;
+        corner2.y = AllWallsCollisions[WallIndex].WallCollisionBox.BoxYRangeB;
+        corner2.z = AllWallsCollisions[WallIndex].WallCollisionBox.BoxZRangeB;
+        float newWallDistance = t;
+        if (getHitDistance(corner1, corner2, dirfrac, startPosition, &newWallDistance))
+        {
+            if (newWallDistance < t)
+            {
+                t = newWallDistance;
+                nearestWallIndex = WallIndex;
+            }
+        }
+    }
+
+    startPosition.x = shooterPlayer->startRaycastPosition.x * 4096;
+    startPosition.y = (shooterPlayer->startRaycastPosition.y + CameraOffsetY) * 4096;
+    startPosition.z = shooterPlayer->startRaycastPosition.z * 4096;
+    for (int PlayerIndex = 0; PlayerIndex < MaxPlayer; PlayerIndex++)
+    {
+        Player *testedPlayer = &AllPlayers[PlayerIndex];
+
+        // Calculate for each player the collision box
+        CalculatePlayerColBox(PlayerIndex);
+        if (testedPlayer->Id != UNUSED && PlayerIndex != playerIndex && !testedPlayer->IsDead)
+        {
+            Vector3Int corner1;
+            Vector3Int corner2;
+            corner1.x = testedPlayer->PlayerCollisionBox.BoxXRangeA;
+            corner1.y = testedPlayer->PlayerCollisionBox.BoxYRangeA;
+            corner1.z = testedPlayer->PlayerCollisionBox.BoxZRangeA;
+
+            corner2.x = testedPlayer->PlayerCollisionBox.BoxXRangeB;
+            corner2.y = testedPlayer->PlayerCollisionBox.BoxYRangeB;
+            corner2.z = testedPlayer->PlayerCollisionBox.BoxZRangeB;
+            float newPlayerDistance = tPlayer;
+            if (getHitDistance(corner1, corner2, dirfrac, startPosition, &newPlayerDistance))
+            {
+                if (shooterPlayer->isAi && shooterPlayer->Team == testedPlayer->Team && newPlayerDistance < 1)
+                {
+                    continue;
+                }
+                if (newPlayerDistance < tPlayer)
+                {
+                    tPlayer = newPlayerDistance;
+                    nearestPlayerIndex = PlayerIndex;
+                }
+            }
+        }
+    }
+
+    if (tPlayer * 2.0 < t)
+    {
+        t = tPlayer * 2.0;
+    }
+    else
+    {
+        nearestPlayerIndex = NO_PLAYER;
+    }
+
+    if ((nearestPlayerIndex != NO_PLAYER || nearestWallIndex != NO_PLAYER))
+    {
+        // Turn distance into float distance scale
+        t /= 8192.0;
+        t -= 0.2;
+        if (!shooterPlayer->justCheking)
+        {
+            // Create wall hot flash position
+            Vector3 hitPosition;
+            hitPosition.x = shooterPlayer->startRaycastPosition.x + shooterPlayer->startRaycastRotation.x * t;
+            hitPosition.y = shooterPlayer->startRaycastPosition.y + CameraOffsetY + shooterPlayer->startRaycastRotation.y * t;
+            hitPosition.z = shooterPlayer->startRaycastPosition.z + shooterPlayer->startRaycastRotation.z * t;
+
+            if (!AllGuns[shooterPlayer->startGunIdRaycast].isKnife)
+            {
+                ShowWallHitFlash = 3;
+
+                // Create wall hit flash rotation
+                Vector2 Direction1D;
+                Direction1D.y = hitPosition.y - shooterPlayer->position.y - CameraOffsetY + y;
+                Direction1D.x = 1;
+                normalize2D(&Direction1D);
+
+                Vector3 Direction;
+                Direction.x = hitPosition.x - shooterPlayer->position.x;
+                Direction.y = hitPosition.y - shooterPlayer->position.y;
+                Direction.z = hitPosition.z - shooterPlayer->position.z;
+                normalize(&Direction);
+
+                // Set wall hit flash angles
+                int FinalAngleY = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 384;
+                int FinalAngleZ = atan2f(Direction1D.y, 1) * 512.0 / (M_TWOPI) + 128;
+                NE_ModelSetRot(Model[8], 0, FinalAngleY, FinalAngleZ);
+                // Set wall hot flash position
+                NE_ModelSetCoord(Model[8], hitPosition.x, hitPosition.y, hitPosition.z);
+
+                if (!applyRules)
+                {
+                    SendWallHit = true;
+                    WallHitXPos = hitPosition.x * 4096; // TODO CHECK THIS
+                    WallHitYPos = hitPosition.y * 4096;
+                    WallHitZPos = hitPosition.z * 4096;
+                }
+            }
+            else
+            {
+                PlayBasicSound(AllGuns[shooterPlayer->startGunIdRaycast].gunSound);
+            }
+
+            if (nearestPlayerIndex != NO_PLAYER && (!AllGuns[shooterPlayer->startGunIdRaycast].isKnife || t <= 1))
+            {
+                if (AllPlayers[nearestPlayerIndex].Team != shooterPlayer->Team || allPartyModes[currentPartyMode].teamDamage)
+                    HitPlayerIndex = nearestPlayerIndex;
+
+                if (hitPosition.y - AllPlayers[nearestPlayerIndex].position.y >= 0.3) //(hitPosition.y >= 5480) // TEST VALUES
+                {
+                    shooterPlayer->IsHeadShot = true;
+                }
+                else if (hitPosition.y - AllPlayers[nearestPlayerIndex].position.y <= -0.02) // if (hitPosition.y <= 2800)
+                {
+                    shooterPlayer->IsLegShot = true;
+                }
+            }
+        }
+        else
+        {
+            if (nearestPlayerIndex != NO_PLAYER)
+            {
+                if (AllPlayers[nearestPlayerIndex].Team != shooterPlayer->Team)
+                    HitPlayerIndex = nearestPlayerIndex;
+
+                if (AllGuns[shooterPlayer->startGunIdRaycast].isKnife) // ICI
+                {
+                    if (t <= 1)
+                    {
+                        shooterPlayer->tooFar = true;
+                        Player *targetPlayer = &AllPlayers[nearestPlayerIndex];
+                        int nearestWaypoint = getNearestWaypoint(targetPlayer->position.x, targetPlayer->position.y, targetPlayer->position.z);
+                        StartChecking(playerIndex, nearestWaypoint);
+                    }
+                    else
+                        shooterPlayer->tooFar = false;
+                }
+            }
+        }
+    }
+
+    return HitPlayerIndex;
 
     // int ForCount = 3 * RaycastDistance;
-    int ForCount = 150;
+    /*int ForCount = 150;
 
-    // if (shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory] < GunCount && AllGuns[shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory]].isKnife)
-    if (AllGuns[shooterPlayer->startGunIdRaycast].isKnife) // ICI
-        ForCount = 4;                                      // ICI
-    // else if (shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory] >= GunCount + shopGrenadeCount /* && AllGuns[AllGunsInInventory[currentGunInInventory]].isKnife*/)
-    // ForCount = 5;
+    if (AllGuns[shooterPlayer->startGunIdRaycast].isKnife && !shooterPlayer->justCheking) // ICI
+        ForCount = 4;                                                                     // ICI
+    // printf("ForCount %d\n", ForCount);
 
     shooterPlayer->PlayerFoundAtDistance = -1;
 
@@ -874,7 +1168,7 @@ int Raycast(int playerId)
         {
             float Step = i / 2.5; // Set RayAccuracy to 3.0 (lower RayAccuracy, lower accuracy but higher scan distance, higher RayAccuracy, higher accuracy but lower scan distance )
             // Calculate next raycast point
-            int NextXRayPoint = (shooterPlayer->startXPosRaycast + shooterPlayer->startXRotRaycast * Step) * 4096, NextYRayPoint = (shooterPlayer->startYPosRaycast + CameraOffsetY + shooterPlayer->startYRotRaycast * Step) * 4096, NextZRayPoint = (shooterPlayer->startZPosRaycast + shooterPlayer->startZRotRaycast * Step) * 4096;
+            int NextXRayPoint = (shooterPlayer->startRaycastPosition.x + shooterPlayer->startRaycastRotation.x * Step) * 4096, NextYRayPoint = (shooterPlayer->startRaycastPosition.y + CameraOffsetY + shooterPlayer->startRaycastRotation.y * Step) * 4096, NextZRayPoint = (shooterPlayer->startRaycastPosition.z + shooterPlayer->startRaycastRotation.z * Step) * 4096;
 
             // Check if next raycast point is in a player body
             for (int PlayerIndex = 0; PlayerIndex < MaxPlayer; PlayerIndex++)
@@ -910,10 +1204,6 @@ int Raycast(int playerId)
                     // printf("%d Hits player %d at %d\n", playerId, PlayerIndex, i);
                     HitPlayerId = PlayerIndex;
                     shooterPlayer->PlayerFoundAtDistance = i;
-                    /*if (applyRules)
-                    {
-                        Hit = HitPlayerId;
-                    }*/
                     i = ForCount;
                     break;
                 }
@@ -921,46 +1211,56 @@ int Raycast(int playerId)
         }
     }
 
-    // if (HitPlayerId == -1)
-    // shooterPlayer->PlayerFoundAtDistance = -1;
-
-    // if (/*shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory] < GunCount && */ AllGuns[shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory]].isKnife)
-
-    // else if (shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory] >= GunCount + shopGrenadeCount) //TODO ??????? Maybe for the Taser
-    // PlayerFoundAtDistance = 5;
-
     // Prepare next scan for walls
     shooterPlayer->OldStopAt = 0;
     shooterPlayer->StopAt = 30;
     shooterPlayer->ScanFinished = false;
 
     if (AllGuns[shooterPlayer->startGunIdRaycast].isKnife) // ICI
-        shooterPlayer->PlayerFoundAtDistance = 4;          // ICI
+    {
+        if (shooterPlayer->justCheking)
+        {
+            if (shooterPlayer->PlayerFoundAtDistance >= 4)
+            {
+                shooterPlayer->tooFar = true;
+                if (shooterPlayer->target != NO_PLAYER)
+                {
+                    Player *targetPlayer = &AllPlayers[shooterPlayer->target];
+                    int nearestWaypoint = getNearestWaypoint(targetPlayer->position.x, targetPlayer->position.y, targetPlayer->position.z);
+                    // printf("Start check from gun :\n");
+                    StartChecking(playerId, nearestWaypoint);
+                }
+                // printf("Far go %d\n", nearestWaypoint);
+            }
+            else
+                shooterPlayer->tooFar = false;
+        }
+
+        // shooterPlayer->PlayerFoundAtDistance = 4; // ICI
+    }
 
     if (CheckWallHit(playerId) == -1) // If a wall is detected before the player
     {
         HitPlayerId = -1;
         shooterPlayer->ScanFinished = true;
     }
-    // else if (shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory] < GunCount && !AllGuns[shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory]].isKnife)
     else if (!AllGuns[shooterPlayer->startGunIdRaycast].isKnife)
     {
         shooterPlayer->OldStopAt = shooterPlayer->StopAt;
         shooterPlayer->StopAt += 30;
     }
-    // else if (shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory] < GunCount && AllGuns[shooterPlayer->AllGunsInInventory[shooterPlayer->currentGunInInventory]].isKnife) //Play normal knife sound if no wall/player was detected
     else if (!shooterPlayer->justCheking)
     {
         PlayBasicSound(AllGuns[shooterPlayer->startGunIdRaycast].gunSound);
     }
 
     // Return no object/player hit
-    return HitPlayerId;
+    return HitPlayerId;*/
 }
 
 int CheckWallHit(int playerId)
 {
-    int NextXRayPoint = 0, NextYRayPoint = -10, NextZRayPoint = 0;
+    /*int NextXRayPoint = 0, NextYRayPoint = -10, NextZRayPoint = 0;
     int LastNextXRayPoint, LastNextYRayPoint, LastNextZRayPoint;
 
     // Make a list of all wall to check (all wall in a visible zone for the player)
@@ -990,11 +1290,11 @@ int CheckWallHit(int playerId)
 
     // printf("WallCount %d", StopAt);
 
-    for (int i = player->OldStopAt; i < player->StopAt; i++)
+    // for (int i = player->OldStopAt; i < player->StopAt; i++)
+    for (int i = 0; i < 120; i++)
     {
         if (player->PlayerFoundAtDistance == i)
         {
-            // printf("STOP %d hit %d\n", i, Hit);
             player->ScanFinished = true;
 
             if (player->isAi)
@@ -1005,30 +1305,11 @@ int CheckWallHit(int playerId)
                 }
                 else
                 {
-                    // int newHealth = AllPlayers[player->target].Health - AllGuns[player->startGunIdRaycast].Damage;
-                    // setPlayerHealth(player->target, newHealth);
-                    // AllPlayers[player->target].Health--;
-                    // checkAfterDamage(playerId, player->target, true);
+                    player->canCancelNextCheck = true;
                     makeHit(playerId, player->target);
-
-                    /*if (AllPlayers[player->target].Health == 0)
-                    {
-                        player->KillCount++;
-                        AllPlayers[player->target].DeathCount++;
-                        if (currentMenu == 2)
-                            UpdateBottomScreenOneFrame += 8;
-                    }*/
+                    // printf("STOP %d\n", i);
                 }
             }
-            /*else if (applyRules)
-            {
-                makeHit(playerId, Hit);
-                //int newHealth = AllPlayers[Hit].Health - AllGuns[player->startGunIdRaycast].Damage;
-                //setPlayerHealth(Hit, newHealth);
-                Hit = -1;
-                //AllPlayers[Hit].Health--;
-            }*/
-
             return 0;
         }
 
@@ -1039,9 +1320,12 @@ int CheckWallHit(int playerId)
         LastNextYRayPoint = NextYRayPoint;
         LastNextZRayPoint = NextZRayPoint;
 
-        NextXRayPoint = (player->startXPosRaycast + player->startXRotRaycast * Step) * 8192;
-        NextYRayPoint = (player->startYPosRaycast + CameraOffsetY + player->startYRotRaycast * Step) * 8192;
-        NextZRayPoint = (player->startZPosRaycast + player->startZRotRaycast * Step) * 8192;
+        NextXRayPoint = (player->startRaycastPosition.x + player->startRaycastRotation.x * Step) * 8192;
+        NextYRayPoint = (player->startRaycastPosition.y + CameraOffsetY + player->startRaycastRotation.y * Step) * 8192;
+        NextZRayPoint = (player->startRaycastPosition.z + player->startRaycastRotation.z * Step) * 8192;
+        float LastNextXRayPointFixed = LastNextXRayPoint / 8192.0;
+        float LastNextYRayPointFixed = LastNextYRayPoint / 8192.0;
+        float LastNextZRayPointFixed = LastNextZRayPoint / 8192.0;
 
         // Check static objects
         for (int i2 = 0; i2 < WallCountToTest; i2++)
@@ -1055,47 +1339,46 @@ int CheckWallHit(int playerId)
 
             // if (collision)
             {
-                // Set wall hit flash position
-                float LastNextXRayPointFixed = LastNextXRayPoint / 8192.0;
-                float LastNextYRayPointFixed = LastNextYRayPoint / 8192.0;
-                float LastNextZRayPointFixed = LastNextZRayPoint / 8192.0;
-                NE_ModelSetCoord(Model[8], LastNextXRayPointFixed, LastNextYRayPointFixed, LastNextZRayPointFixed);
+                if (!player->justCheking)
+                {
+                    // Set wall hit flash position
 
-                // Get wall hit flash rotation
-                Vector2 Direction1D;
-                Direction1D.y = LastNextYRayPointFixed - player->yPos - CameraOffsetY + y;
-                Direction1D.x = 1;
-                normalize2D(&Direction1D);
+                    NE_ModelSetCoord(Model[8], LastNextXRayPointFixed, LastNextYRayPointFixed, LastNextZRayPointFixed);
 
-                Vector3 Direction;
-                Direction.x = LastNextXRayPointFixed - player->xPos;
-                Direction.y = LastNextYRayPointFixed - player->yPos;
-                Direction.z = LastNextZRayPointFixed - player->zPos;
-                normalize(&Direction);
+                    // Get wall hit flash rotation
+                    Vector2 Direction1D;
+                    Direction1D.y = LastNextYRayPointFixed - player->position.y - CameraOffsetY + y;
+                    Direction1D.x = 1;
+                    normalize2D(&Direction1D);
 
-                // Set wall hit flash angles
-                int FinalAngleY = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 384;
-                int FinalAngleZ = atan2f(Direction1D.y, 1) * 512.0 / (M_TWOPI) + 128;
-                NE_ModelSetRot(Model[8], 0, FinalAngleY, FinalAngleZ);
+                    Vector3 Direction;
+                    Direction.x = LastNextXRayPointFixed - player->position.x;
+                    Direction.y = LastNextYRayPointFixed - player->position.y;
+                    Direction.z = LastNextZRayPointFixed - player->position.z;
+                    normalize(&Direction);
 
-                ShowWallHitFlash = 3;
-                // printf("HIT WALL\n");
+                    // Set wall hit flash angles
+                    int FinalAngleY = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 384;
+                    int FinalAngleZ = atan2f(Direction1D.y, 1) * 512.0 / (M_TWOPI) + 128;
+                    NE_ModelSetRot(Model[8], 0, FinalAngleY, FinalAngleZ);
 
-                // Prepare wall hit data for server
-                SendWallHit = true;
-                WallHitXPos = LastNextXRayPoint;
-                WallHitYPos = LastNextYRayPoint;
-                WallHitZPos = LastNextZRayPoint;
+                    ShowWallHitFlash = 3;
+                    // printf("HIT WALL\n");
 
-                // TODO CHANGE THIS
-                // if (player->AllGunsInInventory[player->currentGunInInventory] < GunCount && AllGuns[player->AllGunsInInventory[player->currentGunInInventory]].isKnife) //Play knife sound it a wall was found
-                // PlayBasicSound(AllGuns[player->AllGunsInInventory[player->currentGunInInventory]].gunSound);
+                    // Prepare wall hit data for server
+                    SendWallHit = true;
+                    WallHitXPos = LastNextXRayPoint;
+                    WallHitYPos = LastNextYRayPoint;
+                    WallHitZPos = LastNextZRayPoint;
+                }
+
+                // TODO CHANGE THIS ?
                 if (AllGuns[player->startGunIdRaycast].isKnife && !player->justCheking) // Play knife sound it a wall was found
                     PlayBasicSound(AllGuns[player->startGunIdRaycast].gunSound);
                 return -1;
             }
         }
-    }
+    }*/
 
     return 0;
 }

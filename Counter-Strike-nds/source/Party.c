@@ -2,17 +2,28 @@
 #include "party.h"
 
 PartyMode allPartyModes[2];
-bool bombCheckedInA;
-bool bombCheckedInB;
+// bool bombCheckedInA = 0; // 0 Unchecked, 1 check but nothing, 2 bomb is here
+// bool bombCheckedInB = 0; // 0 Unchecked, 1 check but nothing, 2 bomb is here
 int bombPlantedAt = -1;
 int currentDefuserIndex = -1;
+Vector4 droppedBombPositionAndRotation;
+bool bombDropped;
+
+int PartyMinutes;
+int PartySeconds;
+int BombSeconds;
+enum RoundState roundState = TRAINING;
+int CounterScore = 0;
+int TerroristsScore = 0;
+int currentPartyMode = 1;
 
 void AddAllPartyModes()
 {
     // Competitive
     AddPartyMode(0, true, 30, 800, 16000, 3250, 3500, 1400, 500, 300, 300, 800, 300, true, true, false);
     allPartyModes[0].trainingMinutesDuration = 0;
-    allPartyModes[0].trainingSecondsDuration = 20;
+    // allPartyModes[0].trainingSecondsDuration = 20;
+    allPartyModes[0].trainingSecondsDuration = 0;
 
     allPartyModes[0].startRoundMinutesDuration = 0;
     allPartyModes[0].startRoundSecondsDuration = 15;
@@ -33,8 +44,11 @@ void AddAllPartyModes()
 
     // Casual
     AddPartyMode(1, false, 15, 1000, 10000, 2700, 2700, 2400, 0, 200, 200, 200, 0, false, false, true);
-    allPartyModes[1].trainingMinutesDuration = 0;
-    allPartyModes[1].trainingSecondsDuration = 20;
+    // AddPartyMode(1, false, 2, 1000, 10000, 2700, 2700, 2400, 0, 200, 200, 200, 0, false, false, true);
+    allPartyModes[1].trainingMinutesDuration = 2;
+    // allPartyModes[1].trainingSecondsDuration = 20;
+    // allPartyModes[1].trainingMinutesDuration = 0;
+    allPartyModes[1].trainingSecondsDuration = 0;
 
     allPartyModes[1].startRoundMinutesDuration = 0;
     allPartyModes[1].startRoundSecondsDuration = 15;

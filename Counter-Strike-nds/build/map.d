@@ -1,5 +1,6 @@
-map.o: C:/devkitPro/nitro-engine/examples/physics/basic/source/map.c \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/main.h \
+map.o: \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/map.c \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/main.h \
  C:/devkitPro/nitro-engine/include/NEMain.h \
  C:/devkitPro/libnds/include/nds.h \
  C:/devkitPro/libnds/include/nds/libversion.h \
@@ -78,6 +79,8 @@ map.o: C:/devkitPro/nitro-engine/examples/physics/basic/source/map.c \
  C:/devkitPro/libnds/include/libfatversion.h \
  C:/devkitPro/libnds/include/nds/disc_io.h \
  C:/devkitPro/libnds/include/filesystem.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/saveManager.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/ui.h \
  C:/devkitPro/libnds/include/dswifi9.h \
  C:/devkitPro/libnds/include/dswifi_version.h \
  C:/devkitPro/libnds/include/sys/socket.h \
@@ -85,79 +88,80 @@ map.o: C:/devkitPro/nitro-engine/examples/physics/basic/source/map.c \
  C:/devkitPro/libnds/include/netdb.h \
  C:/devkitPro/libnds/include/maxmod9.h \
  C:/devkitPro/libnds/include/mm_types.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/soundbank.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/playerAnimNea_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/GIGNAnimNea_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/GIGNNew_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart0_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart1_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart2_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart3_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart4_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart5_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart6_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/bomb_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/plane_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/repeat_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/explosion_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/road_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/wallWindow_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/wall_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart3_1_3ds_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart3_2_3ds_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart3_3_3ds_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/grenade_3ds_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/MapUI_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/MapPointUI_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/CheckMark_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/WhiteScareRounded_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/QuitButton_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/scopeImage_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/reload_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/JumpArrow_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/skin_soldier_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/skin_adventurer_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/skin_man_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/gign_skin1_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/crosshair2_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/Atlas_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/gun_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/gun1_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/gun2_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/gunFixed_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/knifect_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/deagle_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/elite_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/fivesevent_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/glock18_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/p228_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/uspsilencer_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/m3super90_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/xm1014_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/mac10_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/mp5_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/m249_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/p90_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/tmp_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/ump45_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/ak47_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/aug_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/famas_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/galil_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/m4a1_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/sg552_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/sg550_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/scout_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/g3sg1_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/awp_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/fraggrenade_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/smokegrenade_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/flashthrowed_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/c4_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/muzzle_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/build/text_bmp_bin.h \
- C:/devkitPro/nitro-engine/examples/physics/basic/source/map.h
-C:/devkitPro/nitro-engine/examples/physics/basic/source/main.h:
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/soundbank.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/playerAnimNea_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/GIGNAnimNea_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/GIGNNew_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart0_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart1_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart2_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart4_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart5_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart6_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/bomb_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/plane_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/repeat_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/explosion_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/road_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/wallWindow_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/wall_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_1_3ds_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_2_3ds_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_3_3ds_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/grenade_3ds_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/MapUI_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/MapPointUI_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/CheckMark_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/WhiteScareRounded_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/QuitButton_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/scopeImage_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/reload_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/JumpArrow_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/skin_soldier_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/skin_adventurer_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/skin_man_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gign_skin1_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/terrorist_skin1_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/crosshair2_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/Atlas_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gun_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gun1_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gun2_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gunFixed_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/knifect_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/deagle_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/elite_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/fivesevent_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/glock18_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/p228_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/uspsilencer_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/m3super90_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/xm1014_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/mac10_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/mp5_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/m249_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/p90_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/tmp_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/ump45_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/ak47_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/aug_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/famas_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/galil_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/m4a1_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/sg552_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/sg550_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/scout_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/g3sg1_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/awp_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/fraggrenade_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/smokegrenade_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/flashthrowed_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/c4_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/muzzle_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/text_bmp_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/map.h
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/main.h:
 C:/devkitPro/nitro-engine/include/NEMain.h:
 C:/devkitPro/libnds/include/nds.h:
 C:/devkitPro/libnds/include/nds/libversion.h:
@@ -236,6 +240,8 @@ C:/devkitPro/libnds/include/fat.h:
 C:/devkitPro/libnds/include/libfatversion.h:
 C:/devkitPro/libnds/include/nds/disc_io.h:
 C:/devkitPro/libnds/include/filesystem.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/saveManager.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/ui.h:
 C:/devkitPro/libnds/include/dswifi9.h:
 C:/devkitPro/libnds/include/dswifi_version.h:
 C:/devkitPro/libnds/include/sys/socket.h:
@@ -243,75 +249,76 @@ C:/devkitPro/libnds/include/netinet/in.h:
 C:/devkitPro/libnds/include/netdb.h:
 C:/devkitPro/libnds/include/maxmod9.h:
 C:/devkitPro/libnds/include/mm_types.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/soundbank.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/playerAnimNea_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/GIGNAnimNea_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/GIGNNew_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart0_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart1_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart2_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart3_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart4_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart5_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart6_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/bomb_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/plane_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/repeat_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/explosion_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/road_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/wallWindow_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/wall_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart3_1_3ds_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart3_2_3ds_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/DustPart3_3_3ds_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/grenade_3ds_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/MapUI_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/MapPointUI_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/CheckMark_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/WhiteScareRounded_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/QuitButton_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/scopeImage_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/reload_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/JumpArrow_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/skin_soldier_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/skin_adventurer_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/skin_man_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/gign_skin1_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/crosshair2_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/Atlas_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/gun_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/gun1_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/gun2_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/gunFixed_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/knifect_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/deagle_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/elite_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/fivesevent_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/glock18_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/p228_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/uspsilencer_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/m3super90_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/xm1014_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/mac10_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/mp5_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/m249_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/p90_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/tmp_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/ump45_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/ak47_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/aug_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/famas_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/galil_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/m4a1_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/sg552_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/sg550_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/scout_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/g3sg1_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/awp_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/fraggrenade_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/smokegrenade_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/flashthrowed_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/c4_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/muzzle_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/build/text_bmp_bin.h:
-C:/devkitPro/nitro-engine/examples/physics/basic/source/map.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/soundbank.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/playerAnimNea_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/GIGNAnimNea_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/GIGNNew_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart0_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart1_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart2_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart4_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart5_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart6_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/bomb_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/plane_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/repeat_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/explosion_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/road_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/wallWindow_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/wall_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_1_3ds_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_2_3ds_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_3_3ds_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/grenade_3ds_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/MapUI_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/MapPointUI_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/CheckMark_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/WhiteScareRounded_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/QuitButton_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/scopeImage_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/reload_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/JumpArrow_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/skin_soldier_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/skin_adventurer_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/skin_man_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gign_skin1_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/terrorist_skin1_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/crosshair2_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/Atlas_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gun_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gun1_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gun2_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/gunFixed_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/knifect_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/deagle_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/elite_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/fivesevent_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/glock18_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/p228_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/uspsilencer_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/m3super90_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/xm1014_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/mac10_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/mp5_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/m249_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/p90_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/tmp_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/ump45_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/ak47_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/aug_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/famas_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/galil_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/m4a1_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/sg552_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/sg550_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/scout_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/g3sg1_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/awp_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/fraggrenade_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/smokegrenade_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/flashthrowed_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/c4_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/muzzle_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/text_bmp_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/map.h:

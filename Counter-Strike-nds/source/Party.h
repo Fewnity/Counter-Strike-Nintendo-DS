@@ -4,6 +4,15 @@
 #include <NEMain.h>
 #include "main.h"
 
+enum RoundState
+{
+    TRAINING = -1,
+    WAIT_START = 0,
+    PLAYING = 1,
+    END_ROUND = 2,
+    END = 3,
+};
+
 typedef struct //
 {
     bool middlePartyTeamSwap;
@@ -47,10 +56,17 @@ typedef struct //
 } PartyMode;
 
 extern PartyMode allPartyModes[2];
-extern bool bombCheckedInA;
-extern bool bombCheckedInB;
 extern int currentDefuserIndex;
 extern int bombPlantedAt;
+extern int PartyMinutes;
+extern int PartySeconds;
+extern enum RoundState roundState;
+extern int CounterScore;
+extern int TerroristsScore;
+extern int BombSeconds;
+extern Vector4 droppedBombPositionAndRotation;
+extern bool bombDropped;
+extern int currentPartyMode;
 
 void AddAllPartyModes();
 void AddPartyMode(int index, bool MiddlePartyTeamSwap, int MaxRound, int StartMoney, int MaxMoney, int WinTheRoundMoney, int WinTheRoundBombMoney, int LoseTheRoundMoney, int LoseIncrease, int DefuseBombMoneyBonus, int PlantBombMoneyBonus, int PlantedBombLoseMoneyBonus, int KillPenalties, bool NoMoneyOnTimeEnd, bool TeamDamage, bool CanSeeOtherTeamView);

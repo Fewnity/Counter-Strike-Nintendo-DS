@@ -7,7 +7,7 @@ $(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>dev
 endif
 
 include $(DEVKITARM)/ds_rules
-
+include $(DEVKITARM)/base_rules
 _ADDFILES	:=	-d $(NITRO_FILES)
 
 #-------------------------------------------------------------------------------
@@ -22,15 +22,19 @@ BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
-AUDIO    	:=  	audio
+AUDIO    	:=  audio
 NITRODATA	:=	nitrofiles
+GAME_TITLE	:=	Counter Strike
+GAME_SUBTITLE1	:=	Fewnity
+GAME_SUBTITLE2	:=	Fewnity
+GAME_ICON	:=	$(CURDIR)/../icon.bmp
 
 #-------------------------------------------------------------------------------
 # options for code generation
 #-------------------------------------------------------------------------------
 ARCH	:=	-mthumb -mthumb-interwork
 
-CFLAGS	:=	-g -Wall -O2\
+CFLAGS	:=	-g -Wall -O3\
 		-march=armv5te -mtune=arm946e-s -fomit-frame-pointer\
 		-ffast-math \
 		$(ARCH)

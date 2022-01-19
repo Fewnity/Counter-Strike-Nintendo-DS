@@ -2,12 +2,19 @@
 #include "grenade.h"
 #include "collisions.h"
 #include "ui.h"
+#include "draw3d.h"
+#include "party.h"
+
+int t1x = 0;
+int t1z = 0;
+int t2x = 0;
+int t2z = 0;
 
 // Draw top screen
 void Draw3DScene(void)
 {
     // Set camera for drawing
-    NE_CameraUse(Camara);
+    NE_CameraUse(Camera);
 
     // Reset polygons Alpha/Light/Effect
     NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
@@ -16,17 +23,17 @@ void Draw3DScene(void)
     if (!isShowingMap)
     {
         // Field of view end coordinates
-        int t1x = (xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos) * 8192.0;
-        int t1z = (zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos) * 8192.0;
-        int t2x = (xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos) * 8192.0;
-        int t2z = (zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos) * 8192.0;
+        t1x = (xWithoutYForOcclusionSide1 * 500 + AllPlayers[CurrentCameraPlayer].position.x) * 8192.0;
+        t1z = (zWithoutYForOcclusionSide1 * 500 + AllPlayers[CurrentCameraPlayer].position.z) * 8192.0;
+        t2x = (xWithoutYForOcclusionSide2 * 500 + AllPlayers[CurrentCameraPlayer].position.x) * 8192.0;
+        t2z = (zWithoutYForOcclusionSide2 * 500 + AllPlayers[CurrentCameraPlayer].position.z) * 8192.0;
 
         // Draw map
-        for (int i = 0; i < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i++)
+        for (int i = 0; i < AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].ZoneCount; i++)
         {
             bool inFov = false; // Is the map part in the field of view of the player?
             // Force to render the map part where the player is
-            if (checkZoneForOcclusion(&AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]], AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z))
+            if (checkZoneForOcclusion(&AllOcclusionZone[AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].AllVisibleZones[i]], AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z))
                 inFov = true;
             else
             {
@@ -34,7 +41,7 @@ void Draw3DScene(void)
                 for (int i2 = 0; i2 < 4; i2++)
                 {
                     // if (PointInTriangle(AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].angles[i2].x, AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].angles[i2].y, AllPlayers[0].xPos, AllPlayers[0].zPos, xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos, xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos))
-                    if (PointInTriangleInt(AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].x, AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].y, AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z, t1x, t1z, t2x, t2z))
+                    if (PointInTriangleInt(AllOcclusionZone[AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].x, AllOcclusionZone[AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].y, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z))
                     {
                         inFov = true;
                         break;
@@ -43,7 +50,7 @@ void Draw3DScene(void)
             }
             // Render map model if needed
             if (inFov)
-                NE_ModelDraw(Model[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]]);
+                NE_ModelDraw(Model[AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].AllVisibleZones[i]]);
         }
 
         // for (int i = 0; i < 7; i++)
@@ -58,7 +65,7 @@ void Draw3DScene(void)
                 if (grenades[i]->isVisible)
                 {
                     // Grenade clipping
-                    bool inFov = PointInTriangleInt(grenades[i]->Model->x, grenades[i]->Model->z, AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z, t1x, t1z, t2x, t2z);
+                    bool inFov = PointInTriangleInt(grenades[i]->Model->x, grenades[i]->Model->z, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z);
 
                     if (inFov)
                         NE_ModelDraw(grenades[i]->Model);
@@ -80,7 +87,7 @@ void Draw3DScene(void)
         NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
 
         // If bomb is planted, draw bomb
-        if (BombPlanted)
+        if (BombPlanted || bombDropped)
             NE_ModelDraw(Model[7]);
 
         // Show wall bullet hit flash
@@ -112,45 +119,53 @@ void Draw3DScene(void)
             NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
         }
 
-        // Draw players
-        for (int i = 1; i < MaxPlayer; i++)
-        {
-            // To draw a player, he need to exists and to be alive
-            if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead && CurrentCameraPlayer != i)
-            {
-                // Check players zones, to hide players in hidden zone
-                for (int i2 = 0; i2 < AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount; i2++)
-                {
-                    for (int i3 = 0; i3 < AllZones[AllPlayers[i].CurrentOcclusionZone].ZoneCount; i3++)
-                    {
-                        // If local player and other player are in visible zones
-                        if (AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i2] == AllZones[AllPlayers[i].CurrentOcclusionZone].AllVisibleZones[i3])
-                        {
-                            // Chec player clipping
-                            CalculatePlayerPosition(i); // TODO REMOVE THIS?
-                                                        // bool inFov = PointInTriangle(AllPlayers[i].xPos, AllPlayers[i].zPos, AllPlayers[0].xPos, AllPlayers[0].zPos, t1x, t1z, t2x, t2z);
-                            bool inFov = PointInTriangleInt(AllPlayers[i].PlayerModel->x, AllPlayers[i].PlayerModel->z, AllPlayers[0].PlayerModel->x, AllPlayers[0].PlayerModel->z, t1x, t1z, t2x, t2z);
-                            // Draw player
-                            if (inFov)
-                                NE_ModelDraw(AllPlayers[i].PlayerModel);
+        DrawPlayers();
+    }
 
-                            // Stop for
-                            i2 = AllZones[AllPlayers[0].CurrentOcclusionZone].ZoneCount;
-                            break;
-                        }
+    // if (UpdateBottomScreenOneFrame != 0)
+    // return;
+
+    // Draw UI
+    drawTopScreenUI();
+}
+
+void DrawPlayers()
+{
+    if (UpdateBottomScreenOneFrame != 0)
+        return;
+
+    // Draw players
+    for (int i = 1; i < MaxPlayer; i++)
+    {
+        if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead && CurrentCameraPlayer != i)
+        {
+            for (int i3 = 0; i3 < AllZones[AllPlayers[i].CurrentOcclusionZone].ZoneCount; i3++)
+            {
+                if (checkZoneForOcclusion(&AllOcclusionZone[AllZones[AllPlayers[i].CurrentOcclusionZone].AllVisibleZones[i3]], AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z))
+                {
+                    bool inFov = PointInTriangleInt(AllPlayers[i].PlayerModel->x, AllPlayers[i].PlayerModel->z, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z);
+                    // Draw player
+                    if (inFov)
+                    {
+                        NE_ModelDraw(AllPlayers[i].PlayerModel);
                     }
+                    break;
                 }
             }
         }
     }
-    /*for (int i = 1; i < MaxPlayer; i++)
-    {
-        if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead)
-        {
-            NE_ModelDraw(AllPlayers[i].PlayerModel);
-        }
-    }*/
+}
 
-    // Draw UI
-    drawTopScreenUI();
+void Draw3DSceneNotInGame(void)
+{
+    // Set camera for drawing
+    NE_CameraUse(Camera);
+
+    // Reset polygons Alpha/Light/Effect
+    NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+
+    NE_ModelDraw(Model[2]);
+    NE_ModelDraw(Model[3]);
+
+    // drawTopScreenUI();
 }

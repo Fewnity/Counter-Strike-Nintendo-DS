@@ -1,0 +1,12 @@
+{
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "party.h": "c",
+        "main.h": "c",
+        "grenade.h": "c",
+        "keyboard.h": "c",
+        "savemanager.h": "c",
+        "network.h": "c",
+        "maxmod9.h": "c"
+    }
+}

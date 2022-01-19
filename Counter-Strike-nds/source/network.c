@@ -6,6 +6,7 @@
 #include "ui.h"
 #include "collisions.h"
 #include "network.h"
+#include "party.h"
 
 #include <dswifi9.h>
 #include <sys/socket.h>
@@ -386,15 +387,15 @@ void ReadServerData()
                     if (localPlayer->Id == PlayerIdInt)
                     {
                         // Set new position and teleport player
-                        localPlayer->xPos = XFloat;
-                        localPlayer->yPos = YFloat;
-                        localPlayer->zPos = ZFloat;
+                        localPlayer->position.x = XFloat;
+                        localPlayer->position.y = YFloat;
+                        localPlayer->position.z = ZFloat;
                         localPlayer->Angle = AngleInt;
                         localPlayer->PlayerPhysic->xspeed = 0;
                         localPlayer->PlayerPhysic->yspeed = 0;
                         localPlayer->PlayerPhysic->zspeed = 0;
-                        NE_ModelSetCoord(localPlayer->PlayerModel, localPlayer->xPos, localPlayer->yPos, localPlayer->zPos);
-                        UpdateLookRotation(CameraAngleY);
+                        NE_ModelSetCoord(localPlayer->PlayerModel, localPlayer->position.x, localPlayer->position.y, localPlayer->position.z);
+                        ForceUpdateLookRotation(CameraAngleY);
                     }
                     else
                     {
@@ -403,18 +404,18 @@ void ReadServerData()
                             if (AllPlayers[i].Id == PlayerIdInt)
                             {
                                 // If player has no position, teleport the player to new updated position (0 default position)
-                                if (AllPlayers[i].xDestination == 0)
+                                if (AllPlayers[i].lerpDestination.x == 0)
                                 {
-                                    AllPlayers[i].xPos = XFloat;
-                                    AllPlayers[i].yPos = YFloat;
-                                    AllPlayers[i].zPos = ZFloat;
+                                    AllPlayers[i].position.x = XFloat;
+                                    AllPlayers[i].position.y = YFloat;
+                                    AllPlayers[i].position.z = ZFloat;
                                     AllPlayers[i].Angle = AngleInt;
                                 }
 
                                 // Set player destination
-                                AllPlayers[i].xDestination = XFloat;
-                                AllPlayers[i].yDestination = YFloat;
-                                AllPlayers[i].zDestination = ZFloat;
+                                AllPlayers[i].lerpDestination.x = XFloat;
+                                AllPlayers[i].lerpDestination.y = YFloat;
+                                AllPlayers[i].lerpDestination.z = ZFloat;
 
                                 AllPlayers[i].AngleDestination = AngleInt;
                                 break;
@@ -443,14 +444,14 @@ void ReadServerData()
 
                     // Get wall hit flash direction
                     Vector2 Direction1D;
-                    Direction1D.y = YFloat - localPlayer->yPos - CameraOffsetY + y;
+                    Direction1D.y = YFloat - localPlayer->position.y - CameraOffsetY + y;
                     Direction1D.x = 1;
                     normalize2D(&Direction1D);
 
                     Vector3 Direction;
-                    Direction.x = XFloat - localPlayer->xPos;
-                    Direction.y = YFloat - localPlayer->yPos;
-                    Direction.z = ZFloat - localPlayer->zPos;
+                    Direction.x = XFloat - localPlayer->position.x;
+                    Direction.y = YFloat - localPlayer->position.y;
+                    Direction.z = ZFloat - localPlayer->position.z;
                     normalize(&Direction);
 
                     // Set wall hit angle
@@ -464,7 +465,7 @@ void ReadServerData()
                     SoundPos.x = XFloat;
                     SoundPos.y = YFloat;
                     SoundPos.z = ZFloat;
-                    GetPanningByPosition(&Panning, &Volume, AllPlayers, SoundPos, xWithoutYForAudio, zWithoutYForAudio, 0.15);
+                    GetPanningByPosition(&Panning, &Volume, SoundPos, xWithoutYForAudio, zWithoutYForAudio, 0.15);
                     Play3DSound(SFX_RIC, Volume, Panning);
 
                     // Set animation timer
@@ -498,7 +499,7 @@ void ReadServerData()
 
                     bombBipTimer = 120;
                     BombPlanted = true;
-                    SetBombDefuseZone(BombPosition.x, BombPosition.z, 2, 2, &bombDefuseZone);
+                    SetBombDefuseZone(BombPosition.x, BombPosition.z, &bombDefuseZone);
                     iprintf("\nBOMB UPDATE");
                 }
                 else if (strcmp(arr[1], "CONFIRM") == 0) // Confirm shop gun buy, or set player gun from server command
@@ -527,7 +528,9 @@ void ReadServerData()
                 else if (strcmp(arr[1], "SETMONEY") == 0) // Set player money
                 {
                     // Parse money text to int
-                    sscanf(arr[2], "%d", &localPlayer->Money);
+                    int ParsedMoney = -1;
+                    sscanf(arr[2], "%d", &ParsedMoney);
+                    setPlayerMoney(0, ParsedMoney);
                 }
                 else if (strcmp(arr[1], "SCORE") == 0) // Party score changes
                 {
@@ -568,10 +571,12 @@ void ReadServerData()
                 else if (strcmp(arr[1], "PartyRound") == 0) // Round state changes
                 {
                     // Parse text to int
-                    sscanf(arr[2], "%d", &RoundState);
+                    int tempRoundState = -1;
+                    sscanf(arr[2], "%d", &tempRoundState);
+                    roundState = tempRoundState;
 
                     // Reset some values on new round
-                    if (RoundState == 0)
+                    if (roundState == WAIT_START)
                     {
                         NE_SpriteVisible(TopScreenSprites[0], true);
                         BombDefused = false;
@@ -661,7 +666,7 @@ void ReadServerData()
 
                     // Make a sound
                     int Panning, Volume;
-                    GetPanning(ParsedPlayerId, &Panning, &Volume, AllPlayers, xWithoutYForAudio, zWithoutYForAudio, AllGuns[ParsedGunId].MaxSoundDistance);
+                    GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, AllGuns[ParsedGunId].MaxSoundDistance);
                     if (ParsedGunId < GunCount)
                         Play3DSound(AllGuns[ParsedGunId].gunSound, Volume, Panning);
                     // else if(ParsedGunId < GunCount + grenadeCount)
@@ -690,23 +695,14 @@ void ReadServerData()
                                     AllPlayers[i].haveBomb = true;
                                     if (i == 0)
                                         SetGunInInventory(28, 8);
-                                    // AllGunsInInventory[8] = 28;
                                 }
                                 else
                                 {
                                     AllPlayers[i].haveBomb = false;
                                     if (i == 0)
-                                        SetGunInInventory(-1, 8);
-                                    // AllGunsInInventory[8] = -1;
+                                        SetGunInInventory(EMPTY, 8);
                                 }
                             }
-                            /*else
-                            {
-                                AllPlayers[i].haveBomb = false;
-                                if (i == 0)
-                                    SetGunInInventory(-1, 8);
-                                //AllGunsInInventory[8] = -1;
-                            }*/
                         }
                     }
                 }
@@ -719,7 +715,7 @@ void ReadServerData()
 
                     int Panning, Volume;
                     if (PlayerId != localPlayer->Id)
-                        GetPanning(PlayerId, &Panning, &Volume, AllPlayers, xWithoutYForAudio, zWithoutYForAudio, 0.10);
+                        GetPanning(PlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
                     else
                     {
                         Panning = 128;
@@ -810,7 +806,7 @@ void ReadServerData()
                     sscanf(arr[0], "%d", &ParsedPlayerId);
 
                     int Panning, Volume;
-                    GetPanning(ParsedPlayerId, &Panning, &Volume, AllPlayers, xWithoutYForAudio, zWithoutYForAudio, 0.10);
+                    GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
 
                     DoStepSound(Volume, Panning, 0);
                 }
@@ -820,7 +816,7 @@ void ReadServerData()
                     sscanf(arr[0], "%d", &ParsedPlayerId);
 
                     int Panning, Volume;
-                    GetPanning(ParsedPlayerId, &Panning, &Volume, AllPlayers, xWithoutYForAudio, zWithoutYForAudio, 0.10);
+                    GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
 
                     Play3DSound(SFX_BOMBPLANTING, Volume, Panning);
                 }
@@ -917,11 +913,11 @@ void ReadServerData()
         }
 
         // Check if position need to be updated for other player
-        if (localPlayer->xPos != OldxPos || localPlayer->yPos != OldyPos || localPlayer->zPos != OldzPos)
+        if (localPlayer->position.x != OldxPos || localPlayer->position.y != OldyPos || localPlayer->position.z != OldzPos)
         {
-            OldxPos = localPlayer->xPos;
-            OldyPos = localPlayer->yPos;
-            OldzPos = localPlayer->zPos;
+            OldxPos = localPlayer->position.x;
+            OldyPos = localPlayer->position.y;
+            OldzPos = localPlayer->position.z;
             SendPosition = true;
         }
 
@@ -948,8 +944,9 @@ void ReadServerData()
             sprintf(InfoToSend /*+ strlen(InfoToSend)*/, "{-4;HIT;%d;%d}", AllPlayers[Hit].Id, hitType);
 
             int Panning, Volume;
-            GetPanning(AllPlayers[Hit].Id, &Panning, &Volume, AllPlayers, xWithoutYForAudio, zWithoutYForAudio, 0.10);
+            GetPanning(AllPlayers[Hit].Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
 
+            // TODO MERGE With MakeHit function
             if (hitType == 0)
                 Play3DSound(SFX_FLESH_IMPACT, Volume, Panning); // Check with kevlar
             else if (hitType == 1)
@@ -1056,7 +1053,7 @@ void ReadServerData()
             SoundPos.x = WallHitXPos /= 8192.0;
             SoundPos.y = WallHitYPos /= 8192.0;
             SoundPos.z = WallHitZPos /= 8192.0;
-            GetPanningByPosition(&Panning, &Volume, AllPlayers, SoundPos, xWithoutYForAudio, zWithoutYForAudio, 0.15);
+            GetPanningByPosition(&Panning, &Volume, SoundPos, xWithoutYForAudio, zWithoutYForAudio, 0.15);
             Play3DSound(SFX_RIC, Volume, Panning);
         }
 

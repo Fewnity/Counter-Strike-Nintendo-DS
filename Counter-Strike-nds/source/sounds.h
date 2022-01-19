@@ -4,8 +4,8 @@
 #include "main.h"
 
 void DoStepSound(int Volume, int Panning, int playerIndex);
-void GetPanning(int PlayerId, int *OutPanning, int *OutVolume, Player AllPlayers[], float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance);
-void GetPanningByPosition(int *OutPanning, int *OutVolume, Player AllPlayers[], Vector4 PositionB, float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance);
+void GetPanning(int PlayerId, int *OutPanning, int *OutVolume, float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance);
+void GetPanningByPosition(int *OutPanning, int *OutVolume, Vector4 PositionB, float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance);
 void Play3DSound(mm_word sound, int Volume, int Panning);
 void Play2DSound(mm_word sound, int Volume);
 void PlayBasicSound(mm_word sound);

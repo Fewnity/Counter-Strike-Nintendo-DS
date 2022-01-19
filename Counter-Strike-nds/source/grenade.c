@@ -1,5 +1,6 @@
 #include "main.h"
 #include "sounds.h"
+#include "grenade.h"
 #include "collisions.h"
 
 #define HE_GRENADE_DAMAGE 98
@@ -27,6 +28,9 @@ void AddGrenades(Grenade *grenades)
     grenades[grenadeIndex].isForCounterTerrorists = -1;
     grenades[grenadeIndex].collisionSound = SFX_HEGRENADE_BOUNCE;
     grenades[grenadeIndex].finalSound = SFX_HEGRENADE_EXPLOSE;
+    grenades[grenadeIndex].maxQuantity[0] = 1;
+    grenades[grenadeIndex].maxQuantity[1] = 1;
+    grenades[grenadeIndex].maxQuantity[2] = 1;
     strncpy(grenades[grenadeIndex].name, "Explosive grenade", 20);
     strncpy(grenades[grenadeIndex].description, "The explosive grenade administers high damage", 50);
     grenadeIndex++;
@@ -37,6 +41,9 @@ void AddGrenades(Grenade *grenades)
     grenades[grenadeIndex].isForCounterTerrorists = -1;
     grenades[grenadeIndex].collisionSound = SFX_FLASHBANG_BOUNCE; // PAS BON?
     grenades[grenadeIndex].finalSound = SFX_SMOKE_EMIT;
+    grenades[grenadeIndex].maxQuantity[0] = 1;
+    grenades[grenadeIndex].maxQuantity[1] = 1;
+    grenades[grenadeIndex].maxQuantity[2] = 1;
     strncpy(grenades[grenadeIndex].name, "Smoke grenade", 20);
     strncpy(grenades[grenadeIndex].description, "The smoke grenade creates an area smoke screen.", 50);
     grenadeIndex++;
@@ -47,6 +54,9 @@ void AddGrenades(Grenade *grenades)
     grenades[grenadeIndex].isForCounterTerrorists = -1;
     grenades[grenadeIndex].collisionSound = SFX_FLASHBANG_BOUNCE;
     grenades[grenadeIndex].finalSound = SFX_FLASHBANG_EXPLODE;
+    grenades[grenadeIndex].maxQuantity[0] = 2;
+    grenades[grenadeIndex].maxQuantity[1] = 1;
+    grenades[grenadeIndex].maxQuantity[2] = 1;
     strncpy(grenades[grenadeIndex].name, "Flash", 20);
     strncpy(grenades[grenadeIndex].description, "The flashbang grenade temporarily blinds anybody", 50);
     grenadeIndex++;
@@ -214,7 +224,7 @@ void UpdateGrenades()
 
         if (grenades[i]->Physic->enabled)
         {
-            bool isOnStairs = CheckStairsForGrenades(grenades[i], StairsCount);
+            bool isOnStairs = CheckStairsForGrenades(grenades[i]);
             int totalSpeed = grenades[i]->Physic->xspeed + grenades[i]->Physic->yspeed + grenades[i]->Physic->zspeed;
             if (totalSpeed == 0 && !isOnStairs)
             {
@@ -301,21 +311,23 @@ void UpdateGrenades()
 
                 // Add offsets from center angles and fix angles (limit angles from 0 to 512 max)
                 // For horizontal check
-                int xAngleFinalSideA = (int)(PlayerAngleToGrenadeDirection + (60.0 * horizontalExpDistance)) % 512;
+                float fixedHorizontalExpDistance = 60.0 * horizontalExpDistance;
+                int xAngleFinalSideA = (int)(PlayerAngleToGrenadeDirection + fixedHorizontalExpDistance) % 512;
                 if (xAngleFinalSideA < 0)
                 {
                     xAngleFinalSideA = 512 + xAngleFinalSideA;
                 }
 
-                int xAngleFinalSideB = (int)(PlayerAngleToGrenadeDirection + (60.0 * -horizontalExpDistance)) % 512;
+                int xAngleFinalSideB = (int)(PlayerAngleToGrenadeDirection + fixedHorizontalExpDistance) % 512;
                 if (xAngleFinalSideB < 0)
                 {
                     xAngleFinalSideB = 512 + xAngleFinalSideB;
                 }
 
                 // For vertical check
-                int xAngleFinalVerticalSideA = (int)(CameraAngleToGrenadeDirection + (50.0 * verticalExpDistance)) % 512;
-                int xAngleFinalVerticalSideB = (int)(CameraAngleToGrenadeDirection - (50.0 * verticalExpDistance)) % 512;
+                float fixedVerticalExpDistance = 50.0 * verticalExpDistance;
+                int xAngleFinalVerticalSideA = (int)(CameraAngleToGrenadeDirection + fixedVerticalExpDistance) % 512;
+                int xAngleFinalVerticalSideB = (int)(CameraAngleToGrenadeDirection - fixedVerticalExpDistance) % 512;
 
                 // Fix player angle (limit the angle from 0 to 512 max)
                 int fixePlayerAngle = (int)localPlayer->Angle % 512;

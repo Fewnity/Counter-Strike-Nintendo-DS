@@ -4,6 +4,8 @@
 #include <NEMain.h>
 #include "main.h"
 
+#define playerNameLength 21
+
 void Save();
 void Load();
 

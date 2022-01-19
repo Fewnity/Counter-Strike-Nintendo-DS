@@ -1,6 +1,8 @@
 #include "main.h"
 #include "ai.h"
+#include "ui.h"
 #include "party.h"
+#include "movements.h"
 #include <math.h>
 
 // Player *AllPlayersRefForMovements;
@@ -101,14 +103,18 @@ void RotatePlayer(uint32 keys, bool *NeedUpdateViewRotation, bool *SendPosition,
     }
 }
 
+int updateRate = 0;
+
+void ForceUpdateLookRotation(float CameraAngleY)
+{
+    updateRate = 0;
+    UpdateLookRotation(CameraAngleY);
+}
+
 void UpdateLookRotation(float CameraAngleY)
 {
     // Math formula to get a point position on sphere from the middle of the sphere with 2 angle
     float TempS = AllPlayers[GetCurrentCameraPlayer()].Angle / 512.0 * M_TWOPI;
-    float TempSside1 = (AllPlayers[GetCurrentCameraPlayer()].Angle - 70) / 512.0 * M_TWOPI;
-    float TempSside2 = (AllPlayers[GetCurrentCameraPlayer()].Angle + 70) / 512.0 * M_TWOPI;
-    float TempSForAudio = (AllPlayers[GetCurrentCameraPlayer()].Angle - 128) / 512.0 * M_TWOPI;
-    float TempSForMap = (AllPlayers[GetCurrentCameraPlayer()].Angle) / 512.0 * M_TWOPI;
     float TempT = (384 - CameraAngleY) / 512.0 * M_TWOPI;
 
     double cosTempT = cos(TempT);
@@ -122,23 +128,38 @@ void UpdateLookRotation(float CameraAngleY)
     xWithoutY = -SinTempS;
     zWithoutY = -cosTempS;
 
-    xWithoutYForAudio = -sin(TempSForAudio);
-    zWithoutYForAudio = -cos(TempSForAudio);
+    if (isShowingMap)
+    {
+        float TempSForMap = (AllPlayers[GetCurrentCameraPlayer()].Angle) / 512.0 * M_TWOPI;
+        xWithoutYForMap = -sin(TempSForMap);
+        zWithoutYForMap = -cos(TempSForMap);
+    }
 
-    xWithoutYForMap = -sin(TempSForMap);
-    zWithoutYForMap = -cos(TempSForMap);
+    if (updateRate == 0)
+    {
+        float TempSside1 = (AllPlayers[GetCurrentCameraPlayer()].Angle - 80) / 512.0 * M_TWOPI;
+        float TempSside2 = (AllPlayers[GetCurrentCameraPlayer()].Angle + 80) / 512.0 * M_TWOPI;
+        float TempSForAudio = (AllPlayers[GetCurrentCameraPlayer()].Angle - 128) / 512.0 * M_TWOPI;
 
-    xWithoutYForOcclusionSide1 = -sin(TempSside1);
-    zWithoutYForOcclusionSide1 = -cos(TempSside1);
+        xWithoutYForAudio = -sin(TempSForAudio);
+        zWithoutYForAudio = -cos(TempSForAudio);
 
-    xWithoutYForOcclusionSide2 = -sin(TempSside2);
-    zWithoutYForOcclusionSide2 = -cos(TempSside2);
+        xWithoutYForOcclusionSide1 = -sin(TempSside1);
+        zWithoutYForOcclusionSide1 = -cos(TempSside1);
+
+        xWithoutYForOcclusionSide2 = -sin(TempSside2);
+        zWithoutYForOcclusionSide2 = -cos(TempSside2);
+
+        updateRate = 2;
+    }
+    updateRate--;
 }
 
-void UpdateLookRotationAI(float CameraAngleY, int playerId, float *x, float *y, float *z)
+// void UpdateLookRotationAI(float CameraAngleY, int playerId, float *x, float *y, float *z)
+void UpdateLookRotationAI(float CameraAngleY, float angle, float *x, float *y, float *z)
 {
     // Math formula to get a point position on sphere from the middle of the sphere with 2 angle
-    float TempS = AllPlayers[playerId].Angle / 512.0 * M_TWOPI;
+    float TempS = angle / 512.0 * M_TWOPI;
     float TempT = (384 - CameraAngleY) / 512.0 * M_TWOPI;
 
     double cosTempT = cos(TempT);
@@ -186,19 +207,19 @@ void SetOnlinelPlayersPositions()
         if (!player->isAi)
         {
             float Speed = 0.1;
-            float Dis = fabs(player->xPos - player->xDestination) + fabs(player->yPos - player->yDestination) + fabs(player->zPos - player->zDestination);
+            float Dis = fabs(player->position.x - player->lerpDestination.x) + fabs(player->position.y - player->lerpDestination.y) + fabs(player->position.z - player->lerpDestination.z);
 
             if (Dis < 4.0)
             {
                 // Smoothing player position
-                if (player->xPos != player->xDestination)                                        // If player x position is not the same as x destination
-                    player->xPos = player->xPos + Speed * (player->xDestination - player->xPos); // Move player with lerp system
+                if (player->position.x != player->lerpDestination.x)                                                    // If player x position is not the same as x destination
+                    player->position.x = player->position.x + Speed * (player->lerpDestination.x - player->position.x); // Move player with lerp system
 
-                if (player->yPos != player->yDestination)                                        // If player y position is not the same as y destination
-                    player->yPos = player->yPos + Speed * (player->yDestination - player->yPos); // Move player with lerp system
+                if (player->position.y != player->lerpDestination.y)                                                    // If player y position is not the same as y destination
+                    player->position.y = player->position.y + Speed * (player->lerpDestination.y - player->position.y); // Move player with lerp system
 
-                if (player->zPos != player->zDestination)                                        // If player y position is not the same as z destination
-                    player->zPos = player->zPos + Speed * (player->zDestination - player->zPos); // Move player with lerp system
+                if (player->position.z != player->lerpDestination.z)                                                    // If player y position is not the same as z destination
+                    player->position.z = player->position.z + Speed * (player->lerpDestination.z - player->position.z); // Move player with lerp system
 
                 if (abs(player->AngleDestination - player->Angle) > 90)
                 {
@@ -218,27 +239,27 @@ void SetOnlinelPlayersPositions()
             }
             else
             {
-                player->xPos = player->xDestination;
-                player->yPos = player->yDestination;
-                player->zPos = player->zDestination;
+                player->position.x = player->lerpDestination.x;
+                player->position.y = player->lerpDestination.y;
+                player->position.z = player->lerpDestination.z;
 
                 player->Angle = player->AngleDestination;
             }
 
             // Set new player position and angle
-            NE_ModelSetCoord(player->PlayerModel, player->xPos, player->yPos, player->zPos);
+            NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
             player->PlayerModel->ry = player->Angle;
         }
-        else if (/*player->isAi && */ player->PathCount != 0 && player->target == -1 && RoundState != 0)
+        else if (player->PathCount != 0 && (player->target == NO_PLAYER || player->tooFar) && roundState != WAIT_START)
         {
             float Speed = 0.087;
             int CurPath = player->CurrentPath;
             int Ok = 0;
 
             Vector3 Direction;
-            Direction.x = GetWaypoints()[player->Path[CurPath]].x - player->xPos;
-            Direction.y = GetWaypoints()[player->Path[CurPath]].y - player->yPos;
-            Direction.z = GetWaypoints()[player->Path[CurPath]].z - player->zPos;
+            Direction.x = GetWaypoints()[player->Path[CurPath]].x - player->position.x;
+            Direction.y = GetWaypoints()[player->Path[CurPath]].y - player->position.y;
+            Direction.z = GetWaypoints()[player->Path[CurPath]].z - player->position.z;
             Vector2 Direction2D;
             Direction2D.x = GetWaypoints()[player->Path[CurPath]].x - GetWaypoints()[player->Path[CurPath - 1]].x;
             Direction2D.y = GetWaypoints()[player->Path[CurPath]].z - GetWaypoints()[player->Path[CurPath - 1]].z;
@@ -246,16 +267,16 @@ void SetOnlinelPlayersPositions()
             normalize2D(&Direction2D);
 
             // Smoothing player position
-            if (player->xPos - 0.1 > GetWaypoints()[player->Path[CurPath]].x || player->xPos + 0.1 < GetWaypoints()[player->Path[CurPath]].x)
-                player->xPos += Direction.x * Speed;
+            if (player->position.x - 0.1 > GetWaypoints()[player->Path[CurPath]].x || player->position.x + 0.1 < GetWaypoints()[player->Path[CurPath]].x)
+                player->position.x += Direction.x * Speed;
             else
                 Ok++;
 
-            if (player->yPos - 0.1 > GetWaypoints()[player->Path[CurPath]].y || player->yPos + 0.1 < GetWaypoints()[player->Path[CurPath]].y)
-                player->yPos += Direction.y * Speed;
+            if (player->position.y - 0.1 > GetWaypoints()[player->Path[CurPath]].y || player->position.y + 0.1 < GetWaypoints()[player->Path[CurPath]].y)
+                player->position.y += Direction.y * Speed;
 
-            if (player->zPos - 0.1 > GetWaypoints()[player->Path[CurPath]].z || player->zPos + 0.1 < GetWaypoints()[player->Path[CurPath]].z)
-                player->zPos += Direction.z * Speed;
+            if (player->position.z - 0.1 > GetWaypoints()[player->Path[CurPath]].z || player->position.z + 0.1 < GetWaypoints()[player->Path[CurPath]].z)
+                player->position.z += Direction.z * Speed;
             else
                 Ok++;
 
@@ -270,36 +291,21 @@ void SetOnlinelPlayersPositions()
                     if (applyRules)
                     {
                         player->LastWayPoint = player->Path[CurPath];
-                        if (player->haveBomb || (player->Team == COUNTERTERRORISTS && BombPlanted && !BombDefused))
+                        if (player->haveBomb || (player->Team == COUNTERTERRORISTS && BombPlanted && !BombDefused && bombPlantedAt == player->LastWayPoint))
                         {
                             iprintf("\nLastPath: %d", player->LastWayPoint);
-                            if (player->LastWayPoint == 14 || player->LastWayPoint == 29)
+                            if (player->LastWayPoint == 14 || player->LastWayPoint == 29) // TOTO Replace 14 and 29 by bomb point define
                             {
-                                if (player->Team == COUNTERTERRORISTS && bombPlantedAt != player->LastWayPoint)
-                                {
-                                    if (player->LastWayPoint == 14)
-                                    {
-                                        bombCheckedInA = true;
-                                    }
-                                    else if (player->LastWayPoint == 29)
-                                    {
-                                        bombCheckedInB = true;
-                                    }
-                                    SetDefuser(i);
-                                }
+                                if (player->Team == COUNTERTERRORISTS)
+                                    printf("(%d)DEFUSING\n", i);
                                 else
-                                {
-                                    if (player->Team == COUNTERTERRORISTS)
-                                        printf("(%d)DEFUSING\n", i);
-                                    else
-                                        printf("(%d)PLANTING\n", i);
+                                    printf("(%d)PLANTING\n", i);
 
-                                    player->isPlantingBomb = true;
-                                    if (!BombDefused && BombPlanted) // Set timer
-                                        player->bombTimer = bombDefuseTime;
-                                    else if (!BombPlanted) // Set timer
-                                        player->bombTimer = bombPlantingTime;
-                                }
+                                player->isPlantingBomb = true;
+                                if (!BombDefused && BombPlanted) // Set timer
+                                    player->bombTimer = bombDefuseTime;
+                                else if (!BombPlanted) // Set timer
+                                    player->bombTimer = bombPlantingTime;
                             }
                         }
                     }
@@ -307,7 +313,7 @@ void SetOnlinelPlayersPositions()
                 }
             }
 
-            NE_ModelSetCoord(player->PlayerModel, player->xPos, player->yPos, player->zPos);
+            NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
 
             float FinalAngle = atan2f(Direction2D.x, Direction2D.y) * 512.0 / (M_TWOPI) + 256.0;
             /*if (AllPlayersRefForMovements[i].Angle + 2 < FinalAngle)
@@ -315,10 +321,63 @@ void SetOnlinelPlayersPositions()
             else if (AllPlayersRefForMovements[i].Angle - 2 > FinalAngle)
                 AllPlayersRefForMovements[i].Angle -= 2;*/
             player->Angle = FinalAngle;
+            // player->Angle = player->AngleDestination;
             player->PlayerModel->ry = player->Angle;
         }
         else // if (player->isAi)
         {
+            Vector3 positionToGo;
+
+            if (player->tooFar)
+            {
+                Player *targetPlayer = &AllPlayers[player->target];
+                positionToGo.x = targetPlayer->position.x;
+                positionToGo.y = targetPlayer->position.y;
+                positionToGo.z = targetPlayer->position.z;
+            }
+            else if (player->searchForDroppedBomb)
+            {
+                positionToGo.x = droppedBombPositionAndRotation.x;
+                positionToGo.y = droppedBombPositionAndRotation.y + 0.845;
+                positionToGo.z = droppedBombPositionAndRotation.z;
+            }
+            else
+            {
+                player->Angle = player->AngleDestination;
+                player->PlayerModel->ry = player->AngleDestination;
+                continue;
+            }
+            // playerToCheck->searchForDroppedBomb
+            // if (player->tooFar)
+            //{
+            float Speed = 0.087;
+            int Ok = 0;
+
+            Vector3 Direction;
+            Direction.x = positionToGo.x - player->position.x;
+            Direction.y = positionToGo.y - player->position.y;
+            Direction.z = positionToGo.z - player->position.z;
+
+            normalize(&Direction);
+
+            // Smoothing player position
+            if (player->position.x - 0.7 > positionToGo.x || player->position.x + 0.7 < positionToGo.x)
+                player->position.x += Direction.x * Speed;
+            else
+                Ok++;
+
+            if (player->position.y - 0.1 > positionToGo.y || player->position.y + 0.1 < positionToGo.y)
+                player->position.y += Direction.y * Speed;
+
+            if (player->position.z - 0.7 > positionToGo.z || player->position.z + 0.7 < positionToGo.z)
+                player->position.z += Direction.z * Speed;
+            else
+                Ok++;
+
+            NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
+
+            // player->PlayerModel->ry = player->Angle;
+            // }
             player->Angle = player->AngleDestination;
             player->PlayerModel->ry = player->AngleDestination;
         }

@@ -1,5 +1,7 @@
 #include "main.h"
 #include "gun.h"
+#include "sounds.h"
+#include "ui.h"
 
 Gun AllGuns[GunCount];
 Equipement AllEquipements[equipementCount];
@@ -199,7 +201,7 @@ void AddGuns()
 
     // A revoir, scopeId, gunCategory, holdFireButton, MuzzleFlashOffset
 
-    //
+    // Knife
     AllGuns[gunIndex].fireRate = 24; // 60 * 0.4
     AllGuns[gunIndex].Damage = 40;
     AllGuns[gunIndex].texture = (void *)knifect_bin;
@@ -213,10 +215,11 @@ void AddGuns()
     AllGuns[gunIndex].isKnife = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.07;
     AllGuns[gunIndex].penetration = 85;
-    strncpy(AllGuns[gunIndex].name, "Knife", 20);
+    // strncpy(AllGuns[gunIndex].name, "Knife", 20);
+    AllGuns[gunIndex].name = "Knife";
     gunIndex++;
 
-    //
+    // Desert Eagle
     AllGuns[gunIndex].fireRate = 13; // 1 / 267 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 53;
@@ -226,20 +229,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_DEAGLE;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 0;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = PISTOLS;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 7;
     AllGuns[gunIndex].MaxAmmoCount = 35;
     AllGuns[gunIndex].ReloadTime = 132; // 2.2 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 11;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 7;
     AllGuns[gunIndex].isBigGun = false;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 75;
-    strncpy(AllGuns[gunIndex].name, "Desert Eagle", 20);
+    // strncpy(AllGuns[gunIndex].name, "Desert Eagle", 20);
+    AllGuns[gunIndex].name = "Desert Eagle";
     gunIndex++;
 
-    //
+    // Dual Berettas
     AllGuns[gunIndex].fireRate = 5; // 1 / 750 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 43;
@@ -249,20 +253,22 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_ELITE;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 0;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = PISTOLS;      // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 0; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 120;
     AllGuns[gunIndex].ReloadTime = 226; // 3.77 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 14;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 3;
     AllGuns[gunIndex].isBigGun = false;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 52;
-    strncpy(AllGuns[gunIndex].name, "Dual Berettas", 20);
+    AllGuns[gunIndex].isDualGun = true;
+    // strncpy(AllGuns[gunIndex].name, "Dual Berettas", 20);
+    AllGuns[gunIndex].name = "Dual Berettas";
     gunIndex++;
 
-    //
+    // Five SeveN
     AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 24;
@@ -272,20 +278,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_FIVESEVEN;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 0;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = PISTOLS;      // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 20;
     AllGuns[gunIndex].MaxAmmoCount = 100;
     AllGuns[gunIndex].ReloadTime = 192; // 3.2 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 16;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 10;
     AllGuns[gunIndex].isBigGun = false;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 75;
-    strncpy(AllGuns[gunIndex].name, "Five SeveN", 20);
+    // strncpy(AllGuns[gunIndex].name, "Five SeveN", 20);
+    AllGuns[gunIndex].name = "Five SeveN";
     gunIndex++;
 
-    //
+    // Glock-18
     AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 24;
@@ -295,20 +302,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_GLOCK18;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 0;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].isForCounterTerrorists = 1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].gunCategory = PISTOLS;      // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].isForCounterTerrorists = 0; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 20;
     AllGuns[gunIndex].MaxAmmoCount = 120;
     AllGuns[gunIndex].ReloadTime = 136; // 2.27 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 17;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 9;
     AllGuns[gunIndex].isBigGun = false;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 52;
-    strncpy(AllGuns[gunIndex].name, "Glock-18", 20);
+    // strncpy(AllGuns[gunIndex].name, "Glock-18", 20);
+    AllGuns[gunIndex].name = "Glock-18";
     gunIndex++;
 
-    //
+    // P228
     AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 31;
@@ -318,20 +326,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_P228;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 0;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = PISTOLS;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 13;
     AllGuns[gunIndex].MaxAmmoCount = 52;
     AllGuns[gunIndex].ReloadTime = 162; // 2.7 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 19;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 10;
     AllGuns[gunIndex].isBigGun = false;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 62.5;
-    strncpy(AllGuns[gunIndex].name, "P228", 20);
+    // strncpy(AllGuns[gunIndex].name, "P228", 20);
+    AllGuns[gunIndex].name = "P228";
     gunIndex++;
 
-    //
+    // USP
     AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 29;
@@ -341,20 +350,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_USP;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 0;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = PISTOLS;      // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 12;
     AllGuns[gunIndex].MaxAmmoCount = 100;
     AllGuns[gunIndex].ReloadTime = 162; // 2.7 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 9;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 6;
     AllGuns[gunIndex].isBigGun = false;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
-    strncpy(AllGuns[gunIndex].name, "USP", 20);
+    // strncpy(AllGuns[gunIndex].name, "USP", 20);
+    AllGuns[gunIndex].name = "USP";
     gunIndex++;
 
-    //
+    // M3
     AllGuns[gunIndex].fireRate = 53; // 1 / 68 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 171;
@@ -364,20 +374,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_M3;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 1;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = HEAVY;         // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 8;
     AllGuns[gunIndex].MaxAmmoCount = 48;
     AllGuns[gunIndex].ReloadTime = 276; // 4.6 * 60 from empty
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -1;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 3;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
-    strncpy(AllGuns[gunIndex].name, "M3", 20);
+    // strncpy(AllGuns[gunIndex].name, "M3", 20);
+    AllGuns[gunIndex].name = "M3";
     gunIndex++;
 
-    //
+    // XM1014
     AllGuns[gunIndex].fireRate = 15; // 1 / 240 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 171;
@@ -387,20 +398,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_XM1014;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 1;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = HEAVY;         // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 7;
     AllGuns[gunIndex].MaxAmmoCount = 32;
     AllGuns[gunIndex].ReloadTime = 168; // 2.8 * 60 from empty
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -8;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 1;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
-    strncpy(AllGuns[gunIndex].name, "XM1014", 20);
+    // strncpy(AllGuns[gunIndex].name, "XM1014", 20);
+    AllGuns[gunIndex].name = "XM1014";
     gunIndex++;
 
-    //
+    // M249
     AllGuns[gunIndex].fireRate = 5; // 1 / 750 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 35;
@@ -410,20 +422,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_M249;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 1;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = HEAVY;         // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 100;
     AllGuns[gunIndex].MaxAmmoCount = 200;
     AllGuns[gunIndex].ReloadTime = 342; // 5.7 * 60
     AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].yMuzzleFlashOffset = -2;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 75;
-    strncpy(AllGuns[gunIndex].name, "M249", 20);
+    // strncpy(AllGuns[gunIndex].name, "M249", 20);
+    AllGuns[gunIndex].name = "M249";
     gunIndex++;
 
-    //
+    // MAC-10
     AllGuns[gunIndex].fireRate = 4; // 1 / 857  * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 28;
@@ -433,20 +446,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_MAC10;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 2;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = SGM;          // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 0; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 100;
     AllGuns[gunIndex].ReloadTime = 156; // 2.6 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 11;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 10;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 47.5;
-    strncpy(AllGuns[gunIndex].name, "MAC-10", 20);
+    // strncpy(AllGuns[gunIndex].name, "MAC-10", 20);
+    AllGuns[gunIndex].name = "MAC-10";
     gunIndex++;
 
-    //
+    // MP5
     AllGuns[gunIndex].fireRate = 5; // 1 / 750 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 25;
@@ -456,20 +470,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_MP5;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 2;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = SGM;           // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 120;
     AllGuns[gunIndex].ReloadTime = 180; // 3 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 1;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 5;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
-    strncpy(AllGuns[gunIndex].name, "MP5", 20);
+    // strncpy(AllGuns[gunIndex].name, "MP5", 20);
+    AllGuns[gunIndex].name = "MP5";
     gunIndex++;
 
-    //
+    // P90
     AllGuns[gunIndex].fireRate = 4; // 1 / 857 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 25;
@@ -479,20 +494,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_P90;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 2;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = SGM;           // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 50;
     AllGuns[gunIndex].MaxAmmoCount = 100;
     AllGuns[gunIndex].ReloadTime = 198; // 3.3 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 5;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 6;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 75;
-    strncpy(AllGuns[gunIndex].name, "P90", 20);
+    // strncpy(AllGuns[gunIndex].name, "P90", 20);
+    AllGuns[gunIndex].name = "P90";
     gunIndex++;
 
-    //
+    // TMP
     AllGuns[gunIndex].fireRate = 4; // 1 / 857  * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 19;
@@ -502,20 +518,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_TMP;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 2;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = SGM;           // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 120;
     AllGuns[gunIndex].ReloadTime = 126; // 2.1 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 2;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 1;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
-    strncpy(AllGuns[gunIndex].name, "TMP", 20);
+    // strncpy(AllGuns[gunIndex].name, "TMP", 20);
+    AllGuns[gunIndex].name = "TMP";
     gunIndex++;
 
-    //
+    // UMP-45
     AllGuns[gunIndex].fireRate = 6; // 1 / 571   * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 29;
@@ -525,20 +542,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_UMP45;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 2;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = SGM;           // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 25;
     AllGuns[gunIndex].MaxAmmoCount = 100;
     AllGuns[gunIndex].ReloadTime = 210; // 3.5 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 6;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 7;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
-    strncpy(AllGuns[gunIndex].name, "UMP-45", 20);
+    // strncpy(AllGuns[gunIndex].name, "UMP-45", 20);
+    AllGuns[gunIndex].name = "UMP-45";
     gunIndex++;
 
-    //
+    // AK-47
     AllGuns[gunIndex].fireRate = 6; // 1 / 600 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 35;
@@ -548,20 +566,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_AK47;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 3;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 0; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 90;
     AllGuns[gunIndex].ReloadTime = 205; // 2.43 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 2;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 2;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 77.5;
-    strncpy(AllGuns[gunIndex].name, "AK-47", 20);
+    // strncpy(AllGuns[gunIndex].name, "AK-47", 20);
+    AllGuns[gunIndex].name = "AK-47";
     gunIndex++;
 
-    //
+    // AUG
     AllGuns[gunIndex].fireRate = 6; // 1 / 666 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 31;
@@ -571,20 +590,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_AUG;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = 1;
-    AllGuns[gunIndex].gunCategory = 3;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 90;
     AllGuns[gunIndex].ReloadTime = 228; // 3.8 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -2;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 0;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
-    strncpy(AllGuns[gunIndex].name, "AUG", 20);
+    // strncpy(AllGuns[gunIndex].name, "AUG", 20);
+    AllGuns[gunIndex].name = "AUG";
     gunIndex++;
 
-    //
+    // FAMAS
     AllGuns[gunIndex].fireRate = 6; // 1 / 666 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 29;
@@ -594,20 +614,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_FAMAS;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 3;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 25;
     AllGuns[gunIndex].MaxAmmoCount = 75;
     AllGuns[gunIndex].ReloadTime = 228; // 3.8 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -2;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 0;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
-    strncpy(AllGuns[gunIndex].name, "FAMAS", 20);
+    // strncpy(AllGuns[gunIndex].name, "FAMAS", 20);
+    AllGuns[gunIndex].name = "FAMAS";
     gunIndex++;
 
-    //
+    // Galil
     AllGuns[gunIndex].fireRate = 6; // 1 / 666 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 29;
@@ -617,20 +638,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_GALIL;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 3;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 0; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 35;
     AllGuns[gunIndex].MaxAmmoCount = 90;
     AllGuns[gunIndex].ReloadTime = 198; // 3.3 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 0;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 1;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 77;
-    strncpy(AllGuns[gunIndex].name, "Galil", 20);
+    // strncpy(AllGuns[gunIndex].name, "Galil", 20);
+    AllGuns[gunIndex].name = "Galil";
     gunIndex++;
 
-    //
+    // M4A1
     AllGuns[gunIndex].fireRate = 6; // 1 / 666 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 31;
@@ -640,20 +662,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_M4A1;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = 3;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 90;
     AllGuns[gunIndex].ReloadTime = 184; // 3.07 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -3;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 3;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
-    strncpy(AllGuns[gunIndex].name, "M4A1", 20);
+    // strncpy(AllGuns[gunIndex].name, "M4A1", 20);
+    AllGuns[gunIndex].name = "M4A1";
     gunIndex++;
 
-    //
+    // SG 552
     AllGuns[gunIndex].fireRate = 6; // 1 / 666 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 32;
@@ -663,20 +686,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_SG552;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = 1;
-    AllGuns[gunIndex].gunCategory = 3;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 0; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 90;
     AllGuns[gunIndex].ReloadTime = 174; // 2.9 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = 0;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 4;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
-    strncpy(AllGuns[gunIndex].name, "SG 552", 20);
+    // strncpy(AllGuns[gunIndex].name, "SG 552", 20);
+    AllGuns[gunIndex].name = "SG 552";
     gunIndex++;
 
-    //
+    // SG 550
     AllGuns[gunIndex].fireRate = 15; // 1 / 240  * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 69;
@@ -686,20 +710,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_SG550;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = 1;
-    AllGuns[gunIndex].gunCategory = 3;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 30;
     AllGuns[gunIndex].MaxAmmoCount = 90;
     AllGuns[gunIndex].ReloadTime = 228; // 3.8 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -8;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 2;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 72.5;
-    strncpy(AllGuns[gunIndex].name, "SG 550", 20);
+    // strncpy(AllGuns[gunIndex].name, "SG 550", 20);
+    AllGuns[gunIndex].name = "SG 550";
     gunIndex++;
 
-    //
+    // Scout
     AllGuns[gunIndex].fireRate = 75; // 1 / 48   * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 74;
@@ -709,20 +734,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_SCOUT;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = 0;
-    AllGuns[gunIndex].gunCategory = 3;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;        // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 10;
     AllGuns[gunIndex].MaxAmmoCount = 90;
     AllGuns[gunIndex].ReloadTime = 174; // 2.9 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -4;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 3;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 85;
-    strncpy(AllGuns[gunIndex].name, "Scout", 20);
+    // strncpy(AllGuns[gunIndex].name, "Scout", 20);
+    AllGuns[gunIndex].name = "Scout";
     gunIndex++;
 
-    //
+    // G3SG1
     AllGuns[gunIndex].fireRate = 15; // 1 / 240 * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 79;
@@ -732,20 +758,21 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_G3SG1;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = 1;
-    AllGuns[gunIndex].gunCategory = 3;            // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;       // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = 0; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 20;
     AllGuns[gunIndex].MaxAmmoCount = 90;
     AllGuns[gunIndex].ReloadTime = 282; // 4.7 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -4;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 4;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 82.5;
-    strncpy(AllGuns[gunIndex].name, "G3SG1", 20);
+    // strncpy(AllGuns[gunIndex].name, "G3SG1", 20);
+    AllGuns[gunIndex].name = "G3SG1";
     gunIndex++;
 
-    //
+    // AWP
     AllGuns[gunIndex].fireRate = 88; // 1 / 41  * 3600
     AllGuns[gunIndex].DamageFalloff = 9;
     AllGuns[gunIndex].Damage = 115;
@@ -755,17 +782,18 @@ void AddGuns()
     AllGuns[gunIndex].gunSound = SFX_AWP;
     AllGuns[gunIndex].WalkSpeed = 210;
     AllGuns[gunIndex].scopeId = 0;
-    AllGuns[gunIndex].gunCategory = 3;             // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].gunCategory = RIFLES;        // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].isForCounterTerrorists = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 10;
     AllGuns[gunIndex].MaxAmmoCount = 30;
     AllGuns[gunIndex].ReloadTime = 222; // 3.7 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 4;
-    AllGuns[gunIndex].yMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].xMuzzleFlashOffset = -7;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 3;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 97.5;
-    strncpy(AllGuns[gunIndex].name, "AWP", 20);
+    // strncpy(AllGuns[gunIndex].name, "AWP", 20);
+    AllGuns[gunIndex].name = "AWP";
     gunIndex++;
 
     for (int i = 0; i < 4; i++)
@@ -826,61 +854,59 @@ void AddGuns()
     AllGuns[8].isForCounterTerrorists = -1; //0 for terrorist only, 1 for counter terrorists only, -1 for both teams*/
 }
 
-void ReloadGun(int playerId)
+void ReloadGun(int playerIndex)
 {
+    Player *player = &AllPlayers[playerIndex];
     // Check if the weapon in the player hands is a gun
-    if (AllPlayers[playerId].currentGunInInventory == 1 || AllPlayers[playerId].currentGunInInventory == 2)
+    if (player->currentGunInInventory == 1 || player->currentGunInInventory == 2)
     {
-        int missingAmmoCount = AllGuns[AllPlayers[playerId].AllGunsInInventory[AllPlayers[playerId].currentGunInInventory]].MagazineCapacity - AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].AmmoCount;
-        if (missingAmmoCount < AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount)
+        int ammoIndex = player->currentGunInInventory - 1;
+        int missingAmmoCount = getPlayerCurrentGun(player).MagazineCapacity - player->AllAmmoMagazine[ammoIndex].AmmoCount;
+        if (missingAmmoCount < player->AllAmmoMagazine[ammoIndex].TotalAmmoCount)
         {
-            AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].AmmoCount += missingAmmoCount;
-            AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount -= missingAmmoCount;
+            player->AllAmmoMagazine[ammoIndex].AmmoCount += missingAmmoCount;
+            player->AllAmmoMagazine[ammoIndex].TotalAmmoCount -= missingAmmoCount;
         }
         else
         {
-            AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].AmmoCount += AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount;
-            AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount = 0;
+            player->AllAmmoMagazine[ammoIndex].AmmoCount += player->AllAmmoMagazine[ammoIndex].TotalAmmoCount;
+            player->AllAmmoMagazine[ammoIndex].TotalAmmoCount = 0;
         }
     }
-    /*return;
-    if (AllGuns[AllPlayers[playerId].AllGunsInInventory[AllPlayers[playerId].currentGunInInventory]].MagazineCapacity <= AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount)
-    {
-        AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount -= AllGuns[AllPlayers[playerId].AllGunsInInventory[AllPlayers[playerId].currentGunInInventory]].MagazineCapacity - AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].AmmoCount;
-        AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].AmmoCount = AllGuns[AllPlayers[playerId].AllGunsInInventory[AllPlayers[playerId].currentGunInInventory]].MagazineCapacity;
-    }
-    else
-    {
-        int missingAmmoCount = AllGuns[AllPlayers[playerId].AllGunsInInventory[AllPlayers[playerId].currentGunInInventory]].MagazineCapacity - AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].AmmoCount;
-        if (missingAmmoCount < AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount)
-        {
-            AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].AmmoCount += missingAmmoCount;
-            AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount -= missingAmmoCount;
-        }
-        else
-        {
-            AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].AmmoCount += AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount;
-            AllPlayers[playerId].AllAmmoMagazine[AllPlayers[playerId].currentGunInInventory - 1].TotalAmmoCount = 0;
-        }
-    }*/
 }
 
 void SetAim()
 {
     doubleTapTimer = 0;
-    if (localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] < GunCount && AllGuns[localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory]].scopeId != -1)
+    if (getPlayerCurrentGunIndex(localPlayer) < GunCount && getPlayerCurrentGun(localPlayer).scopeId != -1)
     {
-        if (CurrentScopeLevel < AllScopeLevels[AllGuns[localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory]].scopeId].scopeCount)
+        if (CurrentScopeLevel < AllScopeLevels[getPlayerCurrentGun(localPlayer).scopeId].scopeCount)
         {
             CurrentScopeLevel++;
-            NE_SetFov(AllScopeLevels[AllGuns[localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory]].scopeId].fov[CurrentScopeLevel - 1]);
+            NE_SetFov(AllScopeLevels[getPlayerCurrentGun(localPlayer).scopeId].fov[CurrentScopeLevel - 1]);
+            PlayBasicSound(SFX_SCOPE);
         }
         else
         {
-            CurrentScopeLevel = 0;
-            NE_SetFov(70);
+            DisableAim();
         }
     }
+}
+
+void DisableAim()
+{
+    CurrentScopeLevel = 0;
+    NE_SetFov(70);
+}
+
+int getPlayerCurrentGunIndex(Player *player)
+{
+    return player->AllGunsInInventory[player->currentGunInInventory];
+}
+
+Gun getPlayerCurrentGun(Player *player)
+{
+    return AllGuns[player->AllGunsInInventory[player->currentGunInInventory]];
 }
 
 void findGun(int gunCategory, int playerIndex)
@@ -913,39 +939,64 @@ void findGun(int gunCategory, int playerIndex)
             }
         }
     }
-    AllPlayers[playerIndex].Money -= AllGuns[gunFound].Price;
+    reducePlayerMoney(playerIndex, AllGuns[gunFound].Price);
+    // AllPlayers[playerIndex].Money -= AllGuns[gunFound].Price;
 
     if (gunCategory == 0)
+    {
         AllPlayers[playerIndex].AllGunsInInventory[1] = gunFound;
+        AllPlayers[playerIndex].currentGunInInventory = 1;
+    }
     else
+    {
         AllPlayers[playerIndex].AllGunsInInventory[2] = gunFound;
-
+        AllPlayers[playerIndex].currentGunInInventory = 2;
+    }
+    // AllPlayers[playerIndex].currentGunInInventory = 0; // TODO REMOVE
     ResetGunsAmmo(playerIndex);
     if (playerIndex == 0)
+    {
+        // if (currentMenu == SHOP || currentMenu == SHOPCATEGORIES)
+        // UpdateBottomScreenOneFrame += 8;
         UpdateGunTexture();
+    }
 }
 
-void ResetGunAmmo(int playerId, int inventoryIndex)
+void ResetGunAmmo(int playerIndex, int inventoryIndex)
 {
     if (inventoryIndex < 1 || inventoryIndex > 2)
         return;
+    Player *player = &AllPlayers[playerIndex];
 
-    AllPlayers[playerId].AllAmmoMagazine[inventoryIndex - 1].AmmoCount = AllGuns[AllPlayers[playerId].AllGunsInInventory[inventoryIndex]].MagazineCapacity;
-    AllPlayers[playerId].AllAmmoMagazine[inventoryIndex - 1].TotalAmmoCount = AllGuns[AllPlayers[playerId].AllGunsInInventory[inventoryIndex]].MaxAmmoCount;
+    int ammoIndex = inventoryIndex - 1;
+    player->AllAmmoMagazine[ammoIndex].AmmoCount = AllGuns[AllPlayers[playerIndex].AllGunsInInventory[inventoryIndex]].MagazineCapacity;
+    player->AllAmmoMagazine[ammoIndex].TotalAmmoCount = AllGuns[AllPlayers[playerIndex].AllGunsInInventory[inventoryIndex]].MaxAmmoCount;
 }
 
-void ResetGunsAmmo(int playerId)
+void ResetGunsAmmo(int playerIndex)
 {
-    for (int i = 0; i < 2; i++)
+    Player *player = &AllPlayers[playerIndex];
+    for (int ammoIndex = 0; ammoIndex < 2; ammoIndex++)
     {
-        if (AllPlayers[playerId].AllGunsInInventory[i + 1] != -1)
+        int inventoryIndex = ammoIndex + 1;
+        if (player->AllGunsInInventory[inventoryIndex] != -1)
         {
-            AllPlayers[playerId].AllAmmoMagazine[i].AmmoCount = AllGuns[AllPlayers[playerId].AllGunsInInventory[i + 1]].MagazineCapacity;
-            AllPlayers[playerId].AllAmmoMagazine[i].TotalAmmoCount = AllGuns[AllPlayers[playerId].AllGunsInInventory[i + 1]].MaxAmmoCount;
+            player->AllAmmoMagazine[ammoIndex].AmmoCount = AllGuns[AllPlayers[playerIndex].AllGunsInInventory[inventoryIndex]].MagazineCapacity;
+            player->AllAmmoMagazine[ammoIndex].TotalAmmoCount = AllGuns[AllPlayers[playerIndex].AllGunsInInventory[inventoryIndex]].MaxAmmoCount;
         }
     }
 }
 
-void shoot()
+void setGunRecoil(Player *player)
 {
+    if (player->isRightGun)
+    {
+        player->rightGunXRecoil = GunMaxRecoil;
+        player->rightGunYRecoil = GunMaxRecoil;
+    }
+    else
+    {
+        player->leftGunXRecoil = GunMaxRecoil;
+        player->leftGunYRecoil = GunMaxRecoil;
+    }
 }

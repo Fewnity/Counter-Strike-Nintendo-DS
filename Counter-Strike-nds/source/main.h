@@ -5,6 +5,9 @@
 #include <fat.h>
 #include <filesystem.h>
 
+#include "saveManager.h"
+#include "ui.h"
+
 // Math functions
 #include <math.h>
 
@@ -61,6 +64,7 @@
 #include "skin_adventurer_bin.h"
 #include "skin_man_bin.h"
 #include "gign_skin1_bin.h"
+#include "terrorist_skin1_bin.h"
 
 // crosshairs
 #include "crosshair2_bin.h"
@@ -116,11 +120,6 @@
 #define MaxPlayer 6
 #define RaycastDistance 40
 #define RayAccuracy 4
-#define ScreenWidth 256
-#define ScreenHeight 192
-#define ScreenHeightFixed 196
-#define ScreenCenterWidth 128 // 256/2
-#define ScreenCenterHeight 96 // 192/2
 
 #define GunPositionX 160 // 256-96
 #define GunPositionY 96	 // 192-96
@@ -129,10 +128,11 @@
 
 #define OcclusionZonesCount 21
 
-#define bombDefuseTime 600
-#define bombPlantingTime 120
+#define bombDefuseTime 600	 // 10 secs
+#define bombPlantingTime 210 // 3,5 secs
 
-#define maxPath 58
+#define maxPoint 58
+#define maxPath 15
 #define ScreenShakeAmount 5
 #define ScreenShakeMinAmount 3
 
@@ -141,6 +141,8 @@
 #define shopGrenadeCount 3
 #define GrenadeCount 20
 #define equipementCount 1 // later 5 or 4 (bomb, headset, kevlar, defuser)
+#define InventoryGrenadeStartPosition 3
+#define InventoryEquipementStartPosition 7
 
 #define defaultWalkSpeed 220
 #define flashAnimationSpeed 0.0035
@@ -156,6 +158,12 @@
 #define EMPTY -1
 #define UNUSED -1
 
+#define StairsCount 31
+#define grenadeBoughtLength 5
+
+#define CameraOffsetY 0.7
+#define CameraOffsetYMultiplied 2867.20 // 0.7 * 4096
+
 enum connectionType
 {
 	UNSELECTED,
@@ -163,6 +171,11 @@ enum connectionType
 	LOCAL,
 	IP1,
 	IP2
+};
+
+enum actionAfterUiTimer
+{
+	SAVE
 };
 
 enum team
@@ -173,18 +186,6 @@ enum team
 };
 
 //////All structs
-typedef struct // Physics values for raycasting
-{
-	float xSize;
-	float ySize;
-	float zSize;
-	int BoxXRangeA;
-	int BoxXRangeB;
-	int BoxYRangeA;
-	int BoxYRangeB;
-	int BoxZRangeA;
-	int BoxZRangeB;
-} CollisionBox;
 
 // 3D point with angle
 typedef struct
@@ -202,6 +203,13 @@ typedef struct
 	float y;
 	float z;
 } Vector3;
+// 3D point
+typedef struct
+{
+	int x;
+	int y;
+	int z;
+} Vector3Int;
 
 // 2D point
 typedef struct
@@ -215,6 +223,28 @@ typedef struct
 	int x;
 	int y;
 } Vector2Int;
+
+typedef struct // Physics values for raycasting
+{
+	float xSize;
+	float ySize;
+	float zSize;
+	int BoxXRangeA;
+	int BoxXRangeB;
+	int BoxYRangeA;
+	int BoxYRangeB;
+	int BoxZRangeA;
+	int BoxZRangeB;
+
+	Vector3 corner1;
+	Vector3 corner2;
+} CollisionBox;
+
+typedef struct // Physics values for raycasting
+{
+	int waypoint;
+	CollisionBox collisionBox;
+} Site;
 
 typedef struct // 2D area (box) values for trigger
 {
@@ -239,14 +269,12 @@ typedef struct //
 typedef struct // Player values
 {
 	int Id;
-	float xPos;
-	float yPos;
-	float zPos;
-	float xDestination;
-	float yDestination;
-	float zDestination;
+
+	Vector3 position;
+	Vector3 lerpDestination;
 	float Angle;
-	int AngleDestination;
+	float AngleDestination;
+
 	// int IsCounter;
 	enum team Team;
 	int Money;
@@ -259,28 +287,38 @@ typedef struct // Player values
 	int currentGunInInventory;
 	AmmoMagazine AllAmmoMagazine[2];
 	int AllGunsInInventory[inventoryCapacity];
-	int armor;
-	bool haveHeadset;
+	int grenadeBought[grenadeBoughtLength];
+	int armor;		  //
+	bool haveHeadset; //
+	int spawnAt;
 
-	CollisionBox PlayerCollisionBox;
-	NE_Model *PlayerModel;
-	NE_Physics *PlayerPhysic;
-	bool IsDead;
-	bool haveDefuseKit;
-	bool haveBomb;
-	bool isPlantingBomb;
-	int bombTimer;
+	CollisionBox PlayerCollisionBox; //
+	NE_Model *PlayerModel;			 //
+	NE_Physics *PlayerPhysic;		 //
+	bool IsDead;					 //
+	bool haveDefuseKit;				 //
+	bool haveBomb;					 //
+	bool isPlantingBomb;			 //
+	int bombTimer;					 //
+	int rightGunXRecoil;			 //
+	int rightGunYRecoil;			 //
+	int leftGunXRecoil;				 //
+	int leftGunYRecoil;				 //
+	bool isRightGun;				 // For dual guns, 0 right, 1 left
 
 	// AI
 	int Path[maxPath];
-	bool isAi;
-	int PathCount;
-	int CurrentPath;
-	int LastWayPoint;
-	int target;
-	int lastSeenTarget;
+	bool isAi;			//
+	int PathCount;		//
+	int CurrentPath;	//
+	int LastWayPoint;	//
+	int target;			//
+	int lastSeenTarget; //
 	bool justCheking;
+	bool canCancelNextCheck;
 	bool canShootEnemy;
+	bool tooFar;
+	bool searchForDroppedBomb;
 
 	// Raycasting
 	bool IsHeadShot;
@@ -289,22 +327,21 @@ typedef struct // Player values
 	int StopAt;
 	int PlayerFoundAtDistance;
 	bool ScanFinished;
-	float startXPosRaycast;
-	float startYPosRaycast;
-	float startZPosRaycast;
-	float startXRotRaycast;
-	float startYRotRaycast;
-	float startZRotRaycast;
+
+	Vector3 startRaycastPosition;
+	Vector3 startRaycastRotation;
 	int startGunIdRaycast;
 
-	int CurrentOcclusionZone;
+	int CurrentOcclusionZone; //
 
-	int RespawnTimer;
-	bool NeedRespawn;
-	float BobbingOffset;
-	bool HasBobbed;
-	int Step;
-	char name[21];
+	int invisibilityTimer;
+
+	int RespawnTimer;			 //
+	bool NeedRespawn;			 //
+	float BobbingOffset;		 //
+	bool HasBobbed;				 //
+	int Step;					 //
+	char name[playerNameLength]; //
 	bool allPlayerScanned[MaxPlayer];
 } Player;
 
@@ -321,9 +358,10 @@ typedef struct // 2D area (box) values for trigger with stairs start height, fin
 
 typedef struct // Physics values for raycasting
 {
-	int xPos;
+	Vector3Int position;
+	/*int xPos;
 	int yPos;
-	int zPos;
+	int zPos;*/
 	int ZoneCollision;
 	CollisionBox WallCollisionBox;
 	NE_Model *WallModel;
@@ -336,51 +374,6 @@ typedef struct //
 	int ZoneCount;
 	int AllVisibleZones[5];
 } Zone;
-
-typedef struct //
-{
-	int xPos;
-	int yPos;
-	int xSize;
-	int ySize;
-	bool value;
-} CheckBox;
-
-typedef struct //
-{
-	int xPos;
-	int yPos;
-	int xSize;
-	int ySize;
-	int parameter;
-	bool isHidden;
-	void (*OnClick)(int);
-} Button;
-
-typedef struct //
-{
-	int fireRate;
-	void *texture;
-	int DamageFalloff;
-	int Damage;
-	float penetration;
-	bool holdFireButton;
-	int Price;
-	char name[20];
-	bool isKnife;
-	mm_word gunSound;
-	int WalkSpeed;
-	int scopeId;
-	int gunCategory;
-	int isForCounterTerrorists; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-	int MagazineCapacity;
-	int MaxAmmoCount;
-	int ReloadTime;
-	float MaxSoundDistance;
-	int xMuzzleFlashOffset;
-	int yMuzzleFlashOffset;
-	bool isBigGun;
-} Gun;
 
 typedef struct //
 {
@@ -399,7 +392,7 @@ typedef struct //
 	char name[20];
 	char description[50];
 	int type;
-
+	int maxQuantity[3];
 	// char name[];
 	mm_word collisionSound;
 	mm_word finalSound;
@@ -458,20 +451,21 @@ extern float flashaAnimation;
 extern bool flashed;
 extern int ShowMuzzle;
 // extern int currentGunInInventory;
-extern int gunX;
-extern int gunY;
-extern int GunXRecoil;
-extern int GunYRecoil;
+extern int rightGunX;
+extern int rightGunY;
+extern int leftGunX;
+extern int leftGunY;
+extern int rightGunXRecoil;
+extern int rightGunYRecoil;
 extern int GunMaxRecoil;
 extern bool isInFullSmoke;
 extern float BobbingOffset;
 extern int redHealthTextCounter;
-extern int PartyMinutes;
-extern int PartySeconds;
+
 extern bool BombPlanted;
 extern int bombTimer;
 extern int CurrentScopeLevel;
-extern Gun AllGuns[GunCount];
+
 extern int KillTextShowTimer;
 // extern int AllGunsInInventory[inventoryCapacity];
 extern NE_Material *TopScreenSpritesMaterials[5];
@@ -479,15 +473,13 @@ extern bool isDebugTopScreen;
 // extern AmmoMagazine AllAmmoMagazine[2];
 extern NE_Sprite *TopScreenSprites[5];
 extern char killText[33];
-extern NE_Camera *Camara;
-extern int RoundState;
+extern NE_Camera *Camera;
+
 extern Zone AllZones[OcclusionZonesCount];
 extern int textToShowTimer;
 extern int CurrentCameraPlayer;
 // extern int Money;
 extern char textToShow[30];
-extern int CounterScore;
-extern int TerroristsScore;
 extern bool NeedChangeScreen;
 extern bool AlwaysUpdateBottomScreen;
 extern int UpdateBottomScreenOneFrame;
@@ -495,7 +487,7 @@ extern Player AllPlayers[MaxPlayer];
 extern int SelectedGunShop;
 extern bool WaitForTeamResponse;
 extern Button AllButtons[7];
-extern CheckBox AllCheckBoxs[1];
+extern CheckBox AllCheckBoxs[CheckBoxCount];
 extern int ButtonToShow;
 extern int currentMenu;
 extern NE_Material *BottomScreenSpritesMaterials[9];
@@ -503,10 +495,8 @@ extern NE_Sprite *BottomScreenSprites[10];
 extern int BottomScreenSpriteCount;
 extern CollisionBox2D AllTriggersCollisions[OcclusionZonesCount];
 extern NE_Material *GroundMaterial;
-extern int StairsCount;
-extern Stairs AllStairs[31];
+extern Stairs AllStairs[StairsCount];
 extern float CameraAngleY;
-extern float CameraOffsetY;
 extern float xWithoutYForMap;
 extern float zWithoutYForMap;
 extern float xWithoutYForOcclusionSide1;
@@ -547,7 +537,6 @@ extern Wall AllWallsCollisions[wallCount];
 extern int doubleTapTimer;
 extern Scope AllScopeLevels[2];
 extern bool PartyStarted;
-extern int currentPartyMode;
 extern enum connectionType Connection;
 extern int checkPlayerDistanceFromAiTimer;
 extern Player *localPlayer;
@@ -556,6 +545,12 @@ extern uint32 keys;
 extern uint32 keysdown;
 extern uint32 keysup;
 extern OcclusionZone AllOcclusionZone[7];
+extern int uiTimer;
+extern enum actionAfterUiTimer actionOfUiTimer;
+extern int RumbleTimer;
+extern Site AllBombsTriggersCollisions[2];
+extern bool useRumble;
+extern bool is3dsMode;
 
 /*typedef enum
 {
@@ -577,6 +572,8 @@ void ReadOneIntData(char *data, int *result, int EndPosition, int CallTypeEndPos
 void ReadPlayerIdInt(char *data, int *result, int StartPosition, int FromPlayerIdEndPosition);
 void UpdatePlayerTexture(int playerIndex);
 void CheckTeamDeathCount(int *TerroristsCount, int *CounterTerroristsCount, int *TerroristDeadCount, int *CounterDeadCount);
+void setPlayerPositionAtSpawns(int playerIndex);
+void SetTwoScreenMode(bool value);
 
 Stairs *GetStairs();
 Wall *GetWalls();
@@ -587,7 +584,6 @@ NE_Sprite **GetSpritesTop();
 NE_Sprite **GetSpritesBottom();
 NE_Material **GetBottomScreenSpritesMaterials();
 NE_Palette **GetPalettes();
-Gun *GetGuns();
 
 void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckScore);
 void StartGame();
@@ -598,6 +594,7 @@ int GetUpdateBottomScreenOneFrame();
 void SetUpdateBottomScreenOneFrame(int value);
 int GetButtonToShow();
 void SetButtonToShow(int value);
+void StartSinglePlayer();
 void SetWaitForTeamResponse(bool value);
 void addMoneyToTeam(int Money, enum team Team);
 bool GetAlwaysUpdateBottomScreen();
@@ -615,6 +612,7 @@ void SetNeedChangeScreen(bool value);
 void SetSendTeam(bool Value);
 void SetTempTeam(int Value);
 int GetTempTeam();
+void UpdateEngineNotInGame();
 void UpdateEngine();
 Grenade *GetAllGrenades();
 void SetNeedJump();
@@ -628,7 +626,6 @@ void SetSendBuyWeapon(bool Value);
 void SetNeedUpdateViewRotation(bool Value);
 void ChangeGunInInventoryForLocalPlayer(int Left);
 void ChangeGunInInventory(int playerIndex, int Left);
-void AskUpdateLookRotation();
 void StopReloading(int playerIndx);
 void startReloadGun(int playerIndx);
 void UpdateGunTexture();
@@ -640,5 +637,10 @@ void setNewRoundHandWeapon();
 void makeHit(int hitBy, int playerHit);
 void buyGun();
 void CheckAfterRound();
+void setPlayerMoney(int playerIndex, int Money);
+void addPlayerMoney(int playerIndex, int Money);
+void reducePlayerMoney(int playerIndex, int Money);
+void removeAllPlayers();
+void rumble(int timer);
 
 #endif // MAIN_H_

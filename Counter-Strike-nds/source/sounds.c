@@ -1,4 +1,5 @@
 #include "main.h"
+#include "sounds.h"
 #include <maxmod9.h>
 #include "soundbank.h"
 #include "soundbank_bin.h"
@@ -8,8 +9,8 @@ int Step = 0;
 
 void initSoundSystem()
 {
-    //Init sound system
-    //mmInitDefaultMem((mm_addr)soundbank_bin);
+    // Init sound system
+    // mmInitDefaultMem((mm_addr)soundbank_bin);
     mm_ds_system sys;
 
     // number of modules in your soundbank (defined in output header)
@@ -26,12 +27,12 @@ void initSoundSystem()
 
     // initialize maxmod
     mmInit(&sys);
-    //mmSelectMode(MM_MODE_C);
+    // mmSelectMode(MM_MODE_C);
 
-    //Load sound back
+    // Load sound back
     mmSoundBankInFiles("soundbank.bin");
 
-    //Load sound effects
+    // Load sound effects
     mmLoadEffect(SFX_TERRORISTSWIN);
     mmLoadEffect(SFX_COUNTERTERRORISTWIN);
     mmLoadEffect(SFX_DETONATE);
@@ -40,18 +41,21 @@ void initSoundSystem()
     mmLoadEffect(SFX_BOMBHASBEENDEFUSED);
     mmLoadEffect(SFX_BOMBHASBEENPLANTED);
     mmLoadEffect(SFX_BOMBBIP);
+
+    mmLoadEffect(SFX_KEYBOARD_SOUND);
     /*mmLoadEffect(SFX_AWP);
-	mmLoadEffect(SFX_GLOCK);
-	mmLoadEffect(SFX_M4A1);
-	mmLoadEffect(SFX_MP7);
-	mmLoadEffect(SFX_MP9);
-	mmLoadEffect(SFX_NOVA);
-	mmLoadEffect(SFX_USP);
-	mmLoadEffect(SFX_XM1014);*/
+    mmLoadEffect(SFX_GLOCK);
+    mmLoadEffect(SFX_M4A1);
+    mmLoadEffect(SFX_MP7);
+    mmLoadEffect(SFX_MP9);
+    mmLoadEffect(SFX_NOVA);
+    mmLoadEffect(SFX_USP);
+    mmLoadEffect(SFX_XM1014);*/
     mmLoadEffect(SFX_KNIFE_HIT_PLAYER);
     mmLoadEffect(SFX_KNIFE_HIT_WALL);
     mmLoadEffect(SFX_RIC);
     mmLoadEffect(SFX_HEADSHOT1);
+    mmLoadEffect(SFX_HIT_HELMET);
     mmLoadEffect(SFX_DEATH);
     mmLoadEffect(SFX_FLESH_IMPACT);
 
@@ -95,29 +99,29 @@ void initSoundSystem()
     mmLoadEffect(SFX_USP);
     mmLoadEffect(SFX_XM1014);
     mmLoadEffect(SFX_XM1014);
-    mmLoadEffect(SFX_ZOOM);
-
+    mmLoadEffect(SFX_SCOPE);
+    //  mmLoadEffect(SFX_ZOOM);
     /*file = fopen("awp_01.raw", "rb");
 
-	mm_stream mystream;
-	mystream.buffer_length = 1024;
-	mystream.callback = stream;
-	mystream.timer = MM_TIMER0;
-	mystream.manual = true;
-	mystream.sampling_rate = 22050;
-	mystream.format = MM_STREAM_16BIT_STEREO;
-	mmStreamOpen(&mystream);
+    mm_stream mystream;
+    mystream.buffer_length = 1024;
+    mystream.callback = stream;
+    mystream.timer = MM_TIMER0;
+    mystream.manual = true;
+    mystream.sampling_rate = 22050;
+    mystream.format = MM_STREAM_16BIT_STEREO;
+    mmStreamOpen(&mystream);
 
-	while (1)
-	{
+    while (1)
+    {
 
-		mmStreamUpdate();
+        mmStreamUpdate();
 
-		mm_word position = mmStreamGetPosition() / 22050;
-		iprintf("\x1b[12;13H%02d:%02d\n", position / 60, position % 60);
+        mm_word position = mmStreamGetPosition() / 22050;
+        iprintf("\x1b[12;13H%02d:%02d\n", position / 60, position % 60);
 
-		swiWaitForVBlank();
-	}*/
+        swiWaitForVBlank();
+    }*/
 }
 
 void DoStepSound(int Volume, int Panning, int playerIndex)
@@ -126,7 +130,7 @@ void DoStepSound(int Volume, int Panning, int playerIndex)
     {
         mm_sfxhand mysound;
 
-        //Play random sound
+        // Play random sound
         if (AllPlayers[playerIndex].Step == 0)
             mysound = mmEffect(SFX_CONCRETE_CT_1);
         else if (Step == 1)
@@ -136,7 +140,7 @@ void DoStepSound(int Volume, int Panning, int playerIndex)
         else
             mysound = mmEffect(SFX_CONCRETE_CT_3);
 
-        //Set panning and volume
+        // Set panning and volume
         mmEffectPanning(mysound, Panning);
         mmEffectVolume(mysound, Volume);
 
@@ -146,26 +150,26 @@ void DoStepSound(int Volume, int Panning, int playerIndex)
     }
 }
 
-void GetPanning(int PlayerId, int *OutPanning, int *OutVolume, Player AllPlayers[], float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance)
+void GetPanning(int PlayerId, int *OutPanning, int *OutVolume, float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance)
 {
-    //float MaxSoundDistance = 0.15; //0 = 0 meter; 0.05 = 7.65 meters; 1 = 255 meters
+    // float MaxSoundDistance = 0.15; //0 = 0 meter; 0.05 = 7.65 meters; 1 = 255 meters
     float CenterOffset = 10;
     float Panning = -1;
 
-    //With players positions, calculate volume and panning
+    // With players positions, calculate volume and panning
     for (int i = 1; i < MaxPlayer; i++)
         if (AllPlayers[i].Id == PlayerId)
         {
             if (CurrentCameraPlayer != 0 && CurrentCameraPlayer != i)
                 CalculatePlayerPosition(CurrentCameraPlayer);
             CalculatePlayerPosition(i);
-            float Dis = sqrtf(powf(AllPlayers[CurrentCameraPlayer].xPos - AllPlayers[i].xPos, 2.0) + powf(AllPlayers[CurrentCameraPlayer].yPos - AllPlayers[i].yPos, 2.0) + powf(AllPlayers[CurrentCameraPlayer].zPos - AllPlayers[i].zPos, 2.0));
+            float Dis = sqrtf(powf(AllPlayers[CurrentCameraPlayer].position.x - AllPlayers[i].position.x, 2.0) + powf(AllPlayers[CurrentCameraPlayer].position.y - AllPlayers[i].position.y, 2.0) + powf(AllPlayers[CurrentCameraPlayer].position.z - AllPlayers[i].position.z, 2.0));
             *OutVolume = (int)fmax(255 - (Dis * 2.0) / MaxSoundDistance, 0);
-            Panning = (xWithoutYForAudio * (AllPlayers[i].xPos - AllPlayers[CurrentCameraPlayer].xPos)) + (zWithoutYForAudio * (AllPlayers[i].zPos - AllPlayers[CurrentCameraPlayer].zPos));
+            Panning = (xWithoutYForAudio * (AllPlayers[i].position.x - AllPlayers[CurrentCameraPlayer].position.x)) + (zWithoutYForAudio * (AllPlayers[i].position.z - AllPlayers[CurrentCameraPlayer].position.z));
             break;
         }
 
-    //Panning ajustements
+    // Panning ajustements
     if (Panning > CenterOffset)
         Panning = CenterOffset;
     else if (Panning < -CenterOffset)
@@ -175,25 +179,25 @@ void GetPanning(int PlayerId, int *OutPanning, int *OutVolume, Player AllPlayers
     Panning /= CenterOffset * 2.0;
     Panning *= 255.0;
 
-    //return panning
+    // return panning
     *OutPanning = (int)Panning;
 }
 
-void GetPanningByPosition(int *OutPanning, int *OutVolume, Player AllPlayers[], Vector4 PositionB, float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance)
+void GetPanningByPosition(int *OutPanning, int *OutVolume, Vector4 PositionB, float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance)
 {
-    //float MaxSoundDistance = 0.15; //0 = 0 meter; 0.05 = 7.65 meters; 1 = 255 meters
+    // float MaxSoundDistance = 0.15; //0 = 0 meter; 0.05 = 7.65 meters; 1 = 255 meters
     float CenterOffset = 10;
     float Panning = -1;
 
     if (CurrentCameraPlayer != 0)
         CalculatePlayerPosition(CurrentCameraPlayer);
 
-    //With players positions, calculate volume and panning
-    float Dis = sqrtf(powf(AllPlayers[CurrentCameraPlayer].xPos - PositionB.x, 2.0) + powf(AllPlayers[CurrentCameraPlayer].yPos - PositionB.y, 2.0) + powf(AllPlayers[CurrentCameraPlayer].zPos - PositionB.z, 2.0));
+    // With players positions, calculate volume and panning
+    float Dis = sqrtf(powf(AllPlayers[CurrentCameraPlayer].position.x - PositionB.x, 2.0) + powf(AllPlayers[CurrentCameraPlayer].position.y - PositionB.y, 2.0) + powf(AllPlayers[CurrentCameraPlayer].position.z - PositionB.z, 2.0));
     *OutVolume = (int)fmax(255 - (Dis * 2.0) / MaxSoundDistance, 0);
-    Panning = (xWithoutYForAudio * (PositionB.x - AllPlayers[CurrentCameraPlayer].xPos)) + (zWithoutYForAudio * (PositionB.z - AllPlayers[CurrentCameraPlayer].zPos));
+    Panning = (xWithoutYForAudio * (PositionB.x - AllPlayers[CurrentCameraPlayer].position.x)) + (zWithoutYForAudio * (PositionB.z - AllPlayers[CurrentCameraPlayer].position.z));
 
-    //Panning ajustements
+    // Panning ajustements
     if (Panning > CenterOffset)
         Panning = CenterOffset;
     else if (Panning < -CenterOffset)
@@ -203,7 +207,7 @@ void GetPanningByPosition(int *OutPanning, int *OutVolume, Player AllPlayers[], 
     Panning /= CenterOffset * 2.0;
     Panning *= 255.0;
 
-    //return panning
+    // return panning
     *OutPanning = (int)Panning;
 }
 
@@ -213,7 +217,7 @@ void Play3DSound(mm_word sound, int Volume, int Panning)
     {
         mm_sfxhand mysound = mmEffect(sound);
 
-        //Set effect panning and volume
+        // Set effect panning and volume
         mmEffectPanning(mysound, Panning);
         mmEffectVolume(mysound, Volume);
     }
@@ -225,7 +229,7 @@ void Play2DSound(mm_word sound, int Volume)
     {
         mm_sfxhand mysound = mmEffect(sound);
 
-        //Set effeft volume
+        // Set effeft volume
         mmEffectVolume(mysound, Volume);
     }
 }
