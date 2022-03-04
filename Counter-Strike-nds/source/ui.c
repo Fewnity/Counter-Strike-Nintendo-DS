@@ -5,10 +5,14 @@
 #include "network.h"
 #include "ui.h"
 #include "party.h"
+#include "input.h"
 #include "ai.h"
+#include "map.h"
 #include "sounds.h"
 #include "gun.h"
+#include "equipment.h"
 #include "grenade.h"
+#include "tutorial.h"
 #include "keyboard.h"
 #include <fat.h>
 
@@ -19,20 +23,26 @@ NE_Material **BottomScreenSpritesMaterialsForUI;
 NE_Palette **PalettesForUI;
 
 enum shopCategory ShopCategory = PISTOLS; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-int WeaponCount;
+int WeaponCount = 0;
 int selectedServer = 0;
 int serverListOffset = 0;
-
-Vector2 LastTouch;
+int currentSelectionMap = 0;
 
 bool isShowingMap = false;
 bool isShowingKeyBoard = false;
+bool isLeftControls = false;
 
 void (*renderFunction)();
 void (*onCloseMenu)();
 void (*lastOpenedMenu)();
-bool haveToCallOnCloseMenu;
-bool useQuitButton;
+bool haveToCallOnCloseMenu = false;
+bool useQuitButton = false;
+int checkBoxToShow = 0;
+int sliderToShow = 0;
+int controlsPage = 0; // [0,1]
+
+int trace = 0;
+char *dialogText;
 
 void SetSpritesForUI()
 {
@@ -40,6 +50,16 @@ void SetSpritesForUI()
     BottomScreenSpritesForUI = GetSpritesBottom();
     BottomScreenSpritesMaterialsForUI = GetBottomScreenSpritesMaterials();
     PalettesForUI = GetPalettes();
+}
+
+void SetCheckBoxToShow(int value)
+{
+    checkBoxToShow = value;
+}
+
+void SetSliderToShow(int value)
+{
+    sliderToShow = value;
 }
 
 void SetCheckBoxsRefForUI()
@@ -63,12 +83,12 @@ void SetWeaponCountFromCategory()
 
     for (int i = 0; i < GunCount; i++)
     {
-        if (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].isForCounterTerrorists || AllGuns[i].isForCounterTerrorists == -1))
+        if (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].team || AllGuns[i].team == BOTH))
             WeaponCount++;
     }
 }
 
-void printLongText(int minX, int maxX, int y, char *text)
+int printLongText(int minX, int maxX, int y, char *text)
 {
     char tempText[maxX - minX];
     tempText[0] = '\0';
@@ -82,9 +102,10 @@ void printLongText(int minX, int maxX, int y, char *text)
     {
         if (strlen(tempText) > 0 && strlen(tempText) + 1 + strlen(ptr) > maxX - minX)
         {
-            NE_TextPrint(0,                     // Font slot
-                         minX, y + currentLine, // Coordinates x(column), y(row)
-                         NE_White,              // Color
+            int fixedXPos = centerPositionOfAText(minX, maxX, strlen(tempText));
+            NE_TextPrint(0,                          // Font slot
+                         fixedXPos, y + currentLine, // Coordinates x(column), y(row)
+                         NE_White,                   // Color
                          tempText);
 
             for (int i = 0; i < strlen(tempText); i++)
@@ -98,13 +119,16 @@ void printLongText(int minX, int maxX, int y, char *text)
 
         ptr = strtok(NULL, " ");
     }
-    NE_TextPrint(0,                     // Font slot
-                 minX, y + currentLine, // Coordinates x(column), y(row)
-                 NE_White,              // Color
+    int fixedXPos = centerPositionOfAText(minX, maxX, strlen(tempText));
+    NE_TextPrint(0,                          // Font slot
+                 fixedXPos, y + currentLine, // Coordinates x(column), y(row)
+                 NE_White,                   // Color
                  tempText);
+
+    return currentLine + 1;
 }
 
-void printLongConstChar(int minX, int maxX, int y, const char *text)
+int printLongConstChar(int minX, int maxX, int y, const char *text)
 {
     char tempText[maxX - minX];
     tempText[0] = '\0';
@@ -118,9 +142,10 @@ void printLongConstChar(int minX, int maxX, int y, const char *text)
     {
         if (strlen(tempText) > 0 && strlen(tempText) + 1 + strlen(ptr) > maxX - minX)
         {
-            NE_TextPrint(0,                     // Font slot
-                         minX, y + currentLine, // Coordinates x(column), y(row)
-                         NE_White,              // Color
+            int fixedXPos = centerPositionOfAText(minX, maxX, strlen(tempText));
+            NE_TextPrint(0,                          // Font slot
+                         fixedXPos, y + currentLine, // Coordinates x(column), y(row)
+                         NE_White,                   // Color
                          tempText);
 
             for (int i = 0; i < strlen(tempText); i++)
@@ -134,16 +159,41 @@ void printLongConstChar(int minX, int maxX, int y, const char *text)
 
         ptr = strtok(NULL, " ");
     }
-    NE_TextPrint(0,                     // Font slot
-                 minX, y + currentLine, // Coordinates x(column), y(row)
-                 NE_White,              // Color
+    int fixedXPos = centerPositionOfAText(minX, maxX, strlen(tempText));
+    NE_TextPrint(0,                          // Font slot
+                 fixedXPos, y + currentLine, // Coordinates x(column), y(row)
+                 NE_White,                   // Color
                  tempText);
+
+    return currentLine + 1;
+}
+
+int centerPositionOfAText(int xMin, int xMax, int textLength)
+{
+    return xMin + ceil((xMax - xMin) / 2.0) - floor(textLength / 2.0);
+}
+
+void setDialogText(char *text)
+{
+    dialogText = text;
+}
+
+void showDialog()
+{
+    if (strlen(dialogText) > 0)
+    {
+        NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+        int ligneCount = printLongConstChar(1, 30, 1, dialogText);
+        NE_PolyFormat(20, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+        NE_2DDrawQuad(0, 0, 256, (ligneCount + 2) * 8, 1, RGB15(0, 0, 0));
+    }
 }
 
 void startChangeMenu(enum UiMenu menuToShow)
 {
-    // lastOpenedMenu = renderFunction;
     SetButtonToShow(0);
+    SetCheckBoxToShow(0);
+    SetSliderToShow(0);
 
     if (haveToCallOnCloseMenu)
     {
@@ -282,7 +332,7 @@ void ChangeWeapon(int Left)
     {
         for (int i = 0; i < GunCount + equipementCount + shopGrenadeCount; i++)
         {
-            if ((ShopCategory < EQUIPMENT && i < GunCount && (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].isForCounterTerrorists || AllGuns[i].isForCounterTerrorists == -1))) || (ShopCategory == GRENADES && i >= GunCount && (AllPlayers[0].Team == GetAllGrenades()[i - GunCount].isForCounterTerrorists || GetAllGrenades()[i - GunCount].isForCounterTerrorists == -1)))
+            if ((ShopCategory < EQUIPMENT && i < GunCount && (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].team || AllGuns[i].team == -1))) || (ShopCategory == GRENADES && i >= GunCount && i < GunCount + shopGrenadeCount && (AllPlayers[0].Team == GetAllGrenades()[i - GunCount].team || GetAllGrenades()[i - GunCount].team == -1)) || (ShopCategory == EQUIPMENT && i >= GunCount + shopGrenadeCount && !AllEquipements[i - GunCount - shopGrenadeCount].isHided && (AllPlayers[0].Team == AllEquipements[i - GunCount - shopGrenadeCount].team || AllEquipements[i - GunCount - shopGrenadeCount].team == -1)))
             {
                 if (FirstGunFound == -1)
                     FirstGunFound = i;
@@ -300,7 +350,7 @@ void ChangeWeapon(int Left)
     {
         for (int i = GunCount + equipementCount + shopGrenadeCount; i > -1; i--)
         {
-            if ((ShopCategory < EQUIPMENT && i < GunCount && (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].isForCounterTerrorists || AllGuns[i].isForCounterTerrorists == -1))) || (ShopCategory == GRENADES && i >= GunCount && (AllPlayers[0].Team == GetAllGrenades()[i - GunCount].isForCounterTerrorists || GetAllGrenades()[i - GunCount].isForCounterTerrorists == -1)))
+            if ((ShopCategory < EQUIPMENT && i < GunCount && (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].team || AllGuns[i].team == -1))) || (ShopCategory == GRENADES && i >= GunCount && i < GunCount + shopGrenadeCount && (AllPlayers[0].Team == GetAllGrenades()[i - GunCount].team || GetAllGrenades()[i - GunCount].team == -1)) || (ShopCategory == EQUIPMENT && i >= GunCount + shopGrenadeCount && !AllEquipements[i - GunCount - shopGrenadeCount].isHided && (AllPlayers[0].Team == AllEquipements[i - GunCount - shopGrenadeCount].team || AllEquipements[i - GunCount - shopGrenadeCount].team == -1)))
             {
                 if (FirstGunFound == -1)
                     FirstGunFound = i;
@@ -326,9 +376,40 @@ void ChangeWeapon(int Left)
         NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], AllGuns[Selected].texture, 1);
     else if (ShopCategory == GRENADES)
         NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], GetAllGrenades()[Selected - GunCount].texture, 1);
+    else if (ShopCategory == EQUIPMENT)
+        NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], AllEquipements[Selected - GunCount - shopGrenadeCount].texture, 1);
 
     SetSelectedGunShop(Selected);
     SetUpdateBottomScreenOneFrame(4);
+}
+
+void ChangeMap(int Left)
+{
+    if (Left == 0)
+    {
+        currentSelectionMap++;
+        if (currentSelectionMap == MAP_COUNT)
+            currentSelectionMap = 0;
+    }
+    else
+    {
+        currentSelectionMap--;
+        if (currentSelectionMap == -1)
+            currentSelectionMap = MAP_COUNT - 1;
+    }
+
+    NE_PaletteDelete(PalettesForUI[10]);
+    NE_MaterialDelete(BottomScreenSpritesMaterialsForUI[6]);
+    BottomScreenSpritesMaterialsForUI[6] = NE_MaterialCreate();
+    PalettesForUI[10] = NE_PaletteCreate();
+    NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], allMaps[currentSelectionMap].image, 1);
+}
+
+void setQuitButton(bool value)
+{
+    useQuitButton = value;
+    // Set button sprite
+    NE_SpriteVisible(BottomScreenSpritesForUI[2], value);
 }
 
 void SetTeam(int i)
@@ -350,85 +431,25 @@ void SetTeam(int i)
     // SetUpdateBottomScreenOneFrame(4);
 }
 
-void ReadTouchScreen(uint32 keysdown, uint32 keys, uint32 keysup, int *currentMenu, touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUpdateBottomScreen, int *ButtonToShow, int *UpdateBottomScreenOneFrame, bool *SendTeam, bool forceCheck)
+void changeControlsPage(int isLeft)
 {
-    if ((*UpdateBottomScreenOneFrame == 0 && uiTimer == 0) || forceCheck)
+    if (!isLeft)
     {
-        for (int i = 0; i < CheckBoxCount; i++)
+        controlsPage++;
+        if (controlsPage == CONTROLS_PAGE_COUNT)
         {
-            // Check checkbox
-            if ((keysdown & KEY_TOUCH && touch.px >= AllCheckBoxs[i].xPos && touch.px <= AllCheckBoxs[i].xPos + AllCheckBoxs[i].xSize && touch.py >= AllCheckBoxs[i].yPos && touch.py <= AllCheckBoxs[i].yPos + AllCheckBoxs[i].ySize))
-            {
-                AllCheckBoxs[i].value = !AllCheckBoxs[i].value;
-                *UpdateBottomScreenOneFrame += 8;
-                if (*currentMenu == SETTINGS) // Update screen button (map menu)
-                {
-                    if (i == 0)
-                    {
-                        useRumble = AllCheckBoxs[i].value;
-                    }
-                    else if (i == 1)
-                    {
-                        is3dsMode = AllCheckBoxs[i].value;
-                    }
-                }
-            }
-        }
-
-        // Check for all buttons click
-        for (int i = 0; i < *ButtonToShow; i++)
-        {
-            if (!AllButtons[i].isHidden && (keysdown & KEY_TOUCH && touch.px >= AllButtons[i].xPos && touch.px <= AllButtons[i].xPos + AllButtons[i].xSize && touch.py >= AllButtons[i].yPos && touch.py <= AllButtons[i].yPos + AllButtons[i].ySize))
-            {
-                AllButtons[i].OnClick(AllButtons[i].parameter);
-                return;
-            }
-        }
-
-        // Check back button click
-        if (useQuitButton && keysdown & KEY_TOUCH && touch.px >= 236 && touch.px <= 236 + 20 && touch.py >= 1 && touch.py <= 1 + 20)
-        {
-            if (*currentMenu == SETTINGS)
-            {
-                uiTimer = 8;
-                actionOfUiTimer = SAVE;
-            }
-            lastOpenedMenu();
-        }
-
-        if (*currentMenu == CONTROLLER && keys & KEY_TOUCH && touch.px >= 40 && touch.px <= 255 && touch.py >= 30 && touch.py <= 194)
-        {
-            if (keysdown & KEY_TOUCH)
-            {
-                if (GetDoubleTapTimer() > 0)
-                    SetAim();
-
-                SetDoubleTapTimer(11);
-            }
-            else if (LastTouch.x != -1)
-            {
-                int xAngleToAdd = 0;
-                int yAngleToAdd = 0;
-
-                if (LastTouch.x != touch.px)
-                    xAngleToAdd = LastTouch.x - touch.px;
-
-                if (LastTouch.y != touch.py)
-                    yAngleToAdd = touch.py - LastTouch.y;
-
-                if (xAngleToAdd + yAngleToAdd < 50) // Security to avoid touch screen stylus teleportation
-                    AddAnglesToPlayer(xAngleToAdd / 2.0, yAngleToAdd / 2.0);
-            }
-
-            LastTouch.x = touch.px;
-            LastTouch.y = touch.py;
-        }
-        else
-        {
-            LastTouch.x = -1;
-            LastTouch.y = -1;
+            controlsPage = 0;
         }
     }
+    else
+    {
+        controlsPage--;
+        if (controlsPage == -1)
+        {
+            controlsPage = CONTROLS_PAGE_COUNT - 1;
+        }
+    }
+    initControlsChangeMenu();
 }
 
 void showPartyEventText(int event)
@@ -470,6 +491,70 @@ void showKillText(int killerIndex, int deadPlayerIndex)
     KillTextShowTimer = 240;
 }
 
+void startScanForInput(int inputIndex)
+{
+    for (int i = 0; i < INPUT_COUNT; i++)
+    {
+        if (inputs[i].nameIndex == 14)
+        {
+            inputs[i].nameIndex = 12;
+        }
+    }
+
+    if (inputs[inputIndex].value != 0)
+    {
+        inputs[inputIndex].value = 0;
+        inputs[inputIndex].nameIndex = 12;
+    }
+    else
+    {
+        scanForInput = true;
+        currentInputScanned = inputIndex;
+        inputs[inputIndex].nameIndex = 13;
+    }
+}
+
+void updateKeyboardModeButton()
+{
+    if (isAzerty)
+    {
+        AllButtons[2].text = "Azerty";
+    }
+    else
+    {
+        AllButtons[2].text = "Qwerty";
+    }
+}
+
+void drawNameChanging()
+{
+    NE_2DDrawQuad(0, 0, ScreenWidth, ScreenHeightFixed, 3, RGB15(3, 3, 3)); // Background
+    if (currentMenu == CHANGENAME)
+    {
+        NE_TextPrint(0,        // Font slot
+                     11, 2,    // Coordinates x(column), y(row)
+                     NE_White, // Color
+                     "Change name");
+
+        char editedName[21];
+
+        // char editedName[40];
+        // sprintf(editedName, "%s", localPlayer->name);
+        sprintf(editedName, "%s", tempText);
+        // strncpy(editedName, tempText, 21);
+
+        for (int i = strlen(editedName); i < 20; i++)
+        {
+            sprintf(editedName + strlen(editedName), "_");
+        }
+
+        NE_TextPrint(0,        // Font slot
+                     6, 12,    // Coordinates x(column), y(row)
+                     NE_White, // Color
+                     editedName);
+    }
+}
+
 void drawTopScreenUI()
 {
     Player *selectPlayer = &AllPlayers[CurrentCameraPlayer];
@@ -485,31 +570,7 @@ void drawTopScreenUI()
     // Player *localPlayer = &AllPlayers[0];
     if (isShowingKeyBoard)
     {
-        NE_2DDrawQuad(0, 0, ScreenWidth, ScreenHeightFixed, 3, RGB15(3, 3, 3)); // Background
-        if (currentMenu == CHANGENAME)
-        {
-            NE_TextPrint(0,        // Font slot
-                         11, 2,    // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         "Change name");
-
-            char editedName[21];
-
-            // char editedName[40];
-            // sprintf(editedName, "%s", localPlayer->name);
-            sprintf(editedName, "%s", tempText);
-            // strncpy(editedName, tempText, 21);
-
-            for (int i = strlen(editedName); i < 20; i++)
-            {
-                sprintf(editedName + strlen(editedName), "_");
-            }
-
-            NE_TextPrint(0,        // Font slot
-                         6, 12,    // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         editedName);
-        }
+        drawNameChanging();
     }
     else if (isShowingMap)
     {
@@ -542,6 +603,19 @@ void drawTopScreenUI()
                     NE_2DDrawTexturedQuadColor(finalXPoint1, finalYPoint1, finalXPoint2, finalYPoint2, 1, BottomScreenSpritesMaterials[2], RGB15(31, 0, 0)); // Enemies points
             }
         }
+
+        if (bombDropped)
+        {
+            float bombXPos = map(droppedBombPositionAndRotation.x, -46, 57.5, -170, 170);
+            float bombYpos = map(droppedBombPositionAndRotation.z, -41, 67, -177, 177);
+            float bombXPoint = ScreenCenterWidth - ((bombXPos - mapXPos) * zWithoutYForMap + (bombYpos - mapYPos) * -xWithoutYForMap) / 2.0;
+            float bombYPoint = ScreenCenterHeight + ((bombYpos - mapYPos) * -zWithoutYForMap + (bombXPos - mapXPos) * -xWithoutYForMap) / 2.0;
+            float bombFinalXPoint1 = bombXPoint - 4, bombFinalYPoint1 = bombYPoint - 2;
+            float bombFinalXPoint2 = bombXPoint + 4, bombFinalYPoint2 = bombYPoint + 4;
+
+            NE_2DDrawTexturedQuadColor(bombFinalXPoint1, bombFinalYPoint1, bombFinalXPoint2, bombFinalYPoint2, 1, TopScreenSpritesMaterials[5], RGB15(31, 0, 0)); // Bomb
+        }
+
         NE_2DDrawTexturedQuadColor(ScreenCenterWidth - 4, ScreenCenterHeight - 2, ScreenCenterWidth + 2, ScreenCenterHeight + 4, 1, BottomScreenSpritesMaterials[2], RGB15(0, 31, 0)); // Background
     }
     else
@@ -560,12 +634,9 @@ void drawTopScreenUI()
             char CPU[40];
 
             // sprintf(CPU, "CPU : %d, Zone : %d", NE_GetCPUPercent(), localPlayer->CurrentOcclusionZone);
-            // sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
-            sprintf(CPU, "Alw : %d, Upd : %d need %d", AlwaysUpdateBottomScreen, UpdateBottomScreenOneFrame, NeedChangeScreen);
+            sprintf(CPU, "CPU : %d%%, Mem : %d%% %d", NE_GetCPUPercent(), NE_TextureFreeMemPercent(), localPlayer->inShadow);
 
-            // sprintf(CPU, "Defuser : %d at %d %d %d %d", currentDefuserIndex, bombPlantedAt, localPlayer->bombTimer, BombPlanted, BombDefused);
-
-            // sprintf(CPU, "B : %d", bombDropped);
+            // sprintf(CPU, "t %d m %d c %d", trace, currentMenu, Connection);
 
             NE_TextPrint(0,        // Font slot
                          1, 1,     // Coordinates x(column), y(row)
@@ -586,8 +657,8 @@ void drawTopScreenUI()
             // DEBUG show map zone to show
             char Occlusion[20];
             sprintf(Occlusion, "Zone to show : ");
-            for (int i = 0; i < AllZones[localPlayer->CurrentOcclusionZone].ZoneCount; i++)
-                sprintf(Occlusion + strlen(Occlusion), "%d ", AllZones[localPlayer->CurrentOcclusionZone].AllVisibleZones[i]);
+            for (int i = 0; i < allMaps[currentMap].AllZones[localPlayer->CurrentOcclusionZone].ZoneCount; i++)
+                sprintf(Occlusion + strlen(Occlusion), "%d ", allMaps[currentMap].AllZones[localPlayer->CurrentOcclusionZone].visibleMapPart[i]);
 
             // for (int i = 0; i < AllZones[17].ZoneCount; i++)
             // sprintf(Occlusion + strlen(Occlusion), "%d ", AllZones[17].AllVisibleZones[i]);
@@ -599,39 +670,42 @@ void drawTopScreenUI()
         }
 
         // if (true) // TODO REMOVE THS
-        if (!BombPlanted && !localPlayer->IsDead)
+        if (!BombPlanted)
         {
-            NE_PolyFormat(13, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-            NE_2DDrawQuad(ScreenCenterWidth - 25, 8, ScreenCenterWidth + 24, 16, 1, RGB15(3, 3, 3));
-            NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-            // Show party timer if bomb is not planted
-            // Minutes
-            char Timer[30];
-            if (PartyMinutes > 9)
-                sprintf(Timer, "%d::", PartyMinutes);
-            else
-                sprintf(Timer, "0%d::", PartyMinutes);
+            if (!allPartyModes[currentPartyMode].infiniteTimer && (!localPlayer->IsDead || roundState == TRAINING))
+            {
+                NE_PolyFormat(13, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+                NE_2DDrawQuad(ScreenCenterWidth - 25, 8, ScreenCenterWidth + 24, 16, 1, RGB15(3, 3, 3));
+                NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+                // Show party timer if bomb is not planted
+                // Minutes
+                char Timer[30];
+                if (PartyMinutes > 9)
+                    sprintf(Timer, "%d::", PartyMinutes);
+                else
+                    sprintf(Timer, "0%d::", PartyMinutes);
 
-            // Seconds
-            if (PartySeconds > 9)
-                sprintf(Timer + strlen(Timer), "%d", PartySeconds);
-            else
-                sprintf(Timer + strlen(Timer), "0%d", PartySeconds);
+                // Seconds
+                if (PartySeconds > 9)
+                    sprintf(Timer + strlen(Timer), "%d", PartySeconds);
+                else
+                    sprintf(Timer + strlen(Timer), "0%d", PartySeconds);
 
-            if (isDebugTopScreen)
-                sprintf(Timer + strlen(Timer), " State : %d", roundState);
+                if (isDebugTopScreen)
+                    sprintf(Timer + strlen(Timer), " State : %d", roundState);
 
-            NE_TextPrint(0,                   // Font slot
-                         13, 4 + TextYOffset, // Coordinates x(column), y(row)
-                         NE_White,            // Color
-                         Timer);
+                NE_TextPrint(0,                   // Font slot
+                             13, 4 + TextYOffset, // Coordinates x(column), y(row)
+                             NE_White,            // Color
+                             Timer);
+            }
 
             // Show planting bomb animation
-            if (localPlayer->bombTimer < 120 && localPlayer->bombTimer > 0)
+            if (localPlayer->bombTimer < bombPlantingTime && localPlayer->bombTimer > 0 && !localPlayer->IsDead)
             {
                 // Draw Background
                 NE_PolyFormat(20, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-                NE_2DDrawQuad(ScreenWidthDivided4, 155, ScreenWidth - mapInt(localPlayer->bombTimer, 1, 119, ScreenWidthDivided4 * 3, ScreenWidthDivided4), 170, 1, RGB15(3, 3, 3));
+                NE_2DDrawQuad(ScreenWidthDivided4, 155, ScreenWidth - mapInt(localPlayer->bombTimer, -2, bombPlantingTime - 0, ScreenWidthDivided4 * 3, ScreenWidthDivided4), 170, 1, RGB15(3, 3, 3));
                 NE_PolyFormat(24, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
                 NE_2DDrawQuad(84, 140, 176, 155, 1, RGB15(3, 3, 3));
                 NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
@@ -652,7 +726,7 @@ void drawTopScreenUI()
             {
                 // Draw Background
                 NE_PolyFormat(20, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-                NE_2DDrawQuad(ScreenWidthDivided4, 155, ScreenWidth - mapInt(localPlayer->bombTimer, 1, 599, ScreenWidth / 4 * 3, ScreenWidthDivided4), 170, 1, RGB15(3, 3, 3));
+                NE_2DDrawQuad(ScreenWidthDivided4, 155, ScreenWidth - mapInt(localPlayer->bombTimer, -2, bombDefuseTime, ScreenWidth / 4 * 3, ScreenWidthDivided4), 170, 1, RGB15(3, 3, 3));
                 NE_PolyFormat(24, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
                 NE_2DDrawQuad(84, 140, 176, 155, 1, RGB15(3, 3, 3));
                 NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
@@ -666,34 +740,38 @@ void drawTopScreenUI()
                              defusingText);
             }
         }
-        NE_PolyFormat(13, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-        NE_2DDrawQuad(ScreenCenterWidth - 25, 0, ScreenCenterWidth + 24, 8, 1, RGB15(3, 3, 3));
-        NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-        // Show party score
-        char PartyScore[15];
-        //  CountersT score
-        if (CounterScore > 9)
-            sprintf(PartyScore, "%d  ", CounterScore);
-        else
-            sprintf(PartyScore, "0%d  ", CounterScore);
 
-        NE_TextPrint(0,                   // Font slot
-                     13, 3 + TextYOffset, // Coordinates x(column), y(row)
-                     ColorCounterTeam,    // Color
-                     PartyScore);
+        if (!allPartyModes[currentPartyMode].noScore)
+        {
+            NE_PolyFormat(13, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+            NE_2DDrawQuad(ScreenCenterWidth - 25, 0, ScreenCenterWidth + 24, 8, 1, RGB15(3, 3, 3));
+            NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+            // Show party score
+            char PartyScore[15];
+            //  CountersT score
+            if (CounterScore > 9)
+                sprintf(PartyScore, "%d  ", CounterScore);
+            else
+                sprintf(PartyScore, "0%d  ", CounterScore);
 
-        // Terrosists score
-        if (TerroristsScore > 9)
-            // sprintf(PartyScoreTerrorist, "%d", TerroristsScore);
-            sprintf(PartyScore, "%d", TerroristsScore);
-        else
-            // sprintf(PartyScoreTerrorist, "0%d", TerroristsScore);
-            sprintf(PartyScore, "0%d", TerroristsScore);
+            NE_TextPrint(0,                   // Font slot
+                         13, 3 + TextYOffset, // Coordinates x(column), y(row)
+                         ColorCounterTeam,    // Color
+                         PartyScore);
 
-        NE_TextPrint(0,                   // Font slot
-                     17, 3 + TextYOffset, // Coordinates x(column), y(row)
-                     ColorTerroristsTeam, // Color
-                     PartyScore);
+            // Terrosists score
+            if (TerroristsScore > 9)
+                // sprintf(PartyScoreTerrorist, "%d", TerroristsScore);
+                sprintf(PartyScore, "%d", TerroristsScore);
+            else
+                // sprintf(PartyScoreTerrorist, "0%d", TerroristsScore);
+                sprintf(PartyScore, "0%d", TerroristsScore);
+
+            NE_TextPrint(0,                   // Font slot
+                         17, 3 + TextYOffset, // Coordinates x(column), y(row)
+                         ColorTerroristsTeam, // Color
+                         PartyScore);
+        }
 
         if (Connection != OFFLINE)
         {
@@ -777,6 +855,11 @@ void drawTopScreenUI()
             NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
         }
 
+        if (redHealthTextCounter != 0)
+        {
+            redHealthTextCounter--;
+        }
+
         if (selectPlayer->Team != SPECTATOR)
         {
             if (!selectPlayer->IsDead)
@@ -838,7 +921,7 @@ void drawTopScreenUI()
                 else // Print red text after taking damage
                 {
                     int ColorAmount = 31 - redHealthTextCounter / 2;
-                    redHealthTextCounter--;
+                    // redHealthTextCounter--;
                     NE_TextPrint(0,                                   // Font slot
                                  1, 23,                               // Coordinates x(column), y(row)
                                  RGB15(31, ColorAmount, ColorAmount), // Color
@@ -870,13 +953,15 @@ void drawTopScreenUI()
 
                     if (selectPlayer->isReloading)
                     {
-                        rightGunY += sinf((float)selectPlayer->GunReloadWaitCount / (float)AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].ReloadTime * M_PI) * 70;
-                        leftGunY += sinf((float)selectPlayer->GunReloadWaitCount / (float)AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].ReloadTime * M_PI) * 70;
+                        float valueToAdd = sinf((float)selectPlayer->GunReloadWaitCount / (float)AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].ReloadTime * M_PI) * 70;
+                        rightGunY += valueToAdd;
+                        leftGunY += valueToAdd;
                     }
-
-                    NE_2DDrawTexturedQuad(rightGunX, rightGunY, rightGunX + 96, rightGunY + 96, 1, TopScreenSpritesMaterials[1]); // Gun
+                    int lightCoef = 31 * selectPlayer->lightCoef;
+                    // NE_2DDrawTexturedQuad(rightGunX, rightGunY, rightGunX + 96, rightGunY + 96, 1, TopScreenSpritesMaterials[1]); // Gun
+                    NE_2DDrawTexturedQuadColor(rightGunX, rightGunY, rightGunX + 96, rightGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef));
                     if (AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isDualGun)
-                        NE_2DDrawTexturedQuad(leftGunX + 96, leftGunY, leftGunX, leftGunY + 96, 1, TopScreenSpritesMaterials[1]); // Gun
+                        NE_2DDrawTexturedQuadColor(leftGunX + 96, leftGunY, leftGunX, leftGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef)); // Gun
                 }
 
                 // Draw gun muzzle flash
@@ -910,10 +995,10 @@ void drawTopScreenUI()
         int totalEndAnimation = 0;
         for (int i = 0; i < GrenadeCount; i++)
         {
-            if (grenades[i] != NULL && grenades[i]->GrenadeType == 1 && grenades[i]->Timer == 0)
+            if (grenades[i] != NULL && grenades[i]->GrenadeType == SMOKE && grenades[i]->Timer == 0)
             {
                 // Calculate distances
-                float smokeDistance = sqrtf(powf(AllPlayers[0].PlayerModel->x - grenades[i]->Model->x, 2.0) + powf(AllPlayers[0].PlayerModel->y - grenades[i]->Model->y, 2.0) + powf(AllPlayers[0].PlayerModel->z - grenades[i]->Model->z, 2.0)) / 26000.0; // fFor smoke detection
+                float smokeDistance = sqrtf(powf(selectPlayer->PlayerModel->x - grenades[i]->Model->x, 2.0) + powf(selectPlayer->PlayerModel->y - grenades[i]->Model->y, 2.0) + powf(selectPlayer->PlayerModel->z - grenades[i]->Model->z, 2.0)) / 26000.0; // fFor smoke detection
 
                 // Set a minimum limit to the smoke detection distance
                 if (smokeDistance > 1)
@@ -953,35 +1038,48 @@ void drawTopScreenUI()
             NE_2DDrawQuad(0, 0, ScreenWidth, ScreenHeightFixed, 0, RGB15(9, 9, 9));
         }
     }
-
-    // If player is flashed, show white screen
-    if (flashed)
+    showDialog();
+    for (int i = 0; i < MaxPlayer; i++)
     {
-        flashaAnimation += flashAnimationSpeed;
+        Player *player = &AllPlayers[i];
 
-        int alpha = 31;
-        if (flashaAnimation < flashAnimationSpeed * 5.0)
+        // If player is flashed, show white screen
+        if (player->flashed)
         {
-            alpha = (int)((flashaAnimation / (flashAnimationSpeed * 5.0)) * 31.0);
-        }
-        else if (flashaAnimation >= flashAnimationSpeed * 120.0)
-        {
-            alpha = map(flashaAnimation, flashAnimationSpeed * 120.0, 1, 31, 0);
-        }
+            if (player->IsDead || player->Id == NO_PLAYER)
+            {
+                player->flashed = false;
+                player->flashAnimation = 0;
+                continue;
+            }
 
-        if (!isShowingMap && !isShowingKeyBoard)
-        {
-            NE_PolyFormat(alpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION); // Set alpha
-            NE_2DDrawQuad(0, 0, ScreenWidth, ScreenHeightFixed, 0, RGB15(31, 31, 31));
-        }
+            player->flashAnimation += flashAnimationSpeed;
 
-        if (flashaAnimation >= 1)
-        {
-            flashed = false;
-            flashaAnimation = 0;
+            int alpha = 31;
+            if (player->flashAnimation < flashAnimationSpeed * 5.0)
+            {
+                alpha = (int)((player->flashAnimation / (flashAnimationSpeed * 5.0)) * 31.0);
+            }
+            else if (player->flashAnimation >= flashAnimationSpeed * 120.0)
+            {
+                alpha = map(player->flashAnimation, flashAnimationSpeed * 120.0, 1, 31, 0);
+            }
+            if (alpha < 1)
+                alpha = 1;
+
+            if (!isShowingMap && !isShowingKeyBoard && selectPlayer == player)
+            {
+                NE_PolyFormat(alpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION); // Set alpha
+                NE_2DDrawQuad(0, 0, ScreenWidth, ScreenHeightFixed, 0, RGB15(31, 31, 31));
+            }
+
+            if (player->flashAnimation >= 1)
+            {
+                player->flashed = false;
+                player->flashAnimation = 0;
+            }
         }
     }
-
     if (KillTextShowTimer > 0)
         KillTextShowTimer--;
 
@@ -1013,6 +1111,8 @@ void drawBottomScreenUI()
 
         renderFunction();
         drawButtons();
+        drawCheckboxs();
+        drawSliders();
     }
     // Change screen update mode (30 fps with 2 screens update or 60 fps with main game screen update)
     if (NeedChangeScreen)
@@ -1033,7 +1133,7 @@ void initGameMenu()
 
     lastOpenedMenu = &initGameMenu;
 
-    useQuitButton = false;
+    setQuitButton(false);
 
     // Show score button
     AllButtons[0].xPos = 15;
@@ -1043,7 +1143,10 @@ void initGameMenu()
     AllButtons[0].OnClick = &initScoreMenu;
     AllButtons[0].xTextPos = 3;
     AllButtons[0].yTextPos = 10;
-    AllButtons[0].text = "Show score";
+    if (localPlayer->Team == SPECTATOR)
+        AllButtons[0].text = "Choose team";
+    else
+        AllButtons[0].text = "Show score";
 
     // Open shop categories button
     AllButtons[1].xPos = 15;
@@ -1081,17 +1184,21 @@ void initGameMenu()
     AllButtons[4].xSize = 100;
     AllButtons[4].ySize = 24;
     AllButtons[4].OnClick = &initControllerMenu;
-    AllButtons[4].xTextPos = 21;
+    AllButtons[4].xTextPos = 19;
     AllButtons[4].yTextPos = 6;
-    AllButtons[4].text = "Controls";
+    AllButtons[4].text = "Gamepad";
 
     if (AllPlayers[0].Team == SPECTATOR)
     {
         AllButtons[1].isHidden = true;
         AllButtons[4].isHidden = true;
     }
+    if (isInTutorial)
+    {
+        AllButtons[0].isHidden = true;
+        AllButtons[1].isHidden = true;
+    }
 
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], false);
     SetButtonToShow(5);
 }
 
@@ -1105,9 +1212,7 @@ void initGameFinishedMenu()
 
     lastOpenedMenu = &initMainMenu;
 
-    useQuitButton = true;
-    // Quit button
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
+    setQuitButton(true);
 }
 
 void initScoreMenu()
@@ -1120,11 +1225,7 @@ void initScoreMenu()
 
     lastOpenedMenu = &initGameMenu;
 
-    // useQuitButton = false;
-
-    useQuitButton = true;
-
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
+    setQuitButton(true);
 
     if (AllPlayers[0].Team == -1)
     {
@@ -1158,32 +1259,33 @@ void initScoreMenu()
 
 void initShopCategoriesMenu()
 {
-    SetTwoScreenMode(false);
-
-    startChangeMenu(SHOPCATEGORIES);
-
-    renderFunction = &drawShopCategoriesMenu;
-
-    lastOpenedMenu = &initGameMenu;
-
-    useQuitButton = true;
-
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
-
-    for (int buttonIndex = 0; buttonIndex < 6; buttonIndex++)
+    if (!localPlayer->IsDead && shopDisableTimer != 0 && isInShopZone)
     {
-        // Set all categories buttons
-        AllButtons[buttonIndex].xPos = (ScreenWidth / 2) * (buttonIndex / 3);
-        AllButtons[buttonIndex].yPos = ((198 - 23) / 3) * (buttonIndex % 3) + 23;
-        AllButtons[buttonIndex].xSize = ScreenWidth / 2;
-        AllButtons[buttonIndex].ySize = (198 - 23) / 3;
-        AllButtons[buttonIndex].OnClick = &OpenShopCategory;
-        AllButtons[buttonIndex].parameter = buttonIndex;
-        AllButtons[buttonIndex].text = "";
-        if (buttonIndex == 4 || buttonIndex == 5)
-            AllButtons[buttonIndex].isHidden = true;
+        SetTwoScreenMode(false);
+
+        startChangeMenu(SHOPCATEGORIES);
+
+        renderFunction = &drawShopCategoriesMenu;
+
+        lastOpenedMenu = &initGameMenu;
+
+        setQuitButton(true);
+
+        for (int buttonIndex = 0; buttonIndex < 6; buttonIndex++)
+        {
+            // Set all categories buttons
+            AllButtons[buttonIndex].xPos = (ScreenWidth / 2) * (buttonIndex / 3);
+            AllButtons[buttonIndex].yPos = ((198 - 23) / 3) * (buttonIndex % 3) + 23;
+            AllButtons[buttonIndex].xSize = ScreenWidth / 2;
+            AllButtons[buttonIndex].ySize = (198 - 23) / 3;
+            AllButtons[buttonIndex].OnClick = &OpenShopCategory;
+            AllButtons[buttonIndex].parameter = buttonIndex;
+            AllButtons[buttonIndex].text = "";
+            // if (buttonIndex == 4 || buttonIndex == 5)
+            //  AllButtons[buttonIndex].isHidden = true;
+        }
+        SetButtonToShow(6);
     }
-    SetButtonToShow(6);
 }
 
 void initSettingsMenu()
@@ -1194,23 +1296,26 @@ void initSettingsMenu()
 
     renderFunction = &drawSettingsMenu;
 
-    lastOpenedMenu = &initGameMenu;
+    if (Connection == UNSELECTED)
+        lastOpenedMenu = &initMainMenu;
+    else
+        lastOpenedMenu = &initGameMenu;
 
-    useQuitButton = true;
+    setQuitButton(true);
 
     // Set rumble checkbox
     AllCheckBoxs[0].xPos = 58;
     AllCheckBoxs[0].yPos = 56;
     AllCheckBoxs[0].xSize = 20;
     AllCheckBoxs[0].ySize = 20;
-    AllCheckBoxs[0].value = useRumble;
+    AllCheckBoxs[0].value = &useRumble;
 
     // Set 3DS mode checkbox
     AllCheckBoxs[1].xPos = 180;
     AllCheckBoxs[1].yPos = 56;
     AllCheckBoxs[1].xSize = 20;
     AllCheckBoxs[1].ySize = 20;
-    AllCheckBoxs[1].value = is3dsMode;
+    AllCheckBoxs[1].value = &is3dsMode;
 
     // Set change name button
     AllButtons[0].xPos = 15;
@@ -1232,10 +1337,17 @@ void initSettingsMenu()
     AllButtons[1].yTextPos = 12;
     AllButtons[1].text = "Controls";
 
-    SetButtonToShow(2);
+    AllButtons[2].xPos = 140;
+    AllButtons[2].yPos = 137;
+    AllButtons[2].xSize = 100;
+    AllButtons[2].ySize = 23;
+    AllButtons[2].OnClick = &changeKeyboardMode;
+    AllButtons[2].xTextPos = 21;
+    AllButtons[2].yTextPos = 18;
+    updateKeyboardModeButton();
 
-    // Quit button
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
+    SetButtonToShow(3);
+    SetCheckBoxToShow(2);
 }
 
 void initChangeNameMenu()
@@ -1246,14 +1358,12 @@ void initChangeNameMenu()
 
     renderFunction = &drawChangeNameMenu;
 
-    useQuitButton = true;
+    setQuitButton(true);
 
     isShowingKeyBoard = true;
     returnToMenuOnCancel = SETTINGS;
     returnToMenuOnSucces = SETTINGS;
     strncpy(tempText, localPlayer->name, 21);
-    // Quit button
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
 }
 
 void initQuitMenu()
@@ -1264,7 +1374,7 @@ void initQuitMenu()
 
     renderFunction = &drawQuitMenu;
 
-    useQuitButton = false;
+    setQuitButton(false);
 
     // No button
     AllButtons[0].xPos = ScreenWidth - 80 - 40;
@@ -1306,13 +1416,11 @@ void initShopMenu()
     PalettesForUI[10] = NE_PaletteCreate();
     if (ShopCategory < EQUIPMENT)
         NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], AllGuns[GetSelectedGunShop()].texture, 1);
-    if (ShopCategory == GRENADES)
+    else if (ShopCategory == GRENADES)
         NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], GetAllGrenades()[GetSelectedGunShop() - GunCount].texture, 1);
-
-    useQuitButton = true;
-
-    // Shop quit button
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
+    else if (ShopCategory == EQUIPMENT)
+        NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], GetAllGrenades()[GetSelectedGunShop() - GunCount - shopGrenadeCount].texture, 1);
+    setQuitButton(true);
 
     // Buy button
     AllButtons[0].xPos = 88;
@@ -1362,10 +1470,7 @@ void initControllerMenu()
     haveToCallOnCloseMenu = true;
     lastOpenedMenu = &initGameMenu;
 
-    useQuitButton = true;
-
-    // Game pad quit button
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
+    setQuitButton(true);
 
     BottomScreenSpritesMaterialsForUI[7] = NE_MaterialCreate();
     PalettesForUI[14] = NE_PaletteCreate();
@@ -1375,8 +1480,20 @@ void initControllerMenu()
     PalettesForUI[15] = NE_PaletteCreate();
     NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[8], PalettesForUI[15], (void *)reload_bin, 1);
 
+    int buttonXPosition = 2;
+    int mapButtonXPosition = 2;
+    int mapTextXPosition = 1;
+    int textXPosition = 2;
+    if (isLeftControls)
+    {
+        buttonXPosition = 218; // 256 - 36 - 2
+        mapButtonXPosition = 193;
+        mapTextXPosition = 25;
+        textXPosition = 29;
+    }
+
     // Jump button
-    AllButtons[0].xPos = 2;
+    AllButtons[0].xPos = buttonXPosition;
     AllButtons[0].yPos = 30;
     AllButtons[0].xSize = 36;
     AllButtons[0].ySize = 36;
@@ -1385,7 +1502,7 @@ void initControllerMenu()
     AllButtons[0].text = "";
 
     // Reload button
-    AllButtons[1].xPos = 2;
+    AllButtons[1].xPos = buttonXPosition;
     AllButtons[1].yPos = 72;
     AllButtons[1].xSize = 36;
     AllButtons[1].ySize = 36;
@@ -1394,35 +1511,35 @@ void initControllerMenu()
     AllButtons[1].text = "";
 
     // Right button
-    AllButtons[2].xPos = 2;
+    AllButtons[2].xPos = buttonXPosition;
     AllButtons[2].yPos = 114;
     AllButtons[2].xSize = 36;
     AllButtons[2].ySize = 36;
     AllButtons[2].OnClick = &ChangeGunInInventoryForLocalPlayer;
     AllButtons[2].parameter = 0;
-    AllButtons[2].xTextPos = 2;
+    AllButtons[2].xTextPos = textXPosition;
     AllButtons[2].yTextPos = 16;
     AllButtons[2].text = ">";
 
     // Left button
-    AllButtons[3].xPos = 2;
+    AllButtons[3].xPos = buttonXPosition;
     AllButtons[3].yPos = 156;
     AllButtons[3].xSize = 36;
     AllButtons[3].ySize = 36;
     AllButtons[3].OnClick = &ChangeGunInInventoryForLocalPlayer;
     AllButtons[3].parameter = 1;
-    AllButtons[3].xTextPos = 2;
+    AllButtons[3].xTextPos = textXPosition;
     AllButtons[3].yTextPos = 21;
     AllButtons[3].text = "<";
 
-    // Left button
-    AllButtons[4].xPos = 2;
+    // Map button
+    AllButtons[4].xPos = mapButtonXPosition;
     AllButtons[4].yPos = 2;
     AllButtons[4].xSize = 36;
     AllButtons[4].ySize = 20;
     AllButtons[4].OnClick = &changeMapState;
     AllButtons[4].parameter = 0;
-    AllButtons[4].xTextPos = 1;
+    AllButtons[4].xTextPos = mapTextXPosition;
     AllButtons[4].yTextPos = 1;
     AllButtons[4].text = "Map";
 
@@ -1440,17 +1557,27 @@ void initMainMenu()
     lastOpenedMenu = &initMainMenu;
 
     Connection = UNSELECTED;
-
-    useQuitButton = false;
+    // return;
+    setQuitButton(false);
 
     removeAllPlayers();
+
+    if (isInTutorial)
+    {
+        // tutorialDone = true;
+        // isInTutorial = false;
+        endTutorial();
+        uiTimer = 8;
+        actionOfUiTimer = SAVE;
+    }
 
     // Single player button
     AllButtons[0].xPos = 40;
     AllButtons[0].yPos = 40;
     AllButtons[0].xSize = ScreenWidth - 80;
     AllButtons[0].ySize = 24;
-    AllButtons[0].OnClick = &StartSinglePlayer; // TODO Change this
+    // AllButtons[0].OnClick = &StartSinglePlayer;
+    AllButtons[0].OnClick = &initSelectionMapImageMenu;
     AllButtons[0].parameter = 0;
     AllButtons[0].xTextPos = 10;
     AllButtons[0].yTextPos = 6;
@@ -1473,13 +1600,10 @@ void initMainMenu()
     AllButtons[2].xSize = ScreenWidth - 80;
     AllButtons[2].ySize = 24;
     AllButtons[2].OnClick = &initSettingsMenu;
-    AllButtons[2].isHidden = true;
+    AllButtons[2].isHidden = false;
     AllButtons[2].xTextPos = 12;
     AllButtons[2].yTextPos = 18;
     AllButtons[2].text = "Settings";
-
-    // Hide quit button
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], false);
 
     SetButtonToShow(3);
 }
@@ -1492,7 +1616,7 @@ void initServerMenu()
 
     renderFunction = &drawServersMenu;
 
-    useQuitButton = true;
+    setQuitButton(true);
 
     // Start game button
     AllButtons[0].xPos = 40;
@@ -1518,9 +1642,6 @@ void initServerMenu()
     AllButtons[2].OnClick = &changeServer; // TODO Change this
     AllButtons[2].parameter = 1;
 
-    // Show quit button
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
-
     // NE_SpriteVisible(BottomScreenSpritesForUI[2], false);
     SetButtonToShow(3);
 }
@@ -1541,10 +1662,266 @@ void initControlsSettingsMenu()
 
     lastOpenedMenu = &initSettingsMenu;
 
-    useQuitButton = true;
+    setQuitButton(true);
 
-    // Quit button
-    NE_SpriteVisible(BottomScreenSpritesForUI[2], true);
+    // Set rumble checkbox
+    AllCheckBoxs[0].xPos = 58;
+    AllCheckBoxs[0].yPos = 56;
+    AllCheckBoxs[0].xSize = 20;
+    AllCheckBoxs[0].ySize = 20;
+    AllCheckBoxs[0].value = &isLeftControls;
+
+    // Set change controls button
+    AllButtons[0].xPos = 140;
+    AllButtons[0].yPos = 40;
+    AllButtons[0].xSize = 100;
+    AllButtons[0].ySize = 32;
+    AllButtons[0].OnClick = &initControlsChangeMenu;
+    AllButtons[0].xTextPos = 17;
+    AllButtons[0].yTextPos = 6;
+    AllButtons[0].text = "";
+
+    AllSliders[0].xPos = 140;
+    AllSliders[0].yPos = 128;
+    AllSliders[0].xSize = 100;
+    // AllSliders[0].ySize = 32;
+    AllSliders[0].min = MIN_SENSITIVITY;
+    AllSliders[0].max = MAX_SENSITIVITY;
+    AllSliders[0].step = 0.1;
+
+    // int val = 2;
+    AllSliders[0].value = &sensitivity;
+
+    SetSliderToShow(1);
+    SetButtonToShow(1);
+    SetCheckBoxToShow(1);
+}
+
+void initControlsChangeMenu()
+{
+    SetTwoScreenMode(true);
+
+    startChangeMenu(CONTROLSCHANGE);
+
+    renderFunction = &drawControlsChangeMenu;
+
+    lastOpenedMenu = &initControlsSettingsMenu;
+
+    setQuitButton(true);
+
+    // Set change controls button
+    AllButtons[0].xPos = 15;
+    AllButtons[0].yPos = 167;
+    AllButtons[0].xSize = 100;
+    AllButtons[0].ySize = 24;
+    AllButtons[0].OnClick = &changeControlsPage;
+    AllButtons[0].parameter = 1;
+    AllButtons[0].xTextPos = 7;
+    AllButtons[0].yTextPos = 22;
+    AllButtons[0].text = "<-";
+
+    AllButtons[1].xPos = 140;
+    AllButtons[1].yPos = 167;
+    AllButtons[1].xSize = 100;
+    AllButtons[1].ySize = 24;
+    AllButtons[1].OnClick = &changeControlsPage;
+    AllButtons[1].parameter = 0;
+    AllButtons[1].xTextPos = 23;
+    AllButtons[1].yTextPos = 22;
+    AllButtons[1].text = "->";
+
+    // Set change controls button
+    AllButtons[2].xPos = 15;
+    AllButtons[2].yPos = 40;
+    AllButtons[2].xSize = 100;
+    AllButtons[2].ySize = 24;
+    AllButtons[2].OnClick = &startScanForInput;
+    if (controlsPage == 0)
+    {
+        AllButtons[2].parameter = FIRE_BUTTON;
+        AllButtons[2].xTextPos = 6;
+        AllButtons[2].yTextPos = 4;
+        AllButtons[2].text = "Fire";
+
+        AllButtons[3].parameter = JUMP_BUTTON;
+        AllButtons[3].xTextPos = 22;
+        AllButtons[3].yTextPos = 4;
+        AllButtons[3].text = "Jump";
+
+        AllButtons[4].parameter = LEFT_BUTTON;
+        AllButtons[4].xTextPos = 4;
+        AllButtons[4].yTextPos = 9;
+        AllButtons[4].text = "Move left";
+
+        AllButtons[5].parameter = RIGHT_BUTTON;
+        AllButtons[5].xTextPos = 19;
+        AllButtons[5].yTextPos = 9;
+        AllButtons[5].text = "Move right";
+
+        AllButtons[6].parameter = UP_BUTTON;
+        AllButtons[6].xTextPos = 3;
+        AllButtons[6].yTextPos = 14;
+        AllButtons[6].text = "Move forward";
+
+        AllButtons[7].parameter = DOWN_BUTTON;
+        AllButtons[7].xTextPos = 18;
+        AllButtons[7].yTextPos = 14;
+        AllButtons[7].text = "Move backward";
+
+        SetButtonToShow(8);
+    }
+    else if (controlsPage == 1)
+    {
+        AllButtons[2].parameter = LOOK_LEFT_BUTTON;
+        AllButtons[2].xTextPos = 4;
+        AllButtons[2].yTextPos = 4;
+        AllButtons[2].text = "Look left";
+
+        AllButtons[3].parameter = LOOK_RIGHT_BUTTON;
+        AllButtons[3].xTextPos = 19;
+        AllButtons[3].yTextPos = 4;
+        AllButtons[3].text = "Look right";
+
+        AllButtons[4].parameter = LOOK_UP_BUTTON;
+        AllButtons[4].xTextPos = 5;
+        AllButtons[4].yTextPos = 9;
+        AllButtons[4].text = "Look up";
+
+        AllButtons[5].parameter = LOOK_DOWN_BUTTON;
+        AllButtons[5].xTextPos = 19;
+        AllButtons[5].yTextPos = 9;
+        AllButtons[5].text = "Look down";
+
+        AllButtons[6].parameter = DEFUSE_BUTTON;
+        AllButtons[6].xTextPos = 5;
+        AllButtons[6].yTextPos = 14;
+        AllButtons[6].text = "Defuse";
+
+        AllButtons[7].parameter = SCOPE_BUTTON;
+        AllButtons[7].xTextPos = 21;
+        AllButtons[7].yTextPos = 14;
+        AllButtons[7].text = "Scope";
+
+        SetButtonToShow(8);
+    }
+
+    AllButtons[3].xPos = 140;
+    AllButtons[3].yPos = 40;
+    AllButtons[3].xSize = 100;
+    AllButtons[3].ySize = 24;
+    AllButtons[3].OnClick = &startScanForInput;
+
+    // Set change controls button
+    AllButtons[4].xPos = 15;
+    AllButtons[4].yPos = 80;
+    AllButtons[4].xSize = 100;
+    AllButtons[4].ySize = 24;
+    AllButtons[4].OnClick = &startScanForInput;
+
+    AllButtons[5].xPos = 140;
+    AllButtons[5].yPos = 80;
+    AllButtons[5].xSize = 100;
+    AllButtons[5].ySize = 24;
+    AllButtons[5].OnClick = &startScanForInput;
+
+    // Set change controls button
+    AllButtons[6].xPos = 15;
+    AllButtons[6].yPos = 120;
+    AllButtons[6].xSize = 100;
+    AllButtons[6].ySize = 24;
+    AllButtons[6].OnClick = &startScanForInput;
+
+    AllButtons[7].xPos = 140;
+    AllButtons[7].yPos = 120;
+    AllButtons[7].xSize = 100;
+    AllButtons[7].ySize = 24;
+    AllButtons[7].OnClick = &startScanForInput;
+}
+
+void initSelectionMapImageMenu()
+{
+    SetTwoScreenMode(true);
+
+    startChangeMenu(MAP_SELECTION_IMAGE);
+
+    renderFunction = &drawSelectionMapImageMenu;
+
+    lastOpenedMenu = &initMainMenu;
+
+    onCloseMenu = &unloadSelectionMapImageMenu;
+    haveToCallOnCloseMenu = true;
+
+    setQuitButton(true);
+
+    BottomScreenSpritesMaterialsForUI[6] = NE_MaterialCreate();
+    PalettesForUI[10] = NE_PaletteCreate();
+    NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterialsForUI[6], PalettesForUI[10], allMaps[currentSelectionMap].image, 1);
+
+    // Set change controls button
+    AllButtons[0].xPos = 35;
+    AllButtons[0].yPos = 164;
+    AllButtons[0].xSize = 40;
+    AllButtons[0].ySize = 32;
+    AllButtons[0].OnClick = &ChangeMap;
+    AllButtons[0].parameter = 0;
+    AllButtons[0].xTextPos = 6;
+    AllButtons[0].yTextPos = 22;
+    AllButtons[0].text = "<-";
+
+    AllButtons[1].xPos = 256 - 35 - 40;
+    AllButtons[1].yPos = 164;
+    AllButtons[1].xSize = 40;
+    AllButtons[1].ySize = 32;
+    AllButtons[1].OnClick = &ChangeMap;
+    AllButtons[0].parameter = 1;
+    AllButtons[1].xTextPos = 24;
+    AllButtons[1].yTextPos = 22;
+    AllButtons[1].text = "->";
+
+    AllButtons[2].xPos = 256 / 2 - 40;
+    AllButtons[2].yPos = 164;
+    AllButtons[2].xSize = 80;
+    AllButtons[2].ySize = 32;
+    AllButtons[2].OnClick = &StartSinglePlayer;
+    AllButtons[2].xTextPos = 14;
+    AllButtons[2].yTextPos = 22;
+    AllButtons[2].text = "Start";
+
+    SetButtonToShow(3);
+}
+
+void initSelectionMapListMenu()
+{
+    SetTwoScreenMode(true);
+
+    startChangeMenu(MAP_SELECTION_LIST);
+
+    renderFunction = &drawSelectionMapListMenu;
+
+    lastOpenedMenu = &initSelectionMapImageMenu;
+
+    setQuitButton(true);
+
+    // Set change controls button
+    AllButtons[0].xPos = 40;
+    AllButtons[0].yPos = 40;
+    AllButtons[0].xSize = 100;
+    AllButtons[0].ySize = 32;
+    AllButtons[0].OnClick = &initControlsChangeMenu;
+    AllButtons[0].xTextPos = 5;
+    AllButtons[0].yTextPos = 6;
+    AllButtons[0].text = "<-";
+
+    AllButtons[1].xPos = 140;
+    AllButtons[1].yPos = 40;
+    AllButtons[1].xSize = 100;
+    AllButtons[1].ySize = 32;
+    AllButtons[1].OnClick = &initControlsChangeMenu;
+    AllButtons[1].xTextPos = 17;
+    AllButtons[1].yTextPos = 6;
+    AllButtons[1].text = "->";
+
+    SetButtonToShow(2);
 }
 
 void drawGameMenu()
@@ -1568,11 +1945,14 @@ void drawGameFinishedMenu()
     NE_2DDrawQuad(126, 28, 130, 180, 19, RGB15(31, 31, 31));
 
     // Counter terrorists text
-    char CounterScoreText[30] = "Counter t : ";
-    if (CounterScore > 9)
-        sprintf(CounterScoreText + strlen(CounterScoreText), "%d ", CounterScore);
-    else
-        sprintf(CounterScoreText + strlen(CounterScoreText), "0%d ", CounterScore);
+    char CounterScoreText[30] = "Counter t";
+    if (!allPartyModes[currentPartyMode].noScore)
+    {
+        if (CounterScore > 9)
+            sprintf(CounterScoreText + strlen(CounterScoreText), " : %d ", CounterScore);
+        else
+            sprintf(CounterScoreText + strlen(CounterScoreText), " : 0%d ", CounterScore);
+    }
 
     NE_TextPrint(0,        // Font slot
                  1, 4,     // Coordinates x(column), y(row)
@@ -1606,12 +1986,14 @@ void drawGameFinishedMenu()
     }
 
     // Counter terrorists text
-    char TerroristsScoreText[30] = "Terrorists : ";
-    if (TerroristsScore > 9)
-        sprintf(TerroristsScoreText + strlen(TerroristsScoreText), "%d ", TerroristsScore);
-    else
-        sprintf(TerroristsScoreText + strlen(TerroristsScoreText), "0%d ", TerroristsScore);
-
+    char TerroristsScoreText[30] = "Terrorists";
+    if (!allPartyModes[currentPartyMode].noScore)
+    {
+        if (TerroristsScore > 9)
+            sprintf(TerroristsScoreText + strlen(TerroristsScoreText), " : %d ", TerroristsScore);
+        else
+            sprintf(TerroristsScoreText + strlen(TerroristsScoreText), " : 0%d ", TerroristsScore);
+    }
     NE_TextPrint(0,        // Font slot
                  17, 4,    // Coordinates x(column), y(row)
                  NE_White, // Color
@@ -1661,12 +2043,14 @@ void drawScoreMenu()
                  "Score table");
 
     // Counter terrorists text
-    char CounterScoreText[30] = "Counter t : ";
-    if (CounterScore > 9)
-        sprintf(CounterScoreText + strlen(CounterScoreText), "%d ", CounterScore);
-    else
-        sprintf(CounterScoreText + strlen(CounterScoreText), "0%d ", CounterScore);
-
+    char CounterScoreText[30] = "Counter t";
+    if (!allPartyModes[currentPartyMode].noScore)
+    {
+        if (CounterScore > 9)
+            sprintf(CounterScoreText + strlen(CounterScoreText), " : %d ", CounterScore);
+        else
+            sprintf(CounterScoreText + strlen(CounterScoreText), " : 0%d ", CounterScore);
+    }
     NE_TextPrint(0,        // Font slot
                  1, 4,     // Coordinates x(column), y(row)
                  NE_White, // Color
@@ -1699,11 +2083,14 @@ void drawScoreMenu()
     }
 
     // Counter terrorists text
-    char TerroristsScoreText[30] = "Terrorists : ";
-    if (TerroristsScore > 9)
-        sprintf(TerroristsScoreText + strlen(TerroristsScoreText), "%d ", TerroristsScore);
-    else
-        sprintf(TerroristsScoreText + strlen(TerroristsScoreText), "0%d ", TerroristsScore);
+    char TerroristsScoreText[30] = "Terrorists";
+    if (!allPartyModes[currentPartyMode].noScore)
+    {
+        if (TerroristsScore > 9)
+            sprintf(TerroristsScoreText + strlen(TerroristsScoreText), " : %d ", TerroristsScore);
+        else
+            sprintf(TerroristsScoreText + strlen(TerroristsScoreText), " : 0%d ", TerroristsScore);
+    }
 
     NE_TextPrint(0,        // Font slot
                  17, 4,    // Coordinates x(column), y(row)
@@ -1795,25 +2182,31 @@ void drawSettingsMenu()
                  NE_White, // Color
                  "Settings");
 
+    NE_TextPrint(0,        // Font slot
+                 18, 16,   // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Keyboard mode");
+
     printLongConstChar(1, 16, 3, "Use Rumble Pack (cause crash on 3DS)");
     printLongConstChar(18, 32, 4, "3DS mode (for saves)");
-
-    for (int i = 0; i < CheckBoxCount; i++)
-    {
-        int CheckBoxXPosition = AllCheckBoxs[i].xPos, CheckBoxYPosition = AllCheckBoxs[i].yPos, CheckBoxXSize = AllCheckBoxs[i].xSize, CheckBoxYSize = AllCheckBoxs[i].ySize;
-        NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 3, CheckBoxYPosition - 3, CheckBoxXPosition + CheckBoxXSize + 3, CheckBoxYPosition + CheckBoxYSize + 3, 2, BottomScreenSpritesMaterials[5], RGB15(4, 4, 4)); // Border
-        NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 1, CheckBoxYPosition - 1, CheckBoxXPosition + CheckBoxXSize + 1, CheckBoxYPosition + CheckBoxYSize + 1, 1, BottomScreenSpritesMaterials[5], RGB15(5, 5, 5)); // Background
-        if (AllCheckBoxs[i].value)
-            NE_2DDrawTexturedQuadColor(CheckBoxXPosition, CheckBoxYPosition, CheckBoxXPosition + CheckBoxXSize, CheckBoxYPosition + CheckBoxYSize, 0, BottomScreenSpritesMaterials[4], RGB15(31, 31, 31)); // CheckMark
-    }
 }
 
 void drawQuitMenu()
 {
-    NE_TextPrint(0,        // Font slot
-                 1, 3,     // Coordinates x(column), y(row)
-                 NE_White, // Color
-                 "Do you want to quit the game ?");
+    if (isInTutorial)
+    {
+        NE_TextPrint(0,        // Font slot
+                     7, 3,     // Coordinates x(column), y(row)
+                     NE_White, // Color
+                     "Skip the tutorial ?");
+    }
+    else
+    {
+        NE_TextPrint(0,        // Font slot
+                     1, 3,     // Coordinates x(column), y(row)
+                     NE_White, // Color
+                     "Do you want to quit the game ?");
+    }
 }
 
 void drawShopMenu()
@@ -1922,19 +2315,29 @@ void drawShopMenu()
 
 void drawControllerMenu()
 {
-    NE_2DDrawQuad(40, 30, 255, 194, 1, RGB15(4, 4, 4));                                        // touch pad area
-    NE_2DDrawTexturedQuad(4, 32, 4 + 36 - 4, 30 + 36 - 2, 1, BottomScreenSpritesMaterials[7]); // Jump button
-    NE_2DDrawTexturedQuad(4, 74, 4 + 36 - 4, 72 + 36 - 2, 1, BottomScreenSpritesMaterials[8]); // Reload button
+    if (!isLeftControls)
+    {
+        NE_2DDrawQuad(40, 30, 255, 194, 1, RGB15(4, 4, 4));                                        // touch pad area
+        NE_2DDrawTexturedQuad(4, 32, 4 + 36 - 4, 30 + 36 - 2, 1, BottomScreenSpritesMaterials[7]); // Jump button
+        NE_2DDrawTexturedQuad(4, 74, 4 + 36 - 4, 72 + 36 - 2, 1, BottomScreenSpritesMaterials[8]); // Reload button
+    }
+    else
+    {
+        NE_2DDrawQuad(0, 30, 215, 194, 1, RGB15(4, 4, 4));                                             // touch pad area
+        NE_2DDrawTexturedQuad(220, 32, 220 + 36 - 4, 30 + 36 - 2, 1, BottomScreenSpritesMaterials[7]); // Jump button
+        NE_2DDrawTexturedQuad(220, 74, 220 + 36 - 4, 72 + 36 - 2, 1, BottomScreenSpritesMaterials[8]); // Reload button
+    }
 
     // Print texts
     NE_TextPrint(0,        // Font slot
-                 12, 1,    // Coordinates x(column), y(row)
+                 13, 1,    // Coordinates x(column), y(row)
                  NE_White, // Color
-                 "Game pad");
+                 "Gamepad");
 }
 
 void drawMainMenu()
 {
+
     // Print texts
     NE_TextPrint(0,        // Font slot
                  10, 1,    // Coordinates x(column), y(row)
@@ -1944,7 +2347,7 @@ void drawMainMenu()
     NE_TextPrint(0,        // Font slot
                  1, 22,    // Coordinates x(column), y(row)
                  NE_White, // Color
-                 "Alpha 0.1.8");
+                 "Alpha 0.6.0");
 
     NE_TextPrint(0,        // Font slot
                  24, 22,   // Coordinates x(column), y(row)
@@ -2035,9 +2438,90 @@ void drawControlsSettingsMenu()
 {
     // Print texts
     NE_TextPrint(0,        // Font slot
+                 9, 1,     // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Controls settings");
+
+    printLongConstChar(3, 18, 4, "Left-handed touch mode");
+    printLongConstChar(20, 28, 6, "Change controls");
+
+    char MoneyText[26];
+    sprintf(MoneyText, "Gamepad sensitivity : %0.1f", *AllSliders[0].value);
+
+    printLongConstChar(17, 32, 11, MoneyText);
+}
+
+void drawControlsChangeMenu()
+{
+    // Print texts
+    NE_TextPrint(0,        // Font slot
                  10, 1,    // Coordinates x(column), y(row)
                  NE_White, // Color
                  "Change controls");
+
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 3, 6,     // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 inputsNames[inputs[0 + (controlsPage * 6)].nameIndex]);
+
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 19, 6,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 inputsNames[inputs[1 + (controlsPage * 6)].nameIndex]);
+
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 3, 11,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 inputsNames[inputs[2 + (controlsPage * 6)].nameIndex]);
+
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 19, 11,   // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 inputsNames[inputs[3 + (controlsPage * 6)].nameIndex]);
+
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 3, 16,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 inputsNames[inputs[4 + (controlsPage * 6)].nameIndex]);
+
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 19, 16,   // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 inputsNames[inputs[5 + (controlsPage * 6)].nameIndex]);
+}
+
+void drawSelectionMapImageMenu()
+{
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 11, 1,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Select map");
+
+    NE_2DDrawTexturedQuad(0 + 32, 20, 192 + 32, 139 + 20, 3, BottomScreenSpritesMaterials[6]); // Draw map image
+
+    // Text background
+    NE_PolyFormat(15, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+    NE_2DDrawQuad(0 + 32, 20, 192 + 32, 16 + 20, 2, RGB15(0, 0, 0));
+    NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+
+    // Print map name
+    printLongConstChar(4, 31 - 4, 3, allMaps[currentSelectionMap].name);
+}
+
+void drawSelectionMapListMenu()
+{
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 11, 1,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Select map");
 }
 
 void drawButtons()
@@ -2057,6 +2541,30 @@ void drawButtons()
     }
 }
 
+void drawCheckboxs()
+{
+    for (int i = 0; i < checkBoxToShow; i++)
+    {
+        int CheckBoxXPosition = AllCheckBoxs[i].xPos, CheckBoxYPosition = AllCheckBoxs[i].yPos, CheckBoxXSize = AllCheckBoxs[i].xSize, CheckBoxYSize = AllCheckBoxs[i].ySize;
+        NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 3, CheckBoxYPosition - 3, CheckBoxXPosition + CheckBoxXSize + 3, CheckBoxYPosition + CheckBoxYSize + 3, 2, BottomScreenSpritesMaterials[5], RGB15(4, 4, 4)); // Border
+        NE_2DDrawTexturedQuadColor(CheckBoxXPosition - 1, CheckBoxYPosition - 1, CheckBoxXPosition + CheckBoxXSize + 1, CheckBoxYPosition + CheckBoxYSize + 1, 1, BottomScreenSpritesMaterials[5], RGB15(5, 5, 5)); // Background
+        if (*AllCheckBoxs[i].value)
+            NE_2DDrawTexturedQuadColor(CheckBoxXPosition, CheckBoxYPosition, CheckBoxXPosition + CheckBoxXSize, CheckBoxYPosition + CheckBoxYSize, 0, BottomScreenSpritesMaterials[4], RGB15(31, 31, 31)); // CheckMark
+    }
+}
+
+void drawSliders()
+{
+    for (int i = 0; i < sliderToShow; i++)
+    {
+        int SliderXPosition = AllSliders[i].xPos, SliderYPosition = AllSliders[i].yPos, SliderXSize = AllSliders[i].xSize;
+        NE_2DDrawQuad(SliderXPosition - 1, SliderYPosition - 2, SliderXPosition + SliderXSize + 1, SliderYPosition + 2, 2, RGB15(5, 5, 5));
+
+        int sliderHandXPos = (int)map(*AllSliders[i].value, AllSliders[i].min, AllSliders[i].max, AllSliders[i].xPos, AllSliders[i].xPos + AllSliders[i].xSize);
+        NE_2DDrawTexturedQuadColor(sliderHandXPos - 10, SliderYPosition - 10, sliderHandXPos + 10, SliderYPosition + 10, 1, BottomScreenSpritesMaterials[5], RGB15(7, 7, 7));
+    }
+}
+
 void unloadShopMenu()
 {
     // Delete shop gun preview image
@@ -2073,4 +2581,11 @@ void unloadControllerMenu()
     NE_PaletteDelete(PalettesForUI[14]);
     NE_MaterialDelete(BottomScreenSpritesMaterialsForUI[8]);
     NE_PaletteDelete(PalettesForUI[15]);
+}
+
+void unloadSelectionMapImageMenu()
+{
+    // Delete shop gun preview image
+    NE_MaterialDelete(BottomScreenSpritesMaterialsForUI[6]);
+    NE_PaletteDelete(PalettesForUI[10]);
 }

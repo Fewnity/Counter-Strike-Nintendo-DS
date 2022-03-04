@@ -3,53 +3,60 @@
 #include "ui.h"
 #include "party.h"
 #include "movements.h"
+#include "input.h"
 #include <math.h>
 
 // Player *AllPlayersRefForMovements;
+int xSpeedAdded = 0;
+int zSpeedAdded = 0;
 
 void SetPlayersForMovements()
 {
     // AllPlayersRefForMovements = GetPlayers();
 }
 
-void MovePlayer(int CurrentSpeed, float xWithoutY, float zWithoutY, uint32 keys, bool *NeedBobbing)
+void MovePlayer(int CurrentSpeed, float xWithoutY, float zWithoutY, bool *NeedBobbing)
 {
-    if (keys & KEY_UP)
+    if (isKey(UP_BUTTON))
     {
         localPlayer->PlayerPhysic->xspeed += CurrentSpeed * xWithoutY * 2;
         localPlayer->PlayerPhysic->zspeed += CurrentSpeed * zWithoutY * 2;
         *NeedBobbing = true;
     }
-    else if (keys & KEY_DOWN)
+    else if (isKey(DOWN_BUTTON))
     {
         localPlayer->PlayerPhysic->xspeed += -CurrentSpeed * xWithoutY * 2;
         localPlayer->PlayerPhysic->zspeed += -CurrentSpeed * zWithoutY * 2;
         *NeedBobbing = true;
     }
 
-    if (keys & KEY_RIGHT)
+    if (isKey(RIGHT_BUTTON))
     {
         localPlayer->PlayerPhysic->xspeed += CurrentSpeed * -zWithoutY * 2;
         localPlayer->PlayerPhysic->zspeed += CurrentSpeed * xWithoutY * 2;
         *NeedBobbing = true;
     }
-    else if (keys & KEY_LEFT)
+    else if (isKey(LEFT_BUTTON))
     {
         localPlayer->PlayerPhysic->xspeed += CurrentSpeed * zWithoutY * 2;
         localPlayer->PlayerPhysic->zspeed += CurrentSpeed * -xWithoutY * 2;
         *NeedBobbing = true;
     }
+
+    xSpeedAdded = abs(localPlayer->PlayerPhysic->xspeed);
+    zSpeedAdded = abs(localPlayer->PlayerPhysic->zspeed);
 }
 
 void AddAnglesToPlayer(float xAngleToAdd, float yAngleToAdd)
 {
-    float AngleSpeed = 2;
+    float AngleSpeed = 1;
     // if (GetCurrentScopeLevel())
     if (GetCurrentScopeLevel() == 1)
-        AngleSpeed = 1;
-    else if (GetCurrentScopeLevel() == 2)
         AngleSpeed = 0.5;
+    else if (GetCurrentScopeLevel() == 2)
+        AngleSpeed = 0.25;
 
+    AngleSpeed *= sensitivity;
     // AngleSpeed /= 4;
 
     if (xAngleToAdd != 0)
@@ -70,20 +77,20 @@ void AddAnglesToPlayer(float xAngleToAdd, float yAngleToAdd)
     }
 }
 
-void RotatePlayer(uint32 keys, bool *NeedUpdateViewRotation, bool *SendPosition, float *CameraAngleY, int CurrentScopeLevel)
+void RotatePlayer(bool *NeedUpdateViewRotation, bool *SendPosition, float *CameraAngleY, int CurrentScopeLevel)
 {
     int AngleSpeed = 2;
     if (CurrentScopeLevel)
         AngleSpeed = 1;
 
     // Change player rotation
-    if (keys & KEY_A)
+    if (isKey(LOOK_RIGHT_BUTTON))
     {
         localPlayer->Angle -= AngleSpeed;
         *NeedUpdateViewRotation = true;
         *SendPosition = true;
     }
-    else if (keys & KEY_Y)
+    else if (isKey(LOOK_LEFT_BUTTON))
     {
         localPlayer->Angle += AngleSpeed;
         *NeedUpdateViewRotation = true;
@@ -91,12 +98,12 @@ void RotatePlayer(uint32 keys, bool *NeedUpdateViewRotation, bool *SendPosition,
     }
 
     // Change camera rotation
-    if (keys & KEY_X && *CameraAngleY > 9)
+    if (isKey(LOOK_UP_BUTTON) && *CameraAngleY > 9)
     {
         *CameraAngleY -= AngleSpeed;
         *NeedUpdateViewRotation = true;
     }
-    else if (keys & KEY_B && *CameraAngleY < 245)
+    else if (isKey(LOOK_DOWN_BUTTON) && *CameraAngleY < 245)
     {
         *CameraAngleY += AngleSpeed;
         *NeedUpdateViewRotation = true;
@@ -169,6 +176,18 @@ void UpdateLookRotationAI(float CameraAngleY, float angle, float *x, float *y, f
     *x = SinTempS * cosTempT;
     *y = -sin(TempT);
     *z = cosTempS * cosTempT;
+}
+
+void GetRotationForCullingAI(int playerIndex, float angle, float *xSide1, float *zSide1, float *xSide2, float *zSide2)
+{
+    float TempSside1 = (AllPlayers[playerIndex].Angle - 100) / 512.0 * M_TWOPI;
+    float TempSside2 = (AllPlayers[playerIndex].Angle + 100) / 512.0 * M_TWOPI;
+
+    *xSide1 = -sin(TempSside1);
+    *zSide1 = -cos(TempSside1);
+
+    *xSide2 = -sin(TempSside2);
+    *zSide2 = -cos(TempSside2);
 }
 
 float Speed = 0.05;
@@ -248,6 +267,7 @@ void SetOnlinelPlayersPositions()
 
             // Set new player position and angle
             NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
+            NE_ModelSetCoord(player->PlayerShadow, player->position.x, player->position.y - 0.845, player->position.z);
             player->PlayerModel->ry = player->Angle;
         }
         else if (player->PathCount != 0 && (player->target == NO_PLAYER || player->tooFar) && roundState != WAIT_START)
@@ -258,7 +278,7 @@ void SetOnlinelPlayersPositions()
 
             Vector3 Direction;
             Direction.x = GetWaypoints()[player->Path[CurPath]].x - player->position.x;
-            Direction.y = GetWaypoints()[player->Path[CurPath]].y - player->position.y;
+            Direction.y = GetWaypoints()[player->Path[CurPath]].y - 0.1 - player->position.y;
             Direction.z = GetWaypoints()[player->Path[CurPath]].z - player->position.z;
             Vector2 Direction2D;
             Direction2D.x = GetWaypoints()[player->Path[CurPath]].x - GetWaypoints()[player->Path[CurPath - 1]].x;
@@ -272,7 +292,8 @@ void SetOnlinelPlayersPositions()
             else
                 Ok++;
 
-            if (player->position.y - 0.1 > GetWaypoints()[player->Path[CurPath]].y || player->position.y + 0.1 < GetWaypoints()[player->Path[CurPath]].y)
+            // TODO remplace -0.1 by a player offset vector 3
+            if (player->position.y - 0.1 > GetWaypoints()[player->Path[CurPath]].y - 0.1 || player->position.y + 0.1 < GetWaypoints()[player->Path[CurPath]].y - 0.1)
                 player->position.y += Direction.y * Speed;
 
             if (player->position.z - 0.1 > GetWaypoints()[player->Path[CurPath]].z || player->position.z + 0.1 < GetWaypoints()[player->Path[CurPath]].z)
@@ -314,6 +335,7 @@ void SetOnlinelPlayersPositions()
             }
 
             NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
+            NE_ModelSetCoord(player->PlayerShadow, player->position.x, player->position.y - 0.845, player->position.z);
 
             float FinalAngle = atan2f(Direction2D.x, Direction2D.y) * 512.0 / (M_TWOPI) + 256.0;
             /*if (AllPlayersRefForMovements[i].Angle + 2 < FinalAngle)
@@ -375,7 +397,7 @@ void SetOnlinelPlayersPositions()
                 Ok++;
 
             NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
-
+            NE_ModelSetCoord(player->PlayerShadow, player->position.x, player->position.y - 0.845, player->position.z);
             // player->PlayerModel->ry = player->Angle;
             // }
             player->Angle = player->AngleDestination;

@@ -13,6 +13,14 @@ enum RoundState
     END = 3,
 };
 
+enum PartyModeName
+{
+    NO_DEFAULT_PARTY_MODE = -1,
+    COMPETITIVE = 0,
+    OCCASIONAL = 1,
+    TUTORIAL_TRAINING = 2
+};
+
 typedef struct //
 {
     bool middlePartyTeamSwap;
@@ -53,9 +61,14 @@ typedef struct //
     int trainingRespawnSecondsDuration;
 
     bool spawnWithArmor;
+    bool infiniteMoney;
+    bool infiniteTimer;
+    bool noScore;
+    bool limitedShopByZoneAndTimer;
+    bool infiniteGunAmmo;
 } PartyMode;
 
-extern PartyMode allPartyModes[2];
+extern PartyMode allPartyModes[3];
 extern int currentDefuserIndex;
 extern int bombPlantedAt;
 extern int PartyMinutes;
@@ -67,8 +80,14 @@ extern int BombSeconds;
 extern Vector4 droppedBombPositionAndRotation;
 extern bool bombDropped;
 extern int currentPartyMode;
+extern int currentMap;
+extern bool partyFinished;
 
 void AddAllPartyModes();
 void AddPartyMode(int index, bool MiddlePartyTeamSwap, int MaxRound, int StartMoney, int MaxMoney, int WinTheRoundMoney, int WinTheRoundBombMoney, int LoseTheRoundMoney, int LoseIncrease, int DefuseBombMoneyBonus, int PlantBombMoneyBonus, int PlantedBombLoseMoneyBonus, int KillPenalties, bool NoMoneyOnTimeEnd, bool TeamDamage, bool CanSeeOtherTeamView);
+void partyTimerTick();
+void CheckTeamDeathCount(int *TerroristsCount, int *CounterTerroristsCount, int *TerroristDeadCount, int *CounterDeadCount);
+void CheckAfterRound();
+void finishParty();
 
 #endif // PARTY_H_

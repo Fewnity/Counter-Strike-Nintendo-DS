@@ -3,16 +3,33 @@
 #include "ui.h"
 #include "keyboard.h"
 #include "saveManager.h"
+#include "input.h"
 
-#define keyCount 39
-#define otherKeyCount 5
+#define KEY_COUNT 39
+#define OTHER_KEY_COUNT 5
 
-Key allKeys[keyCount];
-OtherKey allOtherKeys[otherKeyCount];
+Key allKeys[KEY_COUNT];
+OtherKey allOtherKeys[OTHER_KEY_COUNT];
 char tempText[21];
 bool isUpperCase = false;
 int returnToMenuOnCancel = -1;
 int returnToMenuOnSucces = -1;
+bool isAzerty = false;
+
+void changeKeyboardMode()
+{
+    isAzerty = !isAzerty;
+    if (isAzerty)
+    {
+        AllButtons[2].text = "Azerty";
+    }
+    else
+    {
+        AllButtons[2].text = "Qwerty";
+    }
+    UpdateBottomScreenOneFrame += 8;
+    initKeyboard();
+}
 
 void initKeyboard()
 {
@@ -82,14 +99,30 @@ void initKeyboard()
     index++;
 
     //
-    strncpy(allKeys[index].letter, "a", 2);
-    strncpy(allKeys[index].letterUpperCase, "A", 2);
+    if (isAzerty)
+    {
+        strncpy(allKeys[index].letter, "a", 2);
+        strncpy(allKeys[index].letterUpperCase, "A", 2);
+    }
+    else
+    {
+        strncpy(allKeys[index].letter, "q", 2);
+        strncpy(allKeys[index].letterUpperCase, "Q", 2);
+    }
     allKeys[index].xPos = 1 + 3 * 0;
     allKeys[index].yPos = 1 + 3 * (yOffset + 0);
     index++;
 
-    strncpy(allKeys[index].letter, "z", 2);
-    strncpy(allKeys[index].letterUpperCase, "Z", 2);
+    if (isAzerty)
+    {
+        strncpy(allKeys[index].letter, "z", 2);
+        strncpy(allKeys[index].letterUpperCase, "Z", 2);
+    }
+    else
+    {
+        strncpy(allKeys[index].letter, "w", 2);
+        strncpy(allKeys[index].letterUpperCase, "W", 2);
+    }
     allKeys[index].xPos = 1 + 3 * 1;
     allKeys[index].yPos = 1 + 3 * (yOffset + 0);
     index++;
@@ -143,8 +176,16 @@ void initKeyboard()
     index++;
 
     // ROW 2
-    strncpy(allKeys[index].letter, "q", 2);
-    strncpy(allKeys[index].letterUpperCase, "Q", 2);
+    if (isAzerty)
+    {
+        strncpy(allKeys[index].letter, "q", 2);
+        strncpy(allKeys[index].letterUpperCase, "Q", 2);
+    }
+    else
+    {
+        strncpy(allKeys[index].letter, "a", 2);
+        strncpy(allKeys[index].letterUpperCase, "A", 2);
+    }
     allKeys[index].xPos = 2 + 3 * 0;
     allKeys[index].yPos = 1 + 2 * (yOffset2 + 1);
     index++;
@@ -197,15 +238,31 @@ void initKeyboard()
     allKeys[index].yPos = 1 + 2 * (yOffset2 + 1);
     index++;
 
-    strncpy(allKeys[index].letter, "m", 2);
-    strncpy(allKeys[index].letterUpperCase, "M", 2);
+    if (isAzerty)
+    {
+        strncpy(allKeys[index].letter, "m", 2);
+        strncpy(allKeys[index].letterUpperCase, "M", 2);
+    }
+    else
+    {
+        strncpy(allKeys[index].letter, "?", 2);
+        strncpy(allKeys[index].letterUpperCase, "?", 2);
+    }
     allKeys[index].xPos = 2 + 3 * 9;
     allKeys[index].yPos = 1 + 2 * (yOffset2 + 1);
     index++;
 
     // ROW 3
-    strncpy(allKeys[index].letter, "w", 2);
-    strncpy(allKeys[index].letterUpperCase, "W", 2);
+    if (isAzerty)
+    {
+        strncpy(allKeys[index].letter, "w", 2);
+        strncpy(allKeys[index].letterUpperCase, "W", 2);
+    }
+    else
+    {
+        strncpy(allKeys[index].letter, "z", 2);
+        strncpy(allKeys[index].letterUpperCase, "Z", 2);
+    }
     allKeys[index].xPos = 3 + 3 * 0;
     allKeys[index].yPos = 1 + 2 * (yOffset2 + 2);
     index++;
@@ -240,8 +297,16 @@ void initKeyboard()
     allKeys[index].yPos = 1 + 2 * (yOffset2 + 2);
     index++;
 
-    strncpy(allKeys[index].letter, "?", 2);
-    strncpy(allKeys[index].letterUpperCase, "?", 2);
+    if (isAzerty)
+    {
+        strncpy(allKeys[index].letter, "?", 2);
+        strncpy(allKeys[index].letterUpperCase, "?", 2);
+    }
+    else
+    {
+        strncpy(allKeys[index].letter, "m", 2);
+        strncpy(allKeys[index].letterUpperCase, "M", 2);
+    }
     allKeys[index].xPos = 3 + 3 * 6;
     allKeys[index].yPos = 1 + 2 * (yOffset2 + 2);
     index++;
@@ -311,7 +376,7 @@ void drawKeyBoard()
     NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
     // Keyboard background
     NE_2DDrawQuad(0, 80, 256, 168, 19, RGB15(4, 4, 4));
-    for (int i = 0; i < keyCount; i++)
+    for (int i = 0; i < KEY_COUNT; i++)
     {
         if (isUpperCase)
         {
@@ -333,7 +398,7 @@ void drawKeyBoard()
         NE_2DDrawQuad((xPos)-5, (yPos)-2, (xPos) + 12, (yPos) + 11, 10, RGB15(6, 6, 6));
     }
 
-    for (int i = 0; i < otherKeyCount; i++)
+    for (int i = 0; i < OTHER_KEY_COUNT; i++)
     {
         NE_TextPrint(0,                                          // Font slot
                      allOtherKeys[i].xPos, allOtherKeys[i].yPos, // Coordinates x(column), y(row)
@@ -348,9 +413,9 @@ void drawKeyBoard()
 
 void readKeyboard()
 {
-    if (isShowingKeyBoard && UpdateBottomScreenOneFrame == 0 && uiTimer == 0)
+    if (isShowingKeyBoard && uiTimer == 0)
     {
-        for (int i = 0; i < keyCount; i++)
+        for (int i = 0; i < KEY_COUNT; i++)
         {
             float xPos = allKeys[i].xPos * 8;
             float yPos = allKeys[i].yPos * 8;
@@ -368,7 +433,7 @@ void readKeyboard()
             }
         }
 
-        for (int i = 0; i < otherKeyCount; i++)
+        for (int i = 0; i < OTHER_KEY_COUNT; i++)
         {
             float xPos = allOtherKeys[i].xPos * 8;
             float yPos = allOtherKeys[i].yPos * 8;

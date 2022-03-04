@@ -1,0 +1,75 @@
+17859 vertices
+3988 faces
+9889 triangles
+dust.fbx 316ko
+dust.3ds 485ko
+
+Opti 1
+DustParts0.fxb 55ko
+DustParts1.fxb 48ko
+DustParts2.fxb 72ko
+DustParts3.fxb 70ko
+DustParts4.fxb 42ko
+DustParts5.fxb 66ko
+DustParts6.fxb 55ko
+
+ZONE 2 CPU 55%
+ZONE 3 CPU 73%
+ZONE 5 CPU 59%
+
+Opti 2
+14853 vertices
+3348 faces
+8395 triangles
+
+DustParts0.fxb 52ko
+DustParts1.fxb 42ko
+DustParts2.fxb 68ko
+DustParts3.fxb 65ko
+DustParts4.fxb 38ko
+DustParts5.fxb 61ko
+DustParts6.fxb 52ko
+
+Avant PARTOUT CPU 90-100%
+
+//Création de zones
+ZONE 2 CPU 55%
+ZONE 3 CPU 73%
+ZONE 5 CPU 59%
+
+//Simplification de la carte
+ZONE 2 CPU 42%
+ZONE 3 CPU 60%
+ZONE 5 CPU 42%
+
+//Optimisation textures
+13240 vertices
+3113 faces
+7694 triangles
+
+//Optimisation textures
+9995 vertices
+2711 faces
+6265 triangles
+
+
+
+Avant lower tunnels CPU 54
+Maintenant CPU 39
+
+
+Avant upper tunnels CPU 49
+Maintenant CPU 34
+
+Avant outside tunnels CPU 39
+Maintenant CPU 38
+
+Avant t ramp CPU 39 but with missing zone
+Maintenant CPU 44
+
+Avant t spawn CPU 48
+Maintenant CPU 40
+
+Avant outside long CPU 47
+Maintenant CPU 33
+

@@ -81,13 +81,14 @@ collisions.o: \
  C:/devkitPro/libnds/include/filesystem.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/saveManager.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/ui.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/grenade.h \
+ C:/devkitPro/libnds/include/maxmod9.h \
+ C:/devkitPro/libnds/include/mm_types.h \
  C:/devkitPro/libnds/include/dswifi9.h \
  C:/devkitPro/libnds/include/dswifi_version.h \
  C:/devkitPro/libnds/include/sys/socket.h \
  C:/devkitPro/libnds/include/netinet/in.h \
  C:/devkitPro/libnds/include/netdb.h \
- C:/devkitPro/libnds/include/maxmod9.h \
- C:/devkitPro/libnds/include/mm_types.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/soundbank.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/playerAnimNea_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/GIGNAnimNea_bin.h \
@@ -103,19 +104,24 @@ collisions.o: \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/plane_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/repeat_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/explosion_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/smokeSphere_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/road_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/wallWindow_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/wall_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_1_3ds_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_2_3ds_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_3_3ds_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/tutorialMapUnShadowed_3ds_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/tutorialMapShadowed_3ds_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/grenade_3ds_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/MapUI_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/bomb_logo_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/MapPointUI_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/CheckMark_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/WhiteScareRounded_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/QuitButton_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/scopeImage_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/player_shadow_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/reload_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/JumpArrow_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/skin_soldier_bin.h \
@@ -158,6 +164,9 @@ collisions.o: \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/smokegrenade_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/flashthrowed_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/c4_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/kevlar_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/kevlar_helmet_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/defuser_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/muzzle_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/text_bmp_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/collisions.h \
@@ -166,6 +175,9 @@ collisions.o: \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/gun.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/sounds.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/movements.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/map.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/dust2_map_image_bin.h \
+ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/tutorial_map_image_bin.h \
  C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/party.h
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/main.h:
 C:/devkitPro/nitro-engine/include/NEMain.h:
@@ -248,13 +260,14 @@ C:/devkitPro/libnds/include/nds/disc_io.h:
 C:/devkitPro/libnds/include/filesystem.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/saveManager.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/ui.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/grenade.h:
+C:/devkitPro/libnds/include/maxmod9.h:
+C:/devkitPro/libnds/include/mm_types.h:
 C:/devkitPro/libnds/include/dswifi9.h:
 C:/devkitPro/libnds/include/dswifi_version.h:
 C:/devkitPro/libnds/include/sys/socket.h:
 C:/devkitPro/libnds/include/netinet/in.h:
 C:/devkitPro/libnds/include/netdb.h:
-C:/devkitPro/libnds/include/maxmod9.h:
-C:/devkitPro/libnds/include/mm_types.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/soundbank.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/playerAnimNea_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/GIGNAnimNea_bin.h:
@@ -270,19 +283,24 @@ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/bomb_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/plane_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/repeat_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/explosion_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/smokeSphere_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/road_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/wallWindow_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/wall_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_1_3ds_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_2_3ds_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/DustPart3_3_3ds_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/tutorialMapUnShadowed_3ds_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/tutorialMapShadowed_3ds_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/grenade_3ds_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/MapUI_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/bomb_logo_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/MapPointUI_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/CheckMark_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/WhiteScareRounded_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/QuitButton_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/scopeImage_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/player_shadow_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/reload_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/JumpArrow_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/skin_soldier_bin.h:
@@ -325,6 +343,9 @@ C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/fraggrenade_bin.
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/smokegrenade_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/flashthrowed_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/c4_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/kevlar_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/kevlar_helmet_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/defuser_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/muzzle_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/text_bmp_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/collisions.h:
@@ -333,4 +354,7 @@ C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/ai.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/gun.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/sounds.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/movements.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/map.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/dust2_map_image_bin.h:
+C:/devkitPro/nitro-engine/examples/physics/counter_strike/build/tutorial_map_image_bin.h:
 C:/devkitPro/nitro-engine/examples/physics/counter_strike/source/party.h:

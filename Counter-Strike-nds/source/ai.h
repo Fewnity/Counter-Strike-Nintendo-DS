@@ -9,36 +9,38 @@ typedef struct
     float y;
     float z;
     int edgeCount;
-    int edge[4];
+    int *edge;
+    // int edge[5];
 } Waypoint;
 
 typedef struct
 {
-    int matrixOneLength[58][58];
+    // int matrixOneLength[58][58];
+    int **matrixOneLength;
 } PathLength;
 
-#define botsNamesCount 10
-#define AllMatricesLengthCount 15
-extern char botsNames[botsNamesCount][20];
-extern bool botsNamesTaken[botsNamesCount];
-extern PathLength AllMatricesLength[AllMatricesLengthCount];
+#define BOTS_NAMES_COUNT 46
+extern const char *botsNames[BOTS_NAMES_COUNT];
+extern bool botsNamesTaken[BOTS_NAMES_COUNT];
+extern PathLength *AllMatricesLength;
 
-// int CheckPath();
 void StartChecking(int playerIndex, int FinalWaypoint);
-void CreateWaypoints();
-void CreateWaypoint(int id, float x, float y, float z, int edgeCount, int edge[4]);
+void CreateWaypoints(int mapToLoad);
+void CreateWaypoint(int id, float x, float y, float z, int edgeCount, int *edge);
 void CheckPathWaypoint(int playerIndex, int StartWaypoint, int FinalWaypoint);
 int GetDistanceBewteenTwoPlayers(int player1Index, int player2Index);
 int getNearestWaypoint(float x, float y, float z);
 void setBotsNames();
 void ResetTakenBotsNames();
-void checkShopForBot(int playerId);
+void CheckShopForBot(int playerId);
 void checkShopForBots();
-void checkForPlayer();
-void checkTarget();
+void AiCheckForAction();
+void checkAiShoot();
 void SetDefuser(int defuserIndex);
 void SetRandomDefuser();
-void createLengthMatrices();
+void createLengthMatrices(int mapToLoad);
+void freeAllMatricesLength(int size);
+void freeWaypoint();
 
 Waypoint *GetWaypoints();
 

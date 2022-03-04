@@ -2,7 +2,9 @@
 #include "grenade.h"
 #include "collisions.h"
 #include "ui.h"
+#include "map.h"
 #include "draw3d.h"
+#include "debug.h"
 #include "party.h"
 
 int t1x = 0;
@@ -10,7 +12,10 @@ int t1z = 0;
 int t2x = 0;
 int t2z = 0;
 
-// Draw top screen
+/**
+ * @brief Draw top screen 3D then UI
+ *
+ */
 void Draw3DScene(void)
 {
     // Set camera for drawing
@@ -18,6 +23,8 @@ void Draw3DScene(void)
 
     // Reset polygons Alpha/Light/Effect
     NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+
+    Map *map = &allMaps[currentMap];
 
     // render 3D if map insn't at screen
     if (!isShowingMap)
@@ -29,32 +36,60 @@ void Draw3DScene(void)
         t2z = (zWithoutYForOcclusionSide2 * 500 + AllPlayers[CurrentCameraPlayer].position.z) * 8192.0;
 
         // Draw map
-        for (int i = 0; i < AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].ZoneCount; i++)
+        for (int i = 0; i < map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].ZoneCount; i++)
         {
             bool inFov = false; // Is the map part in the field of view of the player?
+
             // Force to render the map part where the player is
-            if (checkZoneForOcclusion(&AllOcclusionZone[AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].AllVisibleZones[i]], AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z))
+            if (checkZoneForOcclusion(&map->AllOcclusionZone[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]], AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z))
                 inFov = true;
             else
             {
                 // Check if the map part is in the field of view of the player
                 for (int i2 = 0; i2 < 4; i2++)
                 {
-                    // if (PointInTriangle(AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].angles[i2].x, AllOcclusionZone[AllZones[AllPlayers[0].CurrentOcclusionZone].AllVisibleZones[i]].angles[i2].y, AllPlayers[0].xPos, AllPlayers[0].zPos, xWithoutYForOcclusionSide1 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide1 * 500 + localPlayer->zPos, xWithoutYForOcclusionSide2 * 500 + localPlayer->xPos, zWithoutYForOcclusionSide2 * 500 + localPlayer->zPos))
-                    if (PointInTriangleInt(AllOcclusionZone[AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].x, AllOcclusionZone[AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].AllVisibleZones[i]].anglesInt[i2].y, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z))
+                    if (PointInTriangleInt(map->AllOcclusionZone[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].anglesInt[i2].x, map->AllOcclusionZone[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].anglesInt[i2].y, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z))
                     {
                         inFov = true;
                         break;
                     }
                 }
             }
+
             // Render map model if needed
             if (inFov)
-                NE_ModelDraw(Model[AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].AllVisibleZones[i]]);
+            {
+                // char Occlusion[20];
+                // sprintf(Occlusion, "Zone to show : %d", AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone);
+                // debugPrint(Occlusion);
+
+                // char visibleMapPart[20];
+                // sprintf(visibleMapPart, "visibleMapPart : %d", map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]);
+                // debugPrint(visibleMapPart);
+
+                // char shadowed[20];
+                // sprintf(shadowed, "shadowed : %d", map->models[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].shadowed);
+                // debugPrint(shadowed);
+
+                if (!map->models[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].shadowed)
+                {
+                    GroundMaterial->diffuse = RGB15(0, 0, 0);
+                    GroundMaterial->emission = RGB15(11, 11, 11);
+                    GroundMaterial->specular = RGB15(7, 7, 7);
+                    // NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+                }
+                else
+                {
+                    GroundMaterial->diffuse = RGB15(1, 1, 1);
+                    GroundMaterial->emission = RGB15(3, 3, 3);
+                    GroundMaterial->specular = RGB15(3, 3, 3);
+                    // NE_PolyFormat(31, 0, NE_LIGHT_1, NE_CULL_BACK, NE_MODULATION);
+                }
+                NE_ModelDraw(map->models[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].Model);
+            }
         }
 
-        // for (int i = 0; i < 7; i++)
-        // NE_ModelDraw(Model[i]);
+        NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
 
         // Draw grenades and their effects
         for (int i = 0; i < GrenadeCount; i++)
@@ -75,7 +110,7 @@ void Draw3DScene(void)
                 // Draw effect if timer effect is on
                 if (grenades[i]->EffectTimer != 0)
                 {
-                    if (grenades[i]->GrenadeType == 1 && isInFullSmoke)
+                    if ((grenades[i]->GrenadeType == SMOKE && isInFullSmoke) || grenades[i]->GrenadeType == FLASH)
                         continue;
                     NE_ModelDraw(grenades[i]->EffectModel);
                 }
@@ -96,8 +131,6 @@ void Draw3DScene(void)
             ShowWallHitFlash--;
             NE_ModelDraw(Model[8]);
         }
-
-        // NE_ModelDraw(Model[9]);
 
         // Draw bomb explosion
         if (IsExplode)
@@ -129,25 +162,39 @@ void Draw3DScene(void)
     drawTopScreenUI();
 }
 
+/**
+ * @brief Draws players
+ *
+ */
 void DrawPlayers()
 {
     if (UpdateBottomScreenOneFrame != 0)
         return;
 
-    // Draw players
-    for (int i = 1; i < MaxPlayer; i++)
+    Map *map = &allMaps[currentMap];
+
+    // for each players
+    for (int playerIndex = 1; playerIndex < MaxPlayer; playerIndex++)
     {
-        if (AllPlayers[i].Id != -1 && !AllPlayers[i].IsDead && CurrentCameraPlayer != i)
+        // Check if he is not dead, in game and if the camera is not on this player
+        if (AllPlayers[playerIndex].Id != -1 && !AllPlayers[playerIndex].IsDead && CurrentCameraPlayer != playerIndex)
         {
-            for (int i3 = 0; i3 < AllZones[AllPlayers[i].CurrentOcclusionZone].ZoneCount; i3++)
+            for (int i3 = 0; i3 < allMaps[currentMap].AllZones[AllPlayers[playerIndex].CurrentOcclusionZone].ZoneCount; i3++)
             {
-                if (checkZoneForOcclusion(&AllOcclusionZone[AllZones[AllPlayers[i].CurrentOcclusionZone].AllVisibleZones[i3]], AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z))
+                // If the player is in a visible map part
+                if (checkZoneForOcclusion(&map->AllOcclusionZone[allMaps[currentMap].AllZones[AllPlayers[playerIndex].CurrentOcclusionZone].visibleMapPart[i3]], AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z))
                 {
-                    bool inFov = PointInTriangleInt(AllPlayers[i].PlayerModel->x, AllPlayers[i].PlayerModel->z, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z);
-                    // Draw player
+                    // If the player is in the field of view of the camera, draw ot
+                    bool inFov = PointInTriangleInt(AllPlayers[playerIndex].PlayerModel->x, AllPlayers[playerIndex].PlayerModel->z, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z);
+
                     if (inFov)
                     {
-                        NE_ModelDraw(AllPlayers[i].PlayerModel);
+                        // Draw player's skin
+                        NE_ModelDraw(AllPlayers[playerIndex].PlayerModel);
+                        // Draw player's shadow
+                        NE_PolyFormat(15, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+                        NE_ModelDraw(AllPlayers[playerIndex].PlayerShadow);
+                        NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
                     }
                     break;
                 }
@@ -156,6 +203,10 @@ void DrawPlayers()
     }
 }
 
+/**
+ * @brief Draw game top screen when a game is not launched
+ *
+ */
 void Draw3DSceneNotInGame(void)
 {
     // Set camera for drawing
@@ -164,8 +215,25 @@ void Draw3DSceneNotInGame(void)
     // Reset polygons Alpha/Light/Effect
     NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
 
-    NE_ModelDraw(Model[2]);
-    NE_ModelDraw(Model[3]);
+    Map *map = &allMaps[currentMap];
+
+    // Draw map
+    if (currentMap == DUST2)
+    {
+        NE_ModelDraw(map->models[2].Model);
+        NE_ModelDraw(map->models[3].Model);
+    }
+    else if (currentMap == TUTORIAL)
+    {
+        NE_ModelDraw(map->models[0].Model);
+        NE_ModelDraw(map->models[1].Model);
+    }
+
+    NE_2DViewInit();
+    if (isShowingKeyBoard)
+    {
+        drawNameChanging();
+    }
 
     // drawTopScreenUI();
 }

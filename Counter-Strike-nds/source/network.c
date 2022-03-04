@@ -7,6 +7,7 @@
 #include "collisions.h"
 #include "network.h"
 #include "party.h"
+#include "player.h"
 
 #include <dswifi9.h>
 #include <sys/socket.h>
@@ -882,7 +883,8 @@ void ReadServerData()
                     sscanf(arr[7], "%d", &ZInt);
                     sscanf(arr[8], "%d", &GrenadeType);
 
-                    PhysicalGrenade *newGrenade = CreateGrenade(GrenadeType);
+                    // TODO add id replace 0
+                    PhysicalGrenade *newGrenade = CreateGrenade(GrenadeType, 0);
                     lanchGrenade(newGrenade, XDirection, YDirection, ZDirection, XInt, YInt, ZInt);
                 }
 

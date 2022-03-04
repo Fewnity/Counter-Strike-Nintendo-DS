@@ -7,6 +7,7 @@
 extern char tempText[21];
 extern int returnToMenuOnCancel;
 extern int returnToMenuOnSucces;
+extern bool isAzerty;
 
 void initKeyboard();
 void drawKeyBoard();
@@ -16,5 +17,6 @@ void makeDelete();
 void confirmKeyboard();
 void cancelKeyboard();
 void shiftKeyboard();
+void changeKeyboardMode();
 
 #endif // KEYBOARD_H_

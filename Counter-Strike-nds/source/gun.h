@@ -13,14 +13,13 @@ typedef struct //
     float penetration;
     bool holdFireButton;
     int Price;
-    // char name[20];
     const char *name;
     bool isKnife;
     mm_word gunSound;
     int WalkSpeed;
     int scopeId;
     int gunCategory;
-    int isForCounterTerrorists; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    enum teamEnum team; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     int MagazineCapacity;
     int MaxAmmoCount;
     int ReloadTime;
@@ -36,7 +35,6 @@ extern int cheapestGunsCostTerrorists[4];
 extern int gunCountCounter[4];
 extern int gunCountTerrorists[4];
 extern Gun AllGuns[GunCount];
-extern Equipement AllEquipements[equipementCount];
 
 void AddGuns();
 void ReloadGun(int playerId);
@@ -48,5 +46,8 @@ void findGun(int gunCategory, int playerIndex);
 Gun getPlayerCurrentGun(Player *player);
 int getPlayerCurrentGunIndex(Player *player);
 void setGunRecoil(Player *player);
+void UpdateGunTexture();
+void startReloadGun(int playerIndx);
+void StopReloading(int playerIndx);
 
 #endif // GUN_H_
