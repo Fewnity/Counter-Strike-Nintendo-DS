@@ -219,7 +219,7 @@ void SetOnlinelPlayersPositions()
     {
         Player *player = &AllPlayers[i];
 
-        if (player->Id == -1 || player->IsDead)
+        if (player->Id == UNUSED || player->IsDead)
             continue;
 
         // If a player is spawned

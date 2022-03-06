@@ -1697,7 +1697,7 @@ void SetRandomDefuser()
         for (int playerIndex = 1; playerIndex < MaxPlayer; playerIndex++)
         {
             Player *player = &AllPlayers[playerIndex];
-            if (player->Team == COUNTERTERRORISTS && !player->IsDead && player->target == NO_PLAYER)
+            if (player->Team == COUNTERTERRORISTS && !player->IsDead && player->target == NO_PLAYER && player->Id != UNUSED)
             {
                 canAffectDefuser = true;
                 break;
@@ -1709,7 +1709,7 @@ void SetRandomDefuser()
             // Take a random one and the bot will go to the bomb and defuse it
             int newDefuser = (random() % 5) + 1;
             Player *defuserPlayer = &AllPlayers[newDefuser];
-            while (defuserPlayer->Team != COUNTERTERRORISTS || defuserPlayer->IsDead || defuserPlayer->target != NO_PLAYER)
+            while (defuserPlayer->Team != COUNTERTERRORISTS || defuserPlayer->IsDead || defuserPlayer->target != NO_PLAYER || defuserPlayer->Id == UNUSED)
             {
                 defuserPlayer = &AllPlayers[newDefuser];
 
@@ -1717,7 +1717,7 @@ void SetRandomDefuser()
             }
             defuserPlayer->PathCount = -1;
             defuserPlayer->lastSeenTarget = NO_PLAYER;
-            SetDefuser(newDefuser); // currentDefuserIndex = newDefuser;
+            SetDefuser(newDefuser);
         }
     }
 }

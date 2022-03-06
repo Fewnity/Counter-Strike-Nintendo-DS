@@ -177,7 +177,7 @@ void DrawPlayers()
     for (int playerIndex = 1; playerIndex < MaxPlayer; playerIndex++)
     {
         // Check if he is not dead, in game and if the camera is not on this player
-        if (AllPlayers[playerIndex].Id != -1 && !AllPlayers[playerIndex].IsDead && CurrentCameraPlayer != playerIndex)
+        if (AllPlayers[playerIndex].Id != UNUSED && !AllPlayers[playerIndex].IsDead && CurrentCameraPlayer != playerIndex)
         {
             for (int i3 = 0; i3 < allMaps[currentMap].AllZones[AllPlayers[playerIndex].CurrentOcclusionZone].ZoneCount; i3++)
             {

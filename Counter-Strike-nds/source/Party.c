@@ -159,6 +159,8 @@ void partyTimerTick()
 
                             for (int i = 0; i < MaxPlayer; i++)
                             {
+                                if (AllPlayers[i].Id == UNUSED)
+                                    continue;
                                 resetPlayer(i);
                                 setPlayerMoney(i, allPartyModes[currentPartyMode].startMoney);
                                 AllPlayers[i].KillCount = 0;
@@ -280,6 +282,10 @@ void CheckAfterRound()
         for (int i = 0; i < MaxPlayer; i++)
         {
             Player *player = &AllPlayers[i];
+
+            if (player->Id == UNUSED)
+                continue;
+
             if (player->Team == TERRORISTS)
             {
                 player->Team = COUNTERTERRORISTS;

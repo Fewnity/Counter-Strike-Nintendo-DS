@@ -1280,6 +1280,8 @@ void GameLoop()
 	for (int i = 0; i < MaxPlayer; i++)
 	{
 		Player *player = &AllPlayers[i];
+		if (player->Id == UNUSED)
+			continue;
 
 		if (player->inShadow)
 		{
@@ -1700,6 +1702,9 @@ void GameLoop()
 		for (int i = 1; i < MaxPlayer; i++)
 		{
 			Player *player = &AllPlayers[i];
+			if (player->Id == UNUSED)
+				continue;
+
 			if (player->PathCount != 0)
 			{
 				player->BobbingOffset += BobbingSpeed;
@@ -2038,6 +2043,9 @@ void setNewRoundHandWeapon()
 	for (int index = 0; index < MaxPlayer; index++)
 	{
 		Player *player = &AllPlayers[index];
+		if (player->Id == UNUSED)
+			continue;
+
 		if (index == 0 && player->haveBomb)
 		{
 			player->currentGunInInventory = 8;

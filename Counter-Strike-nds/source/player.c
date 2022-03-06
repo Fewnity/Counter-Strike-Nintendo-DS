@@ -81,6 +81,7 @@ void removeAllPlayers()
         Player *player = &AllPlayers[i];
         player->Id = UNUSED;
         player->Team = SPECTATOR;
+
         if (player->PlayerModel != NULL)
         {
             NE_ModelDelete(player->PlayerModel);
@@ -286,7 +287,7 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
             NE_ModelSetCoord(player->PlayerModel, 0, 0 /* + i * 5*/, -2);
 
             player->Id = NewId;
-            // player->Health = 100;
+
             setPlayerHealth(i, 100);
             player->isAi = isAI;
 
@@ -297,8 +298,8 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
             player->lastSeenTarget = NO_PLAYER;
             player->justCheking = false;
             player->canShootEnemy = false;
-            // player->Money = allPartyModes[currentPartyMode].startMoney; //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// TODO
-            player->Money = 8000;
+            player->Money = allPartyModes[currentPartyMode].startMoney; //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// TODO
+            // player->Money = 8000;
 
             setPlayerMoney(i, 8000);
 
@@ -433,7 +434,6 @@ void reducePlayerMoney(int playerIndex, int Money)
 
 void resetPlayer(int index)
 {
-
     Player *player = &AllPlayers[index];
 
     StopReloading(index);
