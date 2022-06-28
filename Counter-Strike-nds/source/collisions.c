@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "collisions.h"
 #include "network.h"
@@ -8,7 +14,9 @@
 #include "map.h"
 #include "party.h"
 
+// All spawned grenades are here
 PhysicalGrenade *grenades[GrenadeCount];
+// Map index to load (for loading collisions)
 int mapToSet = 0;
 
 /**
@@ -223,10 +231,10 @@ void CalculateAllTriggerColBoxs(int mapToLoad)
         map->AllOcclusionZone[1].angles[1].y = 25.4;
 
         map->AllOcclusionZone[1].angles[2].x = -45.8;
-        map->AllOcclusionZone[1].angles[2].y = -0.8;
+        map->AllOcclusionZone[1].angles[2].y = -5.39;
 
         map->AllOcclusionZone[1].angles[3].x = -6.8;
-        map->AllOcclusionZone[1].angles[3].y = -0.8;
+        map->AllOcclusionZone[1].angles[3].y = -5.39;
         /////////////////////////////////////////////////////
         map->AllOcclusionZone[2].angles[0].x = -4.1;
         map->AllOcclusionZone[2].angles[0].y = 3.5;
@@ -290,6 +298,7 @@ void CalculateAllTriggerColBoxs(int mapToLoad)
     }
     else if (mapToLoad == TUTORIAL)
     {
+        // All occlusion culling zones data (a zone will show one or multiple zones)
         map->zonesCount = 2;
         map->AllZones = malloc(map->zonesCount * sizeof(Zone));
 
@@ -304,12 +313,14 @@ void CalculateAllTriggerColBoxs(int mapToLoad)
         map->AllZones[currentZone].visibleMapPart[1] = 0;
         map->AllZones[currentZone].id = currentZone;
 
+        // Add occlusion culling triggers
         CalculateTriggerColBox(0, 2, 22.7, 22.7, 0);
         CalculateTriggerColBox(0, 2, 22.7, 22.7, 1);
 
         map->shadowCollisionBoxCount = 3;
         map->AllShadowCollisionBox = malloc(map->shadowCollisionBoxCount * sizeof(CollisionBox));
 
+        // Add shadow collision boxes
         CalculateShadowColBox(0, 4.5, 11.65236, 22.7, 9, 3.395271, 0);
         CalculateShadowColBox(7.583056, 4.5, 1.242216, 7.533887, 9, 24.21557, 1);
         CalculateShadowColBox(-1.585769, 1.017356, 1.17581, 2.752997, 2.034714, 2.829585, 2);
@@ -344,6 +355,7 @@ void CalculateAllTriggerColBoxs(int mapToLoad)
         map->AllOcclusionZone[1].angles[3].y = 9.395;
     }
 
+    // Convert map limits to a int format
     for (int i = 0; i < map->occlusionZoneCount; i++)
     {
         for (int i2 = 0; i2 < 4; i2++)
@@ -388,7 +400,7 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(-31.85, 1.8, 35.88, 16.8, 1, 16, 0, 20);
         CreateWall(-36.76, 5.03, 60.475, 6.5, 1, 6.67, 0, 21);
         CreateWall(-42.78, 5.03, 58.6, 5, 1, 10, 0, 22);
-        CreateWall(-23.21, 5.03, 53.76, 20, 1, 19, 0, 23);
+        CreateWall(-22.91243, 5.03, 53.76, 20.59513, 1, 19, 0, 23);
         CreateWall(-7.165, 5.03, 61.57, 11.17, 1, 10, 4, 24);
         CreateWall(-15.974, 0.591, 13.66, 3.7, 1, 3.37, 1, 25);
         CreateWall(55.00196, 3.415, 23.80224, 3.714117, 1, 17.83263, 5, 26);
@@ -418,7 +430,7 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(-23.02901, 4.519009, -25.66659, 1.620493, 1.219922, 1.21636, 2, 50);
         CreateWall(-23.8313, 3.102336, -25.47028, 3.225069, 1.615268, 1.608994, 2, 51);
         CreateWall(9.870321, 1.493199, -8.82, 8.488289, 4.839397, 1, 3, 52);
-        CreateWall(19.71741, 1.488101, -10.13818, 11.26746, 4.849592, 1.627839, -1, 53); //
+        CreateWall(19.71741, 1.488101, -10.13818, 11.26746, 4.849592, 1.627839, 3, 53);
         CreateWall(34.23705, 3.871293, -0.4494247, 19.34229, 9.615976, 20.9745, -1, 54);
         CreateWall(8.829233, 0.6898834, -10.13725, 1.602546, 3.232767, 1.615795, 3, 55);
         CreateWall(7.217544, 0.2866741, -16.19459, 2.415168, 2.426349, 2.424468, 3, 56);
@@ -430,16 +442,16 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(29.00651, 1.064285, -18.64375, 2.418206, 2.457632, 2.488899, 3, 62);
         CreateWall(26.98624, 2.499154, -19.01415, 1.618732, 1.627894, 1.629699, 3, 63);
         CreateWall(31.60709, 2.795956, -20.02006, 12.55215, 5.453778, 0.4001274, 3, 64);
-        CreateWall(40.70002, 3.903672, -17.60006, 6.458023, 3.238344, 0.4001274, 5, 65);
+        CreateWall(40.56831, 3.903672, -17.60006, 6.194584, 3.238344, 0.4001274, 5, 65);
         CreateWall(37.69, 3.903672, -18.81139, 0.4001274, 3.238344, 2.822779, 5, 66);
-        CreateWall(43.73, 3.903672, -23.85887, 0.4001274, 3.238344, 12.91774, 5, 67);
+        CreateWall(43.73696, 3.752151, -23.85887, 0.4140491, 3.541387, 12.91774, 5, 67);
         CreateWall(25.17, 4.305497, -15.58066, 0.4001274, 2.434694, 9.287472, 3, 68);
         CreateWall(38.68263, 5.510857, -19.60757, 1.611956, 1.60449, 3.610546, 5, 69);
         CreateWall(38.68263, 7.150856, -19.01406, 1.611956, 1.60449, 1.619928, 5, 70);
         CreateWall(42.71363, 5.530857, -22.65006, 1.611956, 1.60449, 1.619928, 5, 71);
         CreateWall(27.79171, 7.936794, -32.73777, 19.3618, 6.416366, 8.091341, 3, 72);
         CreateWall(27.78882, 7.936794, -28.30295, 7.260923, 6.416366, 0.8257637, 3, 73);
-        CreateWall(15.6907, 7.936794, -13.78543, 4.817293, 6.416366, 29.87009, 3, 74);
+        CreateWall(15.6907, 7.54498, -13.78543, 4.817293, 7.199996, 29.87009, 3, 74);
         CreateWall(18.42, 7.936794, -20.63499, 1, 6.416366, 7.24859, 3, 75);
         CreateWall(44.73563, 3.656087, -19.84385, 1.611956, 2.038029, 1.555517, 5, 76);
         CreateWall(54.45702, 6.858232, -27.74011, 4.934025, 8.573491, 20.66022, 5, 77);
@@ -459,8 +471,8 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(44.72398, -1.73808, 39.10096, 1.634037, 1.618159, 3.295925, 5, 91);
         CreateWall(51.18998, -1.73808, 35.84166, 1.634037, 1.618159, 3.231308, 5, 92);
         CreateWall(51.18998, -0.1290795, 36.23938, 1.634037, 1.618159, 1.610428, 5, 93);
-        CreateWall(52.2789, 0.8512607, 29.83927, 0.5978088, 6.955806, 20.27887, 5, 94);
-        CreateWall(52.2789, 3.373524, 15.67575, 0.5978088, 1.911279, 1.603443, 5, 95);
+        CreateWall(52.32014, 0.8512607, 29.83927, 0.6802864, 6.955806, 20.27887, 5, 94);
+        CreateWall(52.32679, 3.286222, 15.67575, 0.6669998, 2.08588, 1.603443, 5, 95);
         CreateWall(33.44603, 6.720139, 36.03182, 4.826495, 8.840049, 29.46829, 6, 96);
         CreateWall(22.95895, 6.720139, 21.99475, 3.240649, 8.840049, 24.45416, 6, 97);
         CreateWall(30.64663, 5.934331, 33.42, 0.9097431, 7.271662, 2.423, 6, 98);
@@ -547,7 +559,7 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(-26.675, 5.129626, -31.92304, 0.7861614, 5.646835, 0.8204193, 2, 179);
         CreateWall(-32.3, 5.129626, -31.92304, 0.7861614, 5.646835, 0.8204193, 2, 180);
         CreateWall(-40.78566, 3.90744, -21.84602, 1.629536, 1.62726, 1.619009, 2, 181);
-        CreateWall(15.65053, 3.52211, -1.713665, 4.895332, 2.395253, 5.782387, 3, 182);
+        CreateWall(15.57812, 6.657443, -1.713665, 4.750517, 8.66592, 5.782387, 3, 182);
         CreateWall(12.46407, 3.925133, 1.150944, 1.617191, 3.201298, 1.618112, 3, 183);
         CreateWall(5.992119, 5.469345, -0.4590559, 14.66269, 6.289724, 1.618112, 3, 184);
         CreateWall(23.35082, 3.525312, 3.975177, 2.418831, 2.389922, 2.420465, 3, 185);
@@ -644,10 +656,16 @@ void LoadAllStairs(int mapToLoad)
     }
 }
 
+/**
+ * @brief Set bomb zone
+ *
+ * @param mapToLoad Map index to load (see mapEnum enum in map.h)
+ */
 void LoadAllBombZones(int mapToLoad)
 {
     if (mapToLoad == DUST2)
     {
+        // Set the number of bomb zones
         allMaps[mapToLoad].BombsTriggersCollisionsCount = 2;
         allMaps[mapToLoad].AllBombsTriggersCollisions = malloc(allMaps[mapToLoad].BombsTriggersCollisionsCount * sizeof(Site));
 
@@ -656,6 +674,7 @@ void LoadAllBombZones(int mapToLoad)
     }
     else if (mapToLoad == TUTORIAL)
     {
+        // Set the number of bomb zones
         allMaps[mapToLoad].BombsTriggersCollisionsCount = 1;
         allMaps[mapToLoad].AllBombsTriggersCollisions = malloc(allMaps[mapToLoad].BombsTriggersCollisionsCount * sizeof(Site));
 
@@ -729,7 +748,7 @@ void CreateWall(float xPos, float yPos, float zPos, float xSize, float ySize, fl
 /**
  * @brief Calculate a box from physics values for raycasting
  *
- * @param playerIndex
+ * @param playerIndex Player index
  */
 void CalculatePlayerColBox(int playerIndex)
 {
@@ -746,6 +765,25 @@ void CalculatePlayerColBox(int playerIndex)
     player->PlayerCollisionBox.BoxYRangeB = (player->position.y - ySize) * 4096.0;
     player->PlayerCollisionBox.BoxZRangeA = (player->position.z + zSize) * 4096.0;
     player->PlayerCollisionBox.BoxZRangeB = (player->position.z - zSize) * 4096.0;
+}
+
+/**
+ * @brief Calculate a box from physics values for raycasting
+ *
+ * @param position Position of the box
+ * @param size Size of the box
+ */
+CollisionBox CalculateColBox(Vector3 position, Vector3 size)
+{
+    CollisionBox box;
+    // Get min/max of the box
+    box.BoxXRangeA = (position.x + size.x);
+    box.BoxXRangeB = (position.x - size.x);
+    box.BoxYRangeA = (position.y + size.y);
+    box.BoxYRangeB = (position.y - size.y);
+    box.BoxZRangeA = (position.z + size.z);
+    box.BoxZRangeB = (position.z - size.z);
+    return box;
 }
 
 /**
@@ -891,23 +929,24 @@ void checkPlayerOcclusionZone(int playerIndex)
  */
 void checkPlayerShadow(int playerIndex)
 {
-    float correctedPlayerYValue = AllPlayers[playerIndex].position.y + AllPlayers[playerIndex].ySize / 2.0;
+    Player *player = &AllPlayers[playerIndex];
+    float correctedPlayerYValue = player->position.y + player->ySize / 2.0;
     // If the player is the same zone, do nothing
-    if (AllPlayers[playerIndex].currentShadowCollBox < allMaps[currentMap].shadowCollisionBoxCount && AllPlayers[playerIndex].position.x <= allMaps[currentMap].AllShadowCollisionBox[AllPlayers[playerIndex].currentShadowCollBox].BoxXRangeA && AllPlayers[playerIndex].position.x >= allMaps[currentMap].AllShadowCollisionBox[AllPlayers[playerIndex].currentShadowCollBox].BoxXRangeB && correctedPlayerYValue <= allMaps[currentMap].AllShadowCollisionBox[AllPlayers[playerIndex].currentShadowCollBox].BoxYRangeA && correctedPlayerYValue >= allMaps[currentMap].AllShadowCollisionBox[AllPlayers[playerIndex].currentShadowCollBox].BoxYRangeB && AllPlayers[playerIndex].position.z <= allMaps[currentMap].AllShadowCollisionBox[AllPlayers[playerIndex].currentShadowCollBox].BoxZRangeA && AllPlayers[playerIndex].position.z >= allMaps[currentMap].AllShadowCollisionBox[AllPlayers[playerIndex].currentShadowCollBox].BoxZRangeB)
+    if (player->currentShadowCollBox < allMaps[currentMap].shadowCollisionBoxCount && player->position.x <= allMaps[currentMap].AllShadowCollisionBox[player->currentShadowCollBox].BoxXRangeA && player->position.x >= allMaps[currentMap].AllShadowCollisionBox[player->currentShadowCollBox].BoxXRangeB && correctedPlayerYValue <= allMaps[currentMap].AllShadowCollisionBox[player->currentShadowCollBox].BoxYRangeA && correctedPlayerYValue >= allMaps[currentMap].AllShadowCollisionBox[player->currentShadowCollBox].BoxYRangeB && player->position.z <= allMaps[currentMap].AllShadowCollisionBox[player->currentShadowCollBox].BoxZRangeA && player->position.z >= allMaps[currentMap].AllShadowCollisionBox[player->currentShadowCollBox].BoxZRangeB)
     {
-        AllPlayers[playerIndex].inShadow = true;
+        player->inShadow = true;
     }
     else
     {
         // Or find the new zone
-        AllPlayers[playerIndex].inShadow = false;
+        player->inShadow = false;
         //  Check occlusion zones
         for (int shadowIndex = 0; shadowIndex < allMaps[currentMap].shadowCollisionBoxCount; shadowIndex++)
         {
-            if (AllPlayers[playerIndex].position.x <= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxXRangeA && AllPlayers[playerIndex].position.x >= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxXRangeB && correctedPlayerYValue <= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxYRangeA && correctedPlayerYValue >= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxYRangeB && AllPlayers[playerIndex].position.z <= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxZRangeA && AllPlayers[playerIndex].position.z >= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxZRangeB)
+            if (player->position.x <= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxXRangeA && player->position.x >= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxXRangeB && correctedPlayerYValue <= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxYRangeA && correctedPlayerYValue >= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxYRangeB && player->position.z <= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxZRangeA && player->position.z >= allMaps[currentMap].AllShadowCollisionBox[shadowIndex].BoxZRangeB)
             {
-                AllPlayers[playerIndex].inShadow = true;
-                AllPlayers[playerIndex].currentShadowCollBox = shadowIndex;
+                player->inShadow = true;
+                player->currentShadowCollBox = shadowIndex;
                 return;
             }
         }
@@ -941,6 +980,7 @@ int checkBombZoneWaypoint()
  */
 void CheckZones(CollisionBox2D bombDefuseZone, bool *CanPutBomb, bool *canDefuseBomb)
 {
+    // Check players occlusion zones and shadows zones
     for (int i = 0; i < MaxPlayer; i++)
     {
         if (AllPlayers[i].Id != UNUSED)
@@ -950,19 +990,27 @@ void CheckZones(CollisionBox2D bombDefuseZone, bool *CanPutBomb, bool *canDefuse
         }
     }
 
-    // Check bomb zones
-    for (int TriggersIndex = 0; TriggersIndex < allMaps[currentMap].BombsTriggersCollisionsCount; TriggersIndex++)
+    if (!bombDropped)
     {
-        Site *site = &allMaps[currentMap].AllBombsTriggersCollisions[TriggersIndex];
-        if (localPlayer->position.x <= site->collisionBox.BoxXRangeA && localPlayer->position.x >= site->collisionBox.BoxXRangeB && localPlayer->position.z <= site->collisionBox.BoxZRangeA && localPlayer->position.z >= site->collisionBox.BoxZRangeB)
+        // Check bomb zones
+        for (int TriggersIndex = 0; TriggersIndex < allMaps[currentMap].BombsTriggersCollisionsCount; TriggersIndex++)
         {
-            *CanPutBomb = true;
-            break;
+            Site *site = &allMaps[currentMap].AllBombsTriggersCollisions[TriggersIndex];
+            if (localPlayer->position.x <= site->collisionBox.BoxXRangeA && localPlayer->position.x >= site->collisionBox.BoxXRangeB && localPlayer->position.z <= site->collisionBox.BoxZRangeA && localPlayer->position.z >= site->collisionBox.BoxZRangeB)
+            {
+                *CanPutBomb = true;
+                break;
+            }
         }
-    }
 
-    if (localPlayer->position.x <= bombDefuseZone.BoxXRangeA && localPlayer->position.x >= bombDefuseZone.BoxXRangeB && localPlayer->position.z <= bombDefuseZone.BoxZRangeA && localPlayer->position.z >= bombDefuseZone.BoxZRangeB)
-        *canDefuseBomb = true;
+        if (localPlayer->position.x <= bombDefuseZone.BoxXRangeA && localPlayer->position.x >= bombDefuseZone.BoxXRangeB && localPlayer->position.z <= bombDefuseZone.BoxZRangeA && localPlayer->position.z >= bombDefuseZone.BoxZRangeB)
+            *canDefuseBomb = true;
+    }
+    else
+    {
+        *canDefuseBomb = false;
+        *CanPutBomb = false;
+    }
 }
 
 /**
@@ -977,6 +1025,10 @@ void checkTakingBombZone(CollisionBox2D bombDefuseZone)
 
     for (int i = 0; i < MaxPlayer; i++)
     {
+        // Check only for the local player in online mode
+        if (i != 0 && Connection != OFFLINE)
+            break;
+
         Player *player = &AllPlayers[i];
         if (player->IsDead || player->Id == UNUSED || player->Team == COUNTERTERRORISTS)
             continue;
@@ -989,6 +1041,12 @@ void checkTakingBombZone(CollisionBox2D bombDefuseZone)
             SetGunInInventoryForNonLocalPlayer(i, 28, 8);
             bombDropped = false;
 
+            // Send the message to the server
+            SendGetDroppedBomb = true;
+            // Force player to send position
+            SendPosition = true;
+            SendPositionData = 0;
+
             // Disable bomb finding for all other player
             for (int playerIndex2 = 0; playerIndex2 < MaxPlayer; playerIndex2++)
             {
@@ -1000,6 +1058,10 @@ void checkTakingBombZone(CollisionBox2D bombDefuseZone)
     }
 }
 
+/**
+ * @brief Check if local player is in the shop zone
+ *
+ */
 void checkShopZone()
 {
     if (localPlayer->position.x <= shopZone.BoxXRangeA && localPlayer->position.x >= shopZone.BoxXRangeB && localPlayer->position.y <= shopZone.BoxYRangeA && localPlayer->position.y >= shopZone.BoxYRangeB && localPlayer->position.z <= shopZone.BoxZRangeA && localPlayer->position.z >= shopZone.BoxZRangeB)
@@ -1016,6 +1078,7 @@ void checkShopZone()
     }
 }
 
+// Last stairs where the player was
 int LastStairs = 0;
 
 /**
@@ -1197,10 +1260,21 @@ void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibili
     Direction.z = targetPlayer->PlayerModel->z - shooterPlayer->PlayerModel->z;
 
     float tempAngle = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 256.0;
-    float CameraAngleToGrenadeDirection = atan2f(distance2D, Direction.y) * 512.0 / (M_TWOPI);
+    float CameraAngleToGrenadeDirection = atan2f(distance2D, Direction.y) * 512.0 / (M_TWOPI); // Change var name
 
-    float x2 = 0, y2 = 0, z2 = 0;
-    UpdateLookRotationAI(CameraAngleToGrenadeDirection, tempAngle, &x2, &y2, &z2);
+    float x2, y2, z2;
+    // Is the gun is a shotgun, reduce accuracy
+    if (getPlayerCurrentGun(shooterPlayer).bulletCountPerShoot != 1 && !checkVisibility)
+    {
+        float xOffset = ((rand() % 100) - 50) / 3.0;
+        float yOffset2 = ((rand() % 100) - 50) / 3.0;
+        UpdateLookRotationAI(CameraAngleToGrenadeDirection + yOffset2, tempAngle + xOffset, &x2, &y2, &z2);
+    }
+    else
+    {
+        UpdateLookRotationAI(CameraAngleToGrenadeDirection, tempAngle, &x2, &y2, &z2);
+    }
+
     if (!checkVisibility)
     {
         // Reduce accuracy
@@ -1212,18 +1286,12 @@ void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibili
         if ((targetPlayer->isAi && targetPlayer->target != NO_PLAYER) || (!targetPlayer->isAi && targetPlayer->PlayerPhysic->xspeed + targetPlayer->PlayerPhysic->yspeed + targetPlayer->PlayerPhysic->zspeed == 0))
         {
             // Better accuracy if target is not moving
-            // x2 += ((rand() % 200) - 100) / 1600.0 * coef;
-            // y2 += ((rand() % 200) - 100) / 1600.0 * coef;
-            // z2 += ((rand() % 200) - 100) / 1600.0 * coef;
             x2 += ((rand() % 200) - 100) / 1300.0 * coef;
             y2 += ((rand() % 200) - 100) / 1300.0 * coef;
             z2 += ((rand() % 200) - 100) / 1300.0 * coef;
         }
         else
         {
-            // x2 += ((rand() % 200) - 100) / 900.0 * coef;
-            // y2 += ((rand() % 200) - 100) / 900.0 * coef;
-            // z2 += ((rand() % 200) - 100) / 900.0 * coef;
             x2 += ((rand() % 200) - 100) / 700.0 * coef;
             y2 += ((rand() % 200) - 100) / 700.0 * coef;
             z2 += ((rand() % 200) - 100) / 700.0 * coef;
@@ -1234,6 +1302,31 @@ void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibili
     setRaycastValues(shooterPlayer, x2, y2, z2);
 
     shooterPlayer->justCheking = checkVisibility;
+}
+
+/**
+ * @brief Get camera angles value to do a raycast between the start position and the end position
+ *
+ * @param StartPosition Start position of the raycast
+ * @param EndPosition End position of the raycast
+ * @param x out : x angle
+ * @param y out : y angle
+ * @param z out : z angle
+ */
+void getValuesForRaycast(Vector3Int StartPosition, Vector3Int EndPosition, float *x, float *y, float *z)
+{
+    // Get distance between shooter and target players
+    float distance2D = sqrtf(powf(EndPosition.x - StartPosition.x, 2.0) + powf(EndPosition.z - StartPosition.z, 2.0));
+    // Get shoot direction
+    Vector3 Direction;
+    Direction.x = EndPosition.x - StartPosition.x;
+    Direction.y = EndPosition.y - StartPosition.y;
+    Direction.z = EndPosition.z - StartPosition.z;
+
+    float tempAngle = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 256.0; // TODO Change var name
+    float CameraAngleDirection = atan2f(distance2D, Direction.y) * 512.0 / (M_TWOPI);
+
+    UpdateLookRotationAI(CameraAngleDirection, tempAngle, x, y, z);
 }
 
 /**
@@ -1256,7 +1349,9 @@ void setRaycastValues(Player *shooterPlayer, float xRot, float yRot, float zRot)
     shooterPlayer->startGunIdRaycast = getPlayerCurrentGunIndex(shooterPlayer);
 }
 
+// Optimized Min function
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
+// Optimized Max function
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 /**
@@ -1300,26 +1395,31 @@ bool getHitDistance(Vector3Int corner1, Vector3Int corner2, Vector3 dirfrac, Vec
  * @brief Make a raycast from a shooter player
  *
  * @param playerIndex index of the shooter
+ * @param distance distance of the hit (output)
  * @return int Index of player hitted
  */
-int Raycast(int playerIndex)
+int Raycast(int playerIndex, int currentShootIndex, float *distance)
 {
     Player *shooterPlayer = &AllPlayers[playerIndex];
-    shooterPlayer->IsHeadShot = false;
-    shooterPlayer->IsLegShot = false;
+
+    shooterPlayer->IsHeadShot[currentShootIndex] = false;
+    shooterPlayer->IsLegShot[currentShootIndex] = false;
     int HitPlayerIndex = NO_PLAYER;
 
     // Get an array of all walls to test
     int WallCountToTest = 0;
     int AllWallsToCheck[wallCount];
-    for (int i2 = 0; i2 < wallCount; i2++)
+    for (int i2 = 0; i2 < allMaps[currentMap].CollisionsCount; i2++)
     {
+        // If the wall raycast is not affecting all zones:
         if (getMapWalls()[i2].ZoneCollision != -1)
         {
             for (int i3 = 0; i3 < allMaps[currentMap].AllZones[shooterPlayer->CurrentOcclusionZone].ZoneCount; i3++)
             {
+                // If the wall is in the visible zone
                 if (allMaps[currentMap].AllZones[shooterPlayer->CurrentOcclusionZone].visibleMapPart[i3] == getMapWalls()[i2].ZoneCollision)
                 {
+                    // Add the wall to the array
                     AllWallsToCheck[WallCountToTest] = i2;
                     WallCountToTest++;
                     break;
@@ -1328,6 +1428,7 @@ int Raycast(int playerIndex)
         }
         else
         {
+            // Add the wall to the array
             AllWallsToCheck[WallCountToTest] = i2;
             WallCountToTest++;
         }
@@ -1378,43 +1479,89 @@ int Raycast(int playerIndex)
         }
     }
 
+    // ScanForGrenade
+
     // Get int version of the start position for player checking
     startPosition.x = shooterPlayer->startRaycastPosition.x * 4096;
     startPosition.y = (shooterPlayer->startRaycastPosition.y + CameraOffsetY) * 4096;
     startPosition.z = shooterPlayer->startRaycastPosition.z * 4096;
-    for (int PlayerIndex = 0; PlayerIndex < MaxPlayer; PlayerIndex++)
+    if (shooterPlayer->ScanForGrenade != EMPTY)
     {
-        Player *testedPlayer = &AllPlayers[PlayerIndex];
-
-        if (testedPlayer->Id != UNUSED && PlayerIndex != playerIndex && !testedPlayer->IsDead)
+        if (grenades[shooterPlayer->ScanForGrenade] != NULL)
         {
-            // Calculate for each player the collision box
-            CalculatePlayerColBox(PlayerIndex);
+            // debugValue3 = 1;
+            Vector3 grenadePos;
+            grenadePos.x = grenades[shooterPlayer->ScanForGrenade]->Model->x;
+            grenadePos.y = grenades[shooterPlayer->ScanForGrenade]->Model->y;
+            grenadePos.z = grenades[shooterPlayer->ScanForGrenade]->Model->z;
+            Vector3 grenadeSize;
+            grenadeSize.x = grenades[shooterPlayer->ScanForGrenade]->Physic->xsize;
+            grenadeSize.y = grenades[shooterPlayer->ScanForGrenade]->Physic->ysize;
+            grenadeSize.z = grenades[shooterPlayer->ScanForGrenade]->Physic->zsize;
 
-            // Get both opposite corners of the player
+            CollisionBox box = CalculateColBox(grenadePos, grenadeSize);
+
+            //  Get both opposite corners of the wall
             Vector3Int corner1;
             Vector3Int corner2;
-            corner1.x = testedPlayer->PlayerCollisionBox.BoxXRangeA;
-            corner1.y = testedPlayer->PlayerCollisionBox.BoxYRangeA;
-            corner1.z = testedPlayer->PlayerCollisionBox.BoxZRangeA;
 
-            corner2.x = testedPlayer->PlayerCollisionBox.BoxXRangeB;
-            corner2.y = testedPlayer->PlayerCollisionBox.BoxYRangeB;
-            corner2.z = testedPlayer->PlayerCollisionBox.BoxZRangeB;
+            corner1.x = box.BoxXRangeA;
+            corner1.y = box.BoxYRangeA;
+            corner1.z = box.BoxZRangeA;
 
+            corner2.x = box.BoxXRangeB;
+            corner2.y = box.BoxYRangeB;
+            corner2.z = box.BoxZRangeB;
+
+            // check if this hitted wall is nearest than the current found nearest wall
             float newPlayerDistance = tPlayer;
-            // check if this hitted player is nearest than the current found nearest player
             if (getHitDistance(corner1, corner2, dirfrac, startPosition, &newPlayerDistance))
             {
-                // If the found player is an AI in the same team and the player is too near
-                if (shooterPlayer->isAi && shooterPlayer->Team == testedPlayer->Team && newPlayerDistance < 1)
-                {
-                    continue;
-                }
                 if (newPlayerDistance < tPlayer)
                 {
                     tPlayer = newPlayerDistance;
-                    nearestPlayerIndex = PlayerIndex;
+                    // nearestWallIndex = NO_PLAYER;
+                    nearestPlayerIndex = shooterPlayer->ScanForGrenade;
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int PlayerIndex = 0; PlayerIndex < MaxPlayer; PlayerIndex++)
+        {
+            Player *testedPlayer = &AllPlayers[PlayerIndex];
+
+            if (testedPlayer->Id != UNUSED && PlayerIndex != playerIndex && !testedPlayer->IsDead)
+            {
+                // Calculate for each player the collision box
+                CalculatePlayerColBox(PlayerIndex);
+
+                // Get both opposite corners of the player
+                Vector3Int corner1;
+                Vector3Int corner2;
+                corner1.x = testedPlayer->PlayerCollisionBox.BoxXRangeA;
+                corner1.y = testedPlayer->PlayerCollisionBox.BoxYRangeA;
+                corner1.z = testedPlayer->PlayerCollisionBox.BoxZRangeA;
+
+                corner2.x = testedPlayer->PlayerCollisionBox.BoxXRangeB;
+                corner2.y = testedPlayer->PlayerCollisionBox.BoxYRangeB;
+                corner2.z = testedPlayer->PlayerCollisionBox.BoxZRangeB;
+
+                float newPlayerDistance = tPlayer;
+                // check if this hitted player is nearest than the current found nearest player
+                if (getHitDistance(corner1, corner2, dirfrac, startPosition, &newPlayerDistance))
+                {
+                    // If the found player is an AI in the same team and the player is too near
+                    if (shooterPlayer->isAi && shooterPlayer->Team == testedPlayer->Team && newPlayerDistance < 1)
+                    {
+                        continue;
+                    }
+                    if (newPlayerDistance < tPlayer)
+                    {
+                        tPlayer = newPlayerDistance;
+                        nearestPlayerIndex = PlayerIndex;
+                    }
                 }
             }
         }
@@ -1429,14 +1576,15 @@ int Raycast(int playerIndex)
         nearestPlayerIndex = NO_PLAYER;
     }
 
-    if ((nearestPlayerIndex != NO_PLAYER || nearestWallIndex != NO_PLAYER))
+    if (shooterPlayer->ScanForGrenade == EMPTY && (nearestPlayerIndex != NO_PLAYER || nearestWallIndex != NO_PLAYER))
     {
         // Turn distance into float distance scale
         t /= 8192.0;
         t -= 0.2;
+        *distance = t * 50;
         if (!shooterPlayer->justCheking)
         {
-            // Create wall hot flash position
+            //  Create wall shot flash position
             Vector3 hitPosition;
             hitPosition.x = shooterPlayer->startRaycastPosition.x + shooterPlayer->startRaycastRotation.x * t;
             hitPosition.y = shooterPlayer->startRaycastPosition.y + CameraOffsetY + shooterPlayer->startRaycastRotation.y * t;
@@ -1444,7 +1592,18 @@ int Raycast(int playerIndex)
 
             if (!AllGuns[shooterPlayer->startGunIdRaycast].isKnife)
             {
-                ShowWallHitFlash = 3;
+                // Check a free wall shot flash slot
+                int flashIndex = 0;
+                for (int i = 0; i < FLASH_MODELS_COUNT; i++)
+                {
+                    if (ShowWallHitFlash[i] == 0)
+                    {
+                        flashIndex = i;
+                        break;
+                    }
+                }
+
+                ShowWallHitFlash[flashIndex] = 3;
 
                 // Create wall hit flash rotation
                 Vector2 Direction1D;
@@ -1461,16 +1620,17 @@ int Raycast(int playerIndex)
                 // Set wall hit flash angles
                 int FinalAngleY = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 384;
                 int FinalAngleZ = atan2f(Direction1D.y, 1) * 512.0 / (M_TWOPI) + 128;
-                NE_ModelSetRot(Model[8], 0, FinalAngleY, FinalAngleZ);
-                // Set wall hot flash position
-                NE_ModelSetCoord(Model[8], hitPosition.x, hitPosition.y, hitPosition.z);
+                NE_ModelSetRot(flashModels[flashIndex], 0, FinalAngleY, FinalAngleZ);
+
+                //   Set wall hot flash position
+                NE_ModelSetCoord(flashModels[flashIndex], hitPosition.x, hitPosition.y, hitPosition.z);
 
                 if (!applyRules)
                 {
                     SendWallHit = true;
-                    WallHitXPos = hitPosition.x * 4096; // TODO CHECK THIS
-                    WallHitYPos = hitPosition.y * 4096;
-                    WallHitZPos = hitPosition.z * 4096;
+                    WallHitXPos[currentShootIndex] = hitPosition.x * 4096;
+                    WallHitYPos[currentShootIndex] = hitPosition.y * 4096;
+                    WallHitZPos[currentShootIndex] = hitPosition.z * 4096;
                 }
             }
             else
@@ -1480,16 +1640,20 @@ int Raycast(int playerIndex)
 
             if (nearestPlayerIndex != NO_PLAYER && (!AllGuns[shooterPlayer->startGunIdRaycast].isKnife || t <= 1))
             {
+
                 if (AllPlayers[nearestPlayerIndex].Team != shooterPlayer->Team || allPartyModes[currentPartyMode].teamDamage)
                     HitPlayerIndex = nearestPlayerIndex;
 
-                if (hitPosition.y - AllPlayers[nearestPlayerIndex].position.y >= 0.3) //(hitPosition.y >= 5480) // TEST VALUES
+                AllPlayers[nearestPlayerIndex].mapVisivilityTimer = 300;
+
+                // Check if the hit is a headshot
+                if (hitPosition.y - AllPlayers[nearestPlayerIndex].position.y >= 0.64)
                 {
-                    shooterPlayer->IsHeadShot = true;
+                    shooterPlayer->IsHeadShot[currentShootIndex] = true;
                 }
-                else if (hitPosition.y - AllPlayers[nearestPlayerIndex].position.y <= -0.02) // if (hitPosition.y <= 2800)
+                else if (hitPosition.y - AllPlayers[nearestPlayerIndex].position.y <= 0.2) // Check if the hit is a legshot
                 {
-                    shooterPlayer->IsLegShot = true;
+                    shooterPlayer->IsLegShot[currentShootIndex] = true;
                 }
             }
         }
@@ -1500,10 +1664,12 @@ int Raycast(int playerIndex)
                 if (AllPlayers[nearestPlayerIndex].Team != shooterPlayer->Team)
                     HitPlayerIndex = nearestPlayerIndex;
 
-                if (AllGuns[shooterPlayer->startGunIdRaycast].isKnife) // ICI
+                if (AllGuns[shooterPlayer->startGunIdRaycast].isKnife)
                 {
+                    // If the target is too far
                     if (t <= 1)
                     {
+                        // Walk to the target
                         shooterPlayer->tooFar = true;
                         Player *targetPlayer = &AllPlayers[nearestPlayerIndex];
                         int nearestWaypoint = getNearestWaypoint(targetPlayer->position.x, targetPlayer->position.y, targetPlayer->position.z);
@@ -1515,10 +1681,25 @@ int Raycast(int playerIndex)
             }
         }
     }
+    else if (shooterPlayer->ScanForGrenade != EMPTY)
+    {
+        HitPlayerIndex = nearestPlayerIndex;
+    }
 
     return HitPlayerIndex;
 }
 
+/**
+ * @brief Raycast function
+ *
+ * @param p1x
+ * @param p1y
+ * @param p2x
+ * @param p2y
+ * @param p3x
+ * @param p3y
+ * @return float
+ */
 float sign(float p1x, float p1y, float p2x, float p2y, float p3x, float p3y)
 {
     return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
@@ -1552,6 +1733,17 @@ bool PointInTriangle(float px, float py, float p1x, float p1y, float p2x, float 
     return !(has_neg && has_pos);
 }
 
+/**
+ * @brief  Raycast function int version
+ *
+ * @param p1x
+ * @param p1y
+ * @param p2x
+ * @param p2y
+ * @param p3x
+ * @param p3y
+ * @return int
+ */
 int signInt(int p1x, int p1y, int p2x, int p2y, int p3x, int p3y)
 {
     return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);

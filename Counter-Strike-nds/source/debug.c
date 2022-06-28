@@ -1,24 +1,45 @@
-#include "main.h"
-#include "saveManager.h"
-#include "keyboard.h"
-#include "input.h"
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
+#include "debug.h"
 
 // File system
 #include <fat.h>
-#include <stdio.h>
-#include <math.h>
 
-// For random system
-#include <time.h>
-
+// File
 FILE *debugFile;
 
+/**
+ * @brief Print a message in the file
+ *
+ * @param text
+ */
 void debugPrint(const char *text)
 {
+    // Open the file
     debugFile = fopen("fat:/debug_cs.log", "a");
 
+    // Print the message and a new line
     fprintf(debugFile, text);
     fprintf(debugFile, "\n");
 
+    // Close the file
     fclose(debugFile);
+}
+
+/**
+ * @brief Print Nitro Engine error in debug mode
+ *
+ * @param text Text to print
+ */
+void error_handler(const char *text)
+{
+    // Simple handler. You could write this to a file instead, for example.
+    printf(text);
+
+    // Write in the file
+    // debugPrint(text);
 }

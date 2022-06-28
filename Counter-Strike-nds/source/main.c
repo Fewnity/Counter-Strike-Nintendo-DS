@@ -1,13 +1,8 @@
-////
-// Creator : Fewnity
+// SPDX-License-Identifier: MIT
 //
-// dd/mm/yyyy
-// Creation date --/01/2021
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
 //
-// Last modification : 19/12/2021
-//
-// This file need Nitro Engine
-////
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
 
 #include "collisions.h"
 #include "movements.h"
@@ -33,244 +28,257 @@
 //////Level
 // Whole level 3D models and physics
 NE_Model *Model[13]; ////////////REMOVE OR CHANGE THIS
+// Models for wall flashs for guns
+NE_Model *flashModels[FLASH_MODELS_COUNT];
 
 // Materials
-NE_Material *GroundMaterial;
-NE_Material *GroundMaterialShadowed;
+NE_Material *GroundMaterial = NULL;
+NE_Material *GroundMaterialShadowed = NULL;
 
 //
 //////Players
 Player AllPlayers[MaxPlayer];
 // Player values
 int PlayerCount = 0;
+// Old local player position
 float OldxPos, OldyPos, OldzPos = 0;
-int Health = 100;
+// Timer for the player's jump
 int CanJump = 0;
+// CanJumpRealTimer is used wait a little bit of time before the player can jump
 int CanJumpRealTimer = 2;
+// Is the player aiming?
 bool Aiming = false;
 
+// Number of frame when the player is in the air
 int frameCountDuringAir = 0;
+// Is the player on stairs?
 bool isOnStairs = false;
+// Is the player descending stairs?
 bool isInDownStairs = false;
-bool NeedJump = false; // Ask jump from UI button
-// Head bobing
-float BobbingOffset = 0;
-float XBobbingOffset = 0;
-float BobbingSpeed = 0.07;
-bool HasBobbed = false;
-// Materials
-NE_Material *PlayerMaterial;
-NE_Material *PlayerMaterialTerrorist;
-NE_Material *PlayerShadowMaterial;
-//////Guns
-// Values
+// Ask jump from UI button
+bool NeedJump = false;
 
+// Head bobing speed
+float BobbingSpeed = 0.07;
+
+// Materials
+NE_Material *PlayerMaterial = NULL;
+NE_Material *PlayerMaterialTerrorist = NULL;
+NE_Material *PlayerShadowMaterial = NULL;
+
+//////Guns
+// Number if frame of showing the muzzle flash at screen
 int ShowMuzzle = 0;
-int ShowWallHitFlash = 0;
+// Number of frame of showing the wall shit flash (it's a list because it's possible to have more than one at the same time)
+int ShowWallHitFlash[FLASH_MODELS_COUNT] = {0, 0, 0, 0, 0, 0};
+// Guns sprites positions
 int rightGunX = 0;
 int rightGunY = 0;
 int leftGunX = 0;
 int leftGunY = 0;
 
+// All scopes data
 Scope AllScopeLevels[2];
+// Current scope level used by the player
 int CurrentScopeLevel = 0;
 
-// UI
-// int rightGunXRecoil = 6, rightGunYRecoil = 6;
+// Gun recoil values
 int GunMaxRecoil = 16;
 int GunMinRecoil = 6;
 
-// Animations
-
 //
 //////Camera
-NE_Camera *Camera;
-// Values
+NE_Camera *Camera = NULL;
+// [-1;1] values, 3D position of a point in a sphere by using player and camera angle to get the point
 float x = 0, y = 0, z = 0;
+// [-1;1] values, 2D position of a point in a sphere by using player and camera angle to get the point
+float xWithoutY = 0, zWithoutY = 0, xWithoutYForAudio = 0, zWithoutYForAudio = 0, xWithoutYForMap = 0, zWithoutYForMap = 0, xWithoutYForOcclusionSide1 = 0, zWithoutYForOcclusionSide1 = 0, xWithoutYForOcclusionSide2 = 0, zWithoutYForOcclusionSide2 = 0;
+// camera view offset
 float xOffset = 0, yOffset = 0;
+// Camera angle
 float CameraAngleY = 128;
 
-float xWithoutY = 0, zWithoutY = 0, xWithoutYForAudio = 0, zWithoutYForAudio = 0, xWithoutYForMap = 0, zWithoutYForMap = 0, xWithoutYForOcclusionSide1 = 0, zWithoutYForOcclusionSide1 = 0, xWithoutYForOcclusionSide2 = 0, zWithoutYForOcclusionSide2 = 0;
+// Current player's view index for the camera
 int CurrentCameraPlayer = 0;
+// Need to update the sphere positions values of the camera
 bool NeedUpdateViewRotation = false;
 
 // Animations
-#define deathCameraAnimationSpeed 0.025
+#define DEATH_ANIMATION_SPEED 0.025
+// [0 ; 1] progression of the death animation
 float deathCameraAnimation = 0;
+// Offset of the death animation camera
 float deathCameraYOffset = 0;
 
 // Raycasting
-int Hit = -1;
+// Index of all hitted client (for raycasting)
+int hittedClient[FLASH_MODELS_COUNT] = {NO_PLAYER, NO_PLAYER, NO_PLAYER, NO_PLAYER, NO_PLAYER, NO_PLAYER};
 
-int WallHitXPos = 0;
-int WallHitYPos = 0;
-int WallHitZPos = 0;
+// TODO replace by Vector3Int array
+// Positions of all wall hit flashs
+int WallHitXPos[FLASH_MODELS_COUNT] = {0, 0, 0, 0, 0, 0};
+int WallHitYPos[FLASH_MODELS_COUNT] = {0, 0, 0, 0, 0, 0};
+int WallHitZPos[FLASH_MODELS_COUNT] = {0, 0, 0, 0, 0, 0};
+// Distance of all hits
+float hitDistance[FLASH_MODELS_COUNT] = {0, 0, 0, 0, 0, 0};
 
 // Other
+// Is the player is fully in a smoke area?
 bool isInFullSmoke = false;
 
-// Other
+// Retain the team of the player to send to the server
 int tempTeam = 0;
 
-// AI
-int checkPlayerDistanceFromAiTimer = 1;
-
-//
-//////UI
+// All palettes
 NE_Palette *Palettes[17]; // 0 MapUI, 1 Map atlas, 2 text, 3 player, 4 gun sprite, 5 map point
 
-NE_Palette *roadPalette;
-NE_Palette *wallWindowPalette;
-NE_Palette *wallPalette;
-NE_Material *roadMaterials;
-NE_Material *wallWindowMaterials;
-NE_Material *wallMaterials;
-NE_Material *TextMaterial;
+// Unused palettes and materials, to use for creating a more optimized map
+/*NE_Palette *roadPalette = NULL;
+NE_Palette *wallWindowPalette = NULL;
+NE_Palette *wallPalette = NULL;
+NE_Material *roadMaterials = NULL;
+NE_Material *wallWindowMaterials = NULL;
+NE_Material *wallMaterials = NULL;*/
 
-int TopScreenSpriteCount = 1;
-NE_Sprite *TopScreenSprites[5];
+// Text material
+NE_Material *TextMaterial = NULL;
+
+// All sprites used for the top screen
+NE_Sprite *TopScreenSprites[2]; // 0 Map, 1 crosshair
+// All materials used for the top screen
 NE_Material *TopScreenSpritesMaterials[6];
-int BottomScreenSpriteCount = 6;
-NE_Sprite *BottomScreenSprites[10];
-NE_Material *BottomScreenSpritesMaterials[9]; // Remove this
-CheckBox AllCheckBoxs[CheckBoxCount];
-Slider AllSliders[SliderCount];
-Button AllButtons[8];
 
-char textToShow[30] = "";
-char killText[33] = "";
+// All sprites used for the bottom screen
+NE_Sprite *BottomScreenSprites[1];
+// All materials used for the bottom screen
+NE_Material *BottomScreenSpritesMaterials[9];
+// All checkboxes used for the bottom screen
+CheckBox AllCheckBoxs[CheckBoxCount];
+// All sliders used for the bottom screen
+Slider AllSliders[SliderCount];
+// All buttons used for the bottom screen
+Button AllButtons[ButtonCount];
+
+// Timer to draw the event text
 int textToShowTimer = 0;
+// Timer to draw the kill event text
 int KillTextShowTimer = 0;
+// Selected gun in the shop
 int SelectedGunShop = 0;
 
-bool AlwaysUpdateBottomScreen = true;
+// Is 30 fps mode enabled with bottom screen refresh?
+bool AlwaysUpdateBottomScreen = false;
+// Ask to enable 30 fps mode with bottom screen refresh
 bool NeedChangeScreen = false;
-int UpdateBottomScreenOneFrame = 8;
+// Number of frame for 30 fps mode
+int UpdateBottomScreenFrameCount = 0;
+// Button to show count
 int ButtonToShow = 0;
+// Number of frame to show the health bar with red color
 int redHealthTextCounter = 0;
+// Number of frame for aiming activation
 int doubleTapTimer = 0;
 
 //
 //////Party
+// Current opened menu
 int currentMenu = -1; // 0 Main menu //1 Map //2 Score //3 Shop categories //4 Settings //5 Quit //6 Shop
+// Is party started?
 bool PartyStarted = false;
-
+// Need to apply game rules? (true in solo mode, false in online mode)
 bool applyRules = false;
+// Number of lose of terrorists team
 int LoseCountTerrorists = 0;
+// Number of lose of counter terrorists team
 int LoseCountCounterTerrorists = 0;
 
+// Timer to change party timer
 int changeSecondTimer = 60;
 int changeMinuteTimer = 60;
+
+// Is the bomb set? TODO : maybe to replace by the existing var BombPlanted
 bool bombSet = false;
 
 //
 //////Bomb
+// Bomb bip timer frame count
 int bombBipTimer = 120;
+// Bomb position (w = angle)
 Vector4 BombPosition;
+// Is the bomb planted?
 bool BombPlanted = false;
+// Is the bomb defused?
 bool BombDefused = false;
-bool BombWillExplose = false;
+// Will the bomb explode?
+bool BombWillExplode = false;
+// Trigger area to defuse the bomb
 CollisionBox2D bombDefuseZone;
+// Bomb effect scale
 int BombExplosionScale = 0;
+// Is the bomb exploding?
 bool IsExplode = false;
 
+// Timer before disable the shop
 int shopDisableTimer = SHOP_DISABLE_TIMER;
+// Trigger for the shop zone
 CollisionBoxF shopZone;
+// Is the player in the shop zone
 bool isInShopZone = false;
 
-//
 //////Debug
+// Enable debug text at top screen?
 bool isDebugTopScreen = false;
+// Enable debug text at bottom screen?
 bool isDebugBottomScreen = false;
 
-//
-//////Rumble pack
+// Rumble pack timer
 int RumbleTimer = 0;
+// Is rumble enabled?
+bool useRumble = false;
 
+// Connection type (offline for solo)
 enum connectionType Connection = UNSELECTED;
 
+// Local player pointer
 Player *localPlayer = &AllPlayers[0];
 
+// Wait before doing some action (for example, save the party), we want to wait to avoid a screen refresh at the same time and cause a visual bug
 int uiTimer = 0;
-
+// Action to do after the ui timer
 enum actionAfterUiTimer actionOfUiTimer = SAVE;
+
+// Speed of the camera to recenter the camera after using camera offset
 int speedAimingReCenter = 3;
 int speedAimingReCenterTimer = 10;
 
-bool useRumble = false;
-bool is3dsMode = false;
-
+// All inputs data
 Input inputs[INPUT_COUNT];
+// Is scnanning for inputs?
 bool scanForInput = false;
+// Current input index scanned
 int currentInputScanned = 0;
+// All inputs names
 const char *inputsNames[INPUT_NAMES_COUNT];
 
+// Is the player using bomb? (planting or defusing)
 bool isUsingBomb = false;
+// Can the player change gun?
 bool canChangeGun = true;
+// Can the player shoot?
 bool canShoot = true;
 
-// Min x -44.812
-// Max x 56.8331
+// How many players want to start the party (vote)
+int playerWantToStart = 0;
+// How many players are needed to start the party (vote)
+int playerWantToStartLimite = 0;
 
-// Min z 66.496
-// Max z 41.601
+bool isDebugMode = false;
 
-// Draw bottom screen
-void Draw3DScene2(void)
-{
-	drawBottomScreenUI();
-}
-
-// For debug
-void error_handler(const char *text)
-{
-	// Simple handler. You could write this to a file instead, for example.
-	printf(text);
-}
-
-/*
-int sine; // sine position
-int lfo;  // LFO position
-
-FILE *file;
-mm_word stream(mm_word length, mm_addr dest, mm_stream_formats format)
-{
-	//if (file)
-	//{
-	size_t samplesize;
-	switch (format)
-	{
-	case MM_STREAM_8BIT_MONO:
-		samplesize = 1;
-		break;
-	case MM_STREAM_8BIT_STEREO:
-		samplesize = 2;
-		break;
-	case MM_STREAM_16BIT_MONO:
-		samplesize = 2;
-		break;
-	case MM_STREAM_16BIT_STEREO:
-		samplesize = 4;
-		break;
-	}
-
-	int res = fread(dest, samplesize, length, file);
-
-	if (res)
-	{
-		length = res;
-	}
-	else
-	{
-		mmStreamClose();
-		fclose(file);
-		length = 0;
-	}
-	//}
-	return length;
-}*/
-
-// Init the game (launch the engine, load textures, sounds, 3D models, init keyboard...)
+/**
+ * @brief Init the game (launch the engine, load textures, sounds, 3D models, init keyboard...)
+ *
+ * @return int Result
+ */
 int main(void)
 {
 	irqEnable(IRQ_HBLANK);
@@ -282,19 +290,30 @@ int main(void)
 
 	// Init
 	NE_InitDual3D();
-
 	// Anti aliasing
 	NE_AntialiasEnable(true);
 
-	// Error debug
+	// Error debug handler for Nitro Engine
 	NE_DebugSetHandler(error_handler);
 
 	NE_SetFov(70);											  // Set FOV
 	NE_ClippingPlanesSetI(floattof32(0.1), floattof32(90.0)); // Set render distance
-	// NE_ClippingPlanesSetI(floattof32(0.5), floattof32(90.0)); // Set render distance
-	//  Init debug console
-	if (isDebugBottomScreen)
-		consoleDemoInit();
+
+	readKeys();
+
+	if (isDebugMode)
+	{
+		// Set debug mode if keys are pressed
+		if (keys & KEY_START)
+			isDebugTopScreen = true;
+
+		if (keys & KEY_SELECT)
+			isDebugBottomScreen = true;
+
+		//  Init debug console
+		if (isDebugBottomScreen)
+			consoleDemoInit();
+	}
 
 	// Init fat file system
 	if (!fatInitDefault())
@@ -302,8 +321,7 @@ int main(void)
 		// iprintf("Warning: fatInit failure!\n");
 	}
 
-	setDialogText("");
-
+	// Set default inputs
 	inputs[FIRE_BUTTON].value = KEY_L;
 	inputs[FIRE_BUTTON].nameIndex = 9;
 	inputs[JUMP_BUTTON].value = KEY_R;
@@ -331,6 +349,12 @@ int main(void)
 	inputs[SCOPE_BUTTON].value = KEY_START;
 	inputs[SCOPE_BUTTON].nameIndex = 3;
 
+	inputs[LEFT_GUN].value = -1; // unasigned
+	inputs[LEFT_GUN].nameIndex = 12;
+	inputs[RIGHT_GUN].value = -1; // unasigned
+	inputs[RIGHT_GUN].nameIndex = 12;
+
+	// Set inputs names list
 	inputsNames[0] = "A";
 	inputsNames[1] = "B";
 	inputsNames[2] = "Select";
@@ -347,36 +371,37 @@ int main(void)
 	inputsNames[13] = "Scanning...";
 	inputsNames[14] = "Already used";
 
+	// Init default player name
+	strncpy(localPlayer->name, "Player", PLAYER_MAX_LENGTH);
+
+	// Load save file
 	Load();
 
+	// Init rumble pack
 	isRumbleInserted();
 
-	// useRumble = isRumbleInserted();
-
-	// iprintf("Rumble %d\n", isRumbleInserted());
 	/*if (!nitroFSInit(NULL))
 	{
 		iprintf("nitroFSInit failure!\n");
 	}*/
 
+	// Init sound system
 	initSoundSystem();
+	// Init keyboard
 	initKeyboard();
 
-	// Remove this later
-	SetSpritesForUI();
-	SetCheckBoxsRefForUI();
-
+	// Set bots names
 	setBotsNames();
 
-	// Load guns data
+	// Load guns/grenades/equipments data
 	AddGuns();
 	LoadGrenades(AllGrenades);
-	LoadEquipments(AllEquipements);
+	LoadEquipments(allEquipments);
 
+	// Load maps data
 	LoadMapTextures();
 	SetMapCameraPosition();
 	AddAllSpawnPoints();
-
 	SetMapNames();
 	SetMapPartyMode();
 
@@ -385,7 +410,6 @@ int main(void)
 	ForceUpdateLookRotation(CameraAngleY);
 
 	// Set start camera position to look the map
-
 	setCameraMapPosition();
 
 	// create Materials
@@ -419,26 +443,14 @@ int main(void)
 	Palettes[7] = NE_PaletteCreate();
 	Palettes[8] = NE_PaletteCreate();
 	Palettes[9] = NE_PaletteCreate();
-	// Palettes[10] = NE_PaletteCreate();
 	Palettes[11] = NE_PaletteCreate();
 	Palettes[12] = NE_PaletteCreate();
 	Palettes[13] = NE_PaletteCreate();
 	Palettes[14] = NE_PaletteCreate();
 	Palettes[15] = NE_PaletteCreate();
 	Palettes[16] = NE_PaletteCreate();
+
 	// Load .bin textures
-
-	/*roadMaterials = NE_MaterialCreate();
-	wallWindowMaterials = NE_MaterialCreate();
-	wallMaterials = NE_MaterialCreate();
-
-	roadPalette = NE_PaletteCreate();
-	wallWindowPalette = NE_PaletteCreate();
-	wallPalette = NE_PaletteCreate();
-
-	NE_MaterialTexLoadBMPtoRGB256(roadMaterials, roadPalette, (void *)road_bin, false);					  // Load bmp font format
-	NE_MaterialTexLoadBMPtoRGB256(wallWindowMaterials, wallWindowPalette, (void *)wallWindow_bin, false); // Load bmp font format
-	NE_MaterialTexLoadBMPtoRGB256(wallMaterials, wallPalette, (void *)wall_bin, false);					  // Load bmp font format*/
 
 	// Load font
 	TextMaterial = NE_MaterialCreate();
@@ -449,28 +461,17 @@ int main(void)
 				TextMaterial, // Image
 				8, 8);		  // Size of one character (x, y)
 
-	// NE_MaterialTexLoadBMPtoRGB256(PlayerMaterial, Palettes[3], (void *)skin_man_bin, 0);
-	// NE_MaterialTexLoadBMPtoRGB256(PlayerMaterialTerrorist, Palettes[13], (void *)skin_soldier_bin, 0);
-
 	NE_MaterialTexLoadBMPtoRGB256(PlayerMaterial, Palettes[3], (void *)gign_skin1_bin, 0);
 	NE_MaterialTexLoadBMPtoRGB256(PlayerMaterialTerrorist, Palettes[13], (void *)terrorist_skin1_bin, 0);
 
 	NE_MaterialTexLoadBMPtoRGB256(GroundMaterial, Palettes[1], (void *)Atlas_bin, 1);
 	NE_MaterialTexClone(GroundMaterial, GroundMaterialShadowed);
 
-	//  NE_MaterialTexLoadBMPtoRGB256(GroundMaterial, Palettes[1], (void *)player_shadow_bin, 1);
-	//   NE_MaterialTexLoadBMPtoRGB256(GroundMaterial, Palettes[1], (void *)road_bin, 1);
-
-	// Palettes[4] = NE_PaletteCreate();
-	// NE_MaterialTexLoadBMPtoRGB256(TopScreenSpritesMaterials[1], Palettes[4], AllGuns[CurrentLittleGun].texture, 1);
-	// UpdateGunTexture();
-
 	NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterials[0], Palettes[9], (void *)QuitButton_bin, 1);
 	NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterials[2], Palettes[5], (void *)MapPointUI_bin, 1);
 	NE_MaterialTexLoadBMPtoRGB256(TopScreenSpritesMaterials[5], Palettes[16], (void *)bomb_logo_bin, 1);
 	NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterials[4], Palettes[7], (void *)CheckMark_bin, 1);
 	NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterials[5], Palettes[6], (void *)WhiteScareRounded_bin, 1);
-	// NE_MaterialTexLoadBMPtoRGB256(BottomScreenSpritesMaterials[6], Palettes[10], AllGuns[0].texture, 1);
 
 	// Load .bmp textures top screen
 	NE_MaterialTexLoadBMPtoRGB256(TopScreenSpritesMaterials[0], Palettes[8], (void *)crosshair2_bin, 1);
@@ -488,39 +489,25 @@ int main(void)
 	NE_SpriteSetMaterial(TopScreenSprites[0], TopScreenSpritesMaterials[0]);
 
 	// Create map sprite
-	TopScreenSprites[4] = NE_SpriteCreate();
-	NE_SpriteSetSize(TopScreenSprites[4], 170, 177);
-	NE_SpriteSetPriority(TopScreenSprites[4], 2);
-	NE_SpriteSetMaterial(TopScreenSprites[4], TopScreenSpritesMaterials[4]);
-
-	//  Create map point
-	BottomScreenSprites[1] = NE_SpriteCreate();
-	NE_SpriteSetSize(BottomScreenSprites[1], 6, 6);
-	NE_SpriteSetPriority(BottomScreenSprites[1], 1);
-	NE_SpriteSetMaterial(BottomScreenSprites[1], BottomScreenSpritesMaterials[2]);
-
-	NE_SpriteVisible(BottomScreenSprites[1], false);
+	TopScreenSprites[1] = NE_SpriteCreate();
+	NE_SpriteSetSize(TopScreenSprites[1], 170, 177);
+	NE_SpriteSetPriority(TopScreenSprites[1], 2);
+	NE_SpriteSetMaterial(TopScreenSprites[1], TopScreenSpritesMaterials[4]);
 
 	// Create quit button
-	BottomScreenSprites[2] = NE_SpriteCreate();
-	NE_SpriteSetSize(BottomScreenSprites[2], 20, 20);
-	NE_SpriteSetPriority(BottomScreenSprites[2], 0);
-	NE_SpriteSetMaterial(BottomScreenSprites[2], BottomScreenSpritesMaterials[0]);
-	NE_SpriteSetPos(BottomScreenSprites[2], 236, 2);
-	NE_SpriteVisible(BottomScreenSprites[2], false);
+	BottomScreenSprites[0] = NE_SpriteCreate();
+	NE_SpriteSetSize(BottomScreenSprites[0], 20, 20);
+	NE_SpriteSetPriority(BottomScreenSprites[0], 0);
+	NE_SpriteSetMaterial(BottomScreenSprites[0], BottomScreenSpritesMaterials[0]);
+	NE_SpriteSetPos(BottomScreenSprites[0], 236, 2);
+	NE_SpriteVisible(BottomScreenSprites[0], false);
 
-	BottomScreenSpriteCount = 3;
-
-	// TopScreenSprites[4] = NE_MaterialCreate();
-
-	// gui
-	// Material->diffuse = RGB15(31, 0, 0);
-	// Material->ambient = RGB15(31, 0, 0);
-
-	// Create models for the map
-	// for (int i = 0; i < MapPartCount + 4; i++)
+	// Create models
 	for (int i = 7; i < 7 + 4; i++)
 	{
+		if (i == 8) // Model 8 is unused
+			continue;
+
 		Model[i] = NE_ModelCreate(NE_Static);
 		NE_ModelSetMaterial(Model[i], GroundMaterial);
 		NE_ModelScaleI(Model[i], 4096, 4096, 4096);
@@ -532,22 +519,33 @@ int main(void)
 	// Load bomb model
 	NE_ModelLoadStaticMesh(Model[7], (u32 *)bomb_bin);
 
-	// Load Plane model
-	NE_ModelSetMaterial(Model[8], TopScreenSpritesMaterials[2]);
-	NE_ModelLoadStaticMesh(Model[8], (u32 *)plane_bin);
-	NE_ModelSetCoord(Model[8], 0, 0, 1);
+	// Load flash models
+	for (int i = 0; i < FLASH_MODELS_COUNT; i++)
+	{
+		flashModels[i] = NE_ModelCreate(NE_Static);
+
+		if (i == 0)
+			NE_ModelLoadStaticMesh(flashModels[i], (u32 *)plane_bin);
+		else
+			NE_ModelClone(flashModels[i],  // Destination
+						  flashModels[0]); // Source model
+
+		NE_ModelSetMaterial(flashModels[i], TopScreenSpritesMaterials[2]);
+		NE_ModelScaleI(flashModels[i], 4096, 4096, 4096);
+	}
 
 	createPlayerShadow();
 
-	// NE_ModelSetCoord(Model[9], 10.86, 0.08, 7.783);
-
+	// Load explision effect model
 	NE_ModelLoadStaticMesh(Model[10], (u32 *)explosion_bin);
 	Model[10]->rx = 0;
 	Model[10]->ry = 256;
 	NE_ModelScaleI(Model[10], 0, 0, 0);
 
+	// Load the default map
 	LoadMap(currentMap);
 
+	// load party modes
 	AddAllPartyModes();
 
 	// Set scope levels
@@ -560,8 +558,6 @@ int main(void)
 	AllScopeLevels[1].fov[0] = 20;
 	AllScopeLevels[1].Speed = 140;
 
-	// sprintf(killText, "PlayerName01 killed PlayerName02");
-
 	// Set all player ID to UNUSED
 	for (int i = 0; i < MaxPlayer; i++)
 	{
@@ -571,20 +567,20 @@ int main(void)
 
 	// Lights
 	NE_LightSet(0, RGB15(31, 31, 31), -0.5, -0.5, -0.5);
-	NE_LightSet(1, RGB15(15, 15, 15), -0.5, -0.5, -0.5);
 
 	// Set background color
 	NE_ClearColorSet(RGB15(17, 26, 29), 31, 63); // Blue sky
 
-	// Open default menu
-	initMainMenu();
+	if (isDebugMode)
+	{
+		// DEBUG show connection mode
+		printf("A : Offline mode\n");				 // 0
+		printf("B : %s\n", DEBUG_IP_1_STRING);		 // 1
+		printf("Y : %s\n", ONLINE_SERVER_IP_STRING); // 2
+		printf("X : %s\n", DEBUG_IP_2_STRING);		 // 3
+	}
 
-	// DEBUG show connection mode
-	printf("A : offline mode\n");  // 0
-	printf("B : 88.127.205.17\n"); // 1
-	printf("Y : 88.127.205.50\n"); // 2
-	printf("X : Local mode\n");	   // 3
-
+	// Unused (for servers list)
 	/*if (!Wifi_InitDefault(WFC_CONNECT))
 	{
 		printf("Failed to connect! Restart the game.");
@@ -598,21 +594,33 @@ int main(void)
 		connectToServer("fewnity.000webhostapp.com", false, my_socket, false); //Server list
 	}*/
 
+	// Check if we need to start the tutorial
 	if (!tutorialDone)
 	{
+		// Load sounds
+		loadSounds();
 		isInTutorial = true;
 		currentSelectionMap = TUTORIAL;
 		StartSinglePlayer();
 	}
+	else
+	{
+		initMainMenu();
+	}
 
+	// Loop to start parties
 	while (true)
 	{
-		StartGame();
+		checkStartGameLoop();
 	}
 
 	return 0;
 }
 
+/**
+ * @brief Set camera position to look at the map
+ *
+ */
 void setCameraMapPosition()
 {
 	Vector3 *pos = &allMaps[currentMap].cameraPosition;
@@ -623,47 +631,88 @@ void setCameraMapPosition()
 				 0, 1, 0);
 }
 
+/**
+ * @brief Start a single player party
+ *
+ */
 void StartSinglePlayer()
 {
 	Connection = OFFLINE;
 }
 
-bool alreadyLanched = false;
-
-void StartGame()
+/**
+ * @brief Check if music is finished to restart the music
+ *
+ */
+void checkMusicSteaming()
 {
+	if (isMusicPlaying)
+	{
+		// If the music is finished, restart it
+		if (musicLength == 0)
+		{
+			loadMusic();
+		}
+		else // Or update stream
+		{
+			mmStreamUpdate();
+		}
+	}
+}
+
+/**
+ * @brief Prepare party to start a new one
+ *
+ * @param multiplayerMode true for an online party
+ */
+void prepareParty(bool multiplayerMode)
+{
+	applyRules = !multiplayerMode;
+	bombDropped = false;
+	bombSet = false;
+	BombDefused = false;
+	BombPlanted = false;
+	PartyStarted = multiplayerMode;
+
+	SetCurrentCameraPlayer(0);
+	DisableAim();
+	resetFrameCount();
+}
+
+/**
+ * @brief Loop to check if the player want to start a party
+ *
+ */
+void checkStartGameLoop()
+{
+	checkMusicSteaming();
+
 	// Play without internet
 	if (Connection == OFFLINE)
 	{
-		UnLoadMap(currentMap);
-		currentMap = currentSelectionMap;
-		LoadMap(currentMap);
+		prepareParty(false);
+		stopMusic();
+
+		// Unload old map and load new one
+		if (currentMap != currentSelectionMap)
+		{
+			UnLoadMap(currentMap);
+			currentMap = currentSelectionMap;
+			LoadMap(currentMap);
+		}
 
 		currentPartyMode = allMaps[currentMap].forcePartyMode;
 
 		if (currentPartyMode == -1)
-			currentPartyMode = 1;
-		// currentPartyMode = 2;
-		// if(currentPartyMode == -1)
-		// init
-		// while (currentPartyMode == -1)
-		// {
-		// 	readKeys();
-
-		// 	ReadTouchScreen(touch, &NeedChangeScreen, &AlwaysUpdateBottomScreen, &ButtonToShow, &UpdateBottomScreenOneFrame, &SendTeam, true);
-		// 	UpdateEngineNotInGame();
-		// }
+			currentPartyMode = 1; // If there is no party mode, force it to 1 TODO : make a party mode selection
 
 		partyFinished = false;
 		initScoreMenu();
-
-		applyRules = true;
 
 		ResetTakenBotsNames();
 		roundState = TRAINING;
 
 		AddNewPlayer(0, true, false);
-		printf("START PARTY\n\n");
 
 		// Add bots
 		if (currentPartyMode != 2)
@@ -671,8 +720,6 @@ void StartGame()
 			for (int i = 1; i < MaxPlayer; i++)
 				AddNewPlayer(i, false, true);
 		}
-
-		iprintf("\n");
 
 		localPlayer->CurrentOcclusionZone = 15;
 		TerroristsScore = 0;
@@ -682,23 +729,25 @@ void StartGame()
 		{
 			AllPlayers[0].Team = TERRORISTS;
 		}
-
-		while (AllPlayers[0].Team == SPECTATOR)
+		else
 		{
-			readKeys();
+			while (AllPlayers[0].Team == SPECTATOR)
+			{
+				readKeys();
 
-			ReadTouchScreen(touch, &NeedChangeScreen, &AlwaysUpdateBottomScreen, &ButtonToShow, &UpdateBottomScreenOneFrame, &SendTeam, true);
-			UpdateEngineNotInGame();
+				ReadTouchScreen(touch, &NeedChangeScreen, &AlwaysUpdateBottomScreen, &ButtonToShow, &UpdateBottomScreenFrameCount, &SendTeam, true);
+				UpdateEngineNotInGame();
 
-			if (Connection == UNSELECTED)
-				return;
+				if (Connection == UNSELECTED)
+					return;
+			}
+
+			SetNeedChangeScreen(true);
 		}
 
-		SetNeedChangeScreen(true);
 		initControllerMenu();
 
 		// Set randomly players in a team
-		// int rnd = random() % 2;
 
 		int rnd = AllPlayers[0].Team;
 		for (int i = 0; i < PlayerCount; i++) // TODO replace
@@ -711,14 +760,6 @@ void StartGame()
 			{
 				AllPlayers[i].Team = TERRORISTS;
 			}
-			/*if (i == 0)
-			{
-				AllPlayers[i].Team = COUNTERTERRORISTS;
-			}
-			else
-			{
-				AllPlayers[i].Team = TERRORISTS;
-			}*/
 			UpdatePlayerTexture(i);
 		}
 		AllPlayers[2].Team = AllPlayers[1].Team;
@@ -728,22 +769,16 @@ void StartGame()
 
 		checkShopForBots();
 
-		bombDropped = false;
-		bombSet = false;
-		BombDefused = false;
-		BombPlanted = false;
 		PartySeconds = allPartyModes[currentPartyMode].trainingSecondsDuration;
 		PartyMinutes = allPartyModes[currentPartyMode].trainingMinutesDuration;
 		changeSecondTimer = 1;
 		changeMinuteTimer = 60;
 		bombBipTimer = 0;
-		BombWillExplose = false;
+		BombWillExplode = false;
 		currentDefuserIndex = NO_PLAYER;
-		PartyStarted = false;
 
 		textToShowTimer = 0;
 
-		// alreadyLanched = true;
 		while (Connection == OFFLINE)
 		{
 			// Play game code
@@ -753,49 +788,100 @@ void StartGame()
 	}
 	else if (Connection != UNSELECTED)
 	{
-		SetNeedChangeScreen(true);
-		partyFinished = false;
-		initScoreMenu();
-		AllButtons[0].isHidden = true;
-		textToShowTimer = 0;
-
-		printf("Connecting...\n");
-		// Try to connect to wifi
-		if (!Wifi_InitDefault(WFC_CONNECT))
-		{
-			printf("Failed to connect! Restart the game.");
-		}
-		else // Then connect to server
-		{
-			PartyStarted = true;
-			applyRules = false;
-
-			printf("Connected\n\n");
-			my_socket = socket(AF_INET, SOCK_STREAM, 0);
-			/*if (Connection == IP1)
-				connectToServer("88.127.205.17", false, my_socket, true); // Mère
-			else if (Connection == IP2)
-				connectToServer("88.127.205.50", false, my_socket, true); // Père
-			else if (Connection == LOCAL)
-				connectToServer("", true, my_socket, true); // Local mode (Android phone)*/
-		}
+		JoinParty(JOIN_RANDOM_PARTY);
 	}
 	else
 	{
 		readKeys();
+		// For debug, rapid party start
+		if (isDebugMode && currentMenu == MAIN)
+		{
+			if ((keysdown & KEY_A) == KEY_A)
+				Connection = OFFLINE;
+			else if ((keysdown & KEY_B) == KEY_B)
+				Connection = DEBUG_IP_1;
+			else if ((keysdown & KEY_Y) == KEY_Y)
+				Connection = ONLINE_SERVER_IP;
+			else if ((keysdown & KEY_X) == KEY_X)
+				Connection = DEBUG_IP_2;
+		}
 
-		/*if ((keysdown & KEY_A) == KEY_A)
-			Connection = OFFLINE;
-		else if ((keysdown & KEY_B) == KEY_B)
-			Connection = IP1;
-		else if ((keysdown & KEY_Y) == KEY_Y)
-			Connection = IP2;
-		else if ((keysdown & KEY_X) == KEY_X)
-			Connection = LOCAL;*/
-
-		ReadTouchScreen(touch, &NeedChangeScreen, false, &ButtonToShow, &UpdateBottomScreenOneFrame, &SendTeam, true);
+		ReadTouchScreen(touch, &NeedChangeScreen, false, &ButtonToShow, &UpdateBottomScreenFrameCount, &SendTeam, true);
 		UpdateEngineNotInGame();
 	}
+}
+
+/**
+ * @brief Join an online party
+ *
+ * @param option Join option see JoinType enum in network.h
+ */
+void JoinParty(int option)
+{
+	prepareParty(true);
+	stopMusic();
+
+	if (Connection == UNSELECTED)
+	{
+		Connection = ONLINE_SERVER_IP;
+		// Connection = DEBUG_IP_2;
+	}
+
+	SetNeedChangeScreen(true);
+	partyFinished = false;
+	initScoreMenu();
+	textToShowTimer = 0;
+
+	// Try to connect to wifi
+	// Call Wifi_InitDefault only once, or the wifi will not work after that
+	if (my_socket == 0 && !Wifi_InitDefault(WFC_CONNECT))
+	{
+		Connection = UNSELECTED;
+		initMainMenu();
+	}
+	else // Then connect to server
+	{
+		my_socket = socket(AF_INET, SOCK_STREAM, 0);
+		if (Connection == DEBUG_IP_1)
+		{
+			connectToServer(DEBUG_IP_1_STRING, false, my_socket, true, option);
+		}
+		else if (Connection == ONLINE_SERVER_IP)
+		{
+			connectToServer(ONLINE_SERVER_IP_STRING, false, my_socket, true, option);
+		}
+		else if (Connection == DEBUG_IP_2)
+		{
+			connectToServer(DEBUG_IP_2_STRING, false, my_socket, true, option);
+		}
+		else if (Connection == LOCAL)
+		{
+			connectToServer("", true, my_socket, true, option); // Local mode (Android phone with the android server version (unreleased))
+		}
+
+		Connection = UNSELECTED;
+	}
+}
+
+/**
+ * @brief Quit party
+ *
+ * @param option Unused
+ */
+void QuitParty(int option)
+{
+	initMainMenu();
+	OnPartyQuit();
+}
+
+/**
+ * @brief Event on quit party
+ *
+ */
+void OnPartyQuit()
+{
+	setCameraMapPosition();
+	DisableAim();
 }
 
 // Getters / setters
@@ -812,12 +898,12 @@ void SetCurrentMenu(int value)
 
 int GetUpdateBottomScreenOneFrame()
 {
-	return UpdateBottomScreenOneFrame;
+	return UpdateBottomScreenFrameCount;
 }
 
 void SetUpdateBottomScreenOneFrame(int value)
 {
-	UpdateBottomScreenOneFrame = value;
+	UpdateBottomScreenFrameCount = value;
 }
 
 int GetButtonToShow()
@@ -880,16 +966,6 @@ bool GetNeedChangeScreen()
 	return NeedChangeScreen;
 }
 
-bool GetIsDebugBottomScreen()
-{
-	return isDebugBottomScreen;
-}
-
-void SetIsDebugBottomScreen(bool value)
-{
-	isDebugBottomScreen = value;
-}
-
 bool GetIsDebugTopScreen()
 {
 	return isDebugTopScreen;
@@ -905,9 +981,14 @@ void SetNeedChangeScreen(bool value)
 	NeedChangeScreen = value;
 }
 
+/**
+ * @brief Enanble or disable two screens refresh mode
+ *
+ * @param value
+ */
 void SetTwoScreenMode(bool value)
 {
-	if (AlwaysUpdateBottomScreen && !value && UpdateBottomScreenOneFrame == 0)
+	if (AlwaysUpdateBottomScreen && !value && UpdateBottomScreenFrameCount == 0)
 	{
 		NeedChangeScreen = true;
 	}
@@ -987,6 +1068,7 @@ int GetSelectedGunShop()
 void SetCurrentCameraPlayer(int Value)
 {
 	CurrentCameraPlayer = Value;
+	UpdateGunTexture();
 }
 
 int GetCurrentCameraPlayer()
@@ -994,23 +1076,39 @@ int GetCurrentCameraPlayer()
 	return CurrentCameraPlayer;
 }
 
+/**
+ * @brief Set a gun to the local player
+ *
+ * @param Value Gun id
+ * @param inventoryIndex Inventory slot index
+ */
 void SetGunInInventory(int Value, int inventoryIndex)
 {
 	localPlayer->AllGunsInInventory[inventoryIndex] = Value;
-	if (getPlayerCurrentGunIndex(localPlayer) == UNUSED)
-		ChangeGunInInventoryForLocalPlayer(0);
+	if (getPlayerCurrentGunIndex(localPlayer) == UNUSED) // If the player has no guns in hands
+		ChangeGunInInventoryForLocalPlayer(0);			 // Switch to a gun in inventory
 	else
 	{
+		// Refresh the gun texture and reset ammo
 		ResetGunAmmo(0, inventoryIndex);
 		UpdateGunTexture();
 	}
 }
 
+/**
+ * @brief  Set a gun to a player
+ *
+ * @param playerIndex Player index
+ * @param Value Gun id
+ * @param inventoryIndex Inventory slot index
+ */
 void SetGunInInventoryForNonLocalPlayer(int playerIndex, int Value, int inventoryIndex)
 {
 	AllPlayers[playerIndex].AllGunsInInventory[inventoryIndex] = Value;
-	if (playerIndex == 0 && getPlayerCurrentGunIndex(localPlayer) == UNUSED)
-		ChangeGunInInventoryForLocalPlayer(0);
+	if (playerIndex == 0 && getPlayerCurrentGunIndex(localPlayer) == UNUSED) // If the player has no guns in hands
+		ChangeGunInInventoryForLocalPlayer(0);								 // Switch to a gun in inventory
+	else																	 // Reset ammo
+		ResetGunAmmo(playerIndex, inventoryIndex);
 }
 
 void SetSendBuyWeapon(bool Value)
@@ -1063,17 +1161,30 @@ int GetDoubleTapTimer()
 	return doubleTapTimer;
 }
 
+/**
+ * @brief Change current gun of the local player
+ *
+ * @param Left Way (1 - left, 0 - right)
+ */
 void ChangeGunInInventoryForLocalPlayer(int Left)
 {
 	DisableAim();
 	ChangeGunInInventory(0, Left);
 }
 
+/**
+ * @brief Change current gun of a player
+ *
+ * @param playerIndex Player index
+ * @param Left Way (1 - left, 0 - right)
+ */
 void ChangeGunInInventory(int playerIndex, int Left)
 {
 	Player *player = &AllPlayers[playerIndex];
 
+	// Retain the current gun in inventory if there is no other gun in the inventory
 	int oldCurrentGun = player->currentGunInInventory;
+	// Find a gun in the inventory
 	do
 	{
 		if (Left == 1)
@@ -1090,6 +1201,7 @@ void ChangeGunInInventory(int playerIndex, int Left)
 		}
 	} while (getPlayerCurrentGunIndex(player) == EMPTY);
 
+	// If no another gun was found, use the old gun index
 	if (playerIndex == 0 && !canChangeGun && player->AllGunsInInventory[oldCurrentGun] != -1)
 	{
 		player->currentGunInInventory = oldCurrentGun;
@@ -1098,30 +1210,38 @@ void ChangeGunInInventory(int playerIndex, int Left)
 
 	if (oldCurrentGun != player->currentGunInInventory)
 	{
-		StopReloading(playerIndex);
-		if (playerIndex == 0)
-		{
-			SendSelectedGun = true;
-			UpdateGunTexture();
-		}
+		setSelectedGunInInventory(playerIndex, player->currentGunInInventory);
 	}
 }
 
+/**
+ * @brief Set the Selected Gun In Inventory object
+ *
+ * @param playerIndex
+ * @param gunIndex
+ */
 void setSelectedGunInInventory(int playerIndex, int gunIndex)
 {
 	Player *player = &AllPlayers[playerIndex];
 	if (player->AllGunsInInventory[gunIndex] != EMPTY)
 	{
 		player->currentGunInInventory = gunIndex;
+		// Stop the reloading animation/action
 		StopReloading(playerIndex);
 		if (playerIndex == 0)
 		{
+			// Send to the server
 			SendSelectedGun = true;
+			// Update gun texture at screen
 			UpdateGunTexture();
 		}
 	}
 }
 
+/**
+ * @brief Reduce the rumble timer every frame
+ *
+ */
 void reduceRumbleTimer()
 {
 	// If rumble timer is on, reduce it
@@ -1134,6 +1254,10 @@ void reduceRumbleTimer()
 	}
 }
 
+/**
+ * @brief Reduce double tap timer every frame for aiming from the gamepad
+ *
+ */
 void reduceDoubleTapTimer()
 {
 	// Reduce double tab timer
@@ -1141,6 +1265,10 @@ void reduceDoubleTapTimer()
 		doubleTapTimer--;
 }
 
+/**
+ * @brief Reduce screen shake
+ *
+ */
 void reduceScreenShake()
 {
 	// Screen shake
@@ -1149,6 +1277,7 @@ void reduceScreenShake()
 	else if (xOffset < -0.005)
 		xOffset += 0.005;
 
+	// Reduce yOffset with more affinity
 	for (int i = 0; i < speedAimingReCenter; i++)
 	{
 		if (yOffset >= 0.0025)
@@ -1157,6 +1286,7 @@ void reduceScreenShake()
 			yOffset += 0.0025;
 	}
 
+	// Increase the speed reduction of the screen shake
 	if (speedAimingReCenterTimer > 0)
 	{
 		speedAimingReCenterTimer--;
@@ -1169,6 +1299,10 @@ void reduceScreenShake()
 	}
 }
 
+/**
+ * @brief Game loop
+ *
+ */
 void GameLoop()
 {
 	// Read keys
@@ -1181,27 +1315,22 @@ void GameLoop()
 
 	// Check if player can defuse or plant the bomb
 	bool CanPutBomb = false, canDefuseBomb = false;
-
 	CheckZones(bombDefuseZone, &CanPutBomb, &canDefuseBomb);
-	if (bombDropped)
-	{
-		canDefuseBomb = false;
-		CanPutBomb = false;
-	}
 
 	checkTakingBombZone(bombDefuseZone);
 
+	// Check if the player is in the shop zone
 	if (allPartyModes[currentPartyMode].limitedShopByZoneAndTimer)
-		checkShopZone();
+		checkShopZone(); // Check
 	else
-		isInShopZone = true;
+		isInShopZone = true; // Enable shop zone every where
 
 	UpdateGrenades();
 
 	reduceDoubleTapTimer();
 
 	// Check touchscreen input for menus
-	ReadTouchScreen(touch, &NeedChangeScreen, &AlwaysUpdateBottomScreen, &ButtonToShow, &UpdateBottomScreenOneFrame, &SendTeam, false);
+	ReadTouchScreen(touch, &NeedChangeScreen, &AlwaysUpdateBottomScreen, &ButtonToShow, &UpdateBottomScreenFrameCount, &SendTeam, false);
 
 	if (isInTutorial)
 		checkTutorial();
@@ -1209,8 +1338,18 @@ void GameLoop()
 	// If local player is not a spectator
 	if (localPlayer->Team != SPECTATOR)
 	{
+		// Change gun in inventory if needed
+		if (isKeyDown(LEFT_GUN))
+		{
+			ChangeGunInInventoryForLocalPlayer(1);
+		}
+		else if (isKeyDown(RIGHT_GUN))
+		{
+			ChangeGunInInventoryForLocalPlayer(0);
+		}
+
 		// Check input and rotate player
-		RotatePlayer(&NeedUpdateViewRotation, &SendPosition, &CameraAngleY, CurrentScopeLevel);
+		RotatePlayer(&NeedUpdateViewRotation, &SendPosition, &CameraAngleY);
 
 		// Update look rotation value
 		if (NeedUpdateViewRotation || CurrentCameraPlayer != 0)
@@ -1277,26 +1416,33 @@ void GameLoop()
 
 	reduceScreenShake();
 
+	// Check for each players
 	for (int i = 0; i < MaxPlayer; i++)
 	{
 		Player *player = &AllPlayers[i];
 		if (player->Id == UNUSED)
 			continue;
 
+		// Check if the playe is in a shadow
 		if (player->inShadow)
 		{
+			// Reduce player light intensity
 			if (player->lightCoef > 0.7)
 				player->lightCoef -= 0.05;
 		}
 		else
 		{
+			// Increase player light intensity
 			if (player->lightCoef < 1)
 				player->lightCoef += 0.05;
 		}
 
+		// Respawn player if needed
 		if (player->NeedRespawn)
 		{
+			// Reduce timer
 			player->RespawnTimer--;
+			// If timer is 0, respawn player
 			if (player->RespawnTimer == 0)
 			{
 				player->NeedRespawn = false;
@@ -1306,9 +1452,10 @@ void GameLoop()
 			}
 		}
 
-		if (player->invisibilityTimer > 0)
+		// Reduce invincibility timer
+		if (player->invincibilityTimer > 0)
 		{
-			player->invisibilityTimer--;
+			player->invincibilityTimer--;
 		}
 
 		// Change gun sprite position to normal position if needed
@@ -1321,9 +1468,6 @@ void GameLoop()
 			player->leftGunXRecoil--;
 		if (player->leftGunYRecoil > GunMinRecoil)
 			player->leftGunYRecoil--;
-
-		if (player->Id == UNUSED)
-			continue;
 
 		// Gun timer
 		if (getPlayerCurrentGunIndex(player) < GunCount && player->GunWaitCount < getPlayerCurrentGun(player).fireRate)
@@ -1344,6 +1488,12 @@ void GameLoop()
 		}
 	}
 
+	// Check if the player want to vote
+	if (roundState == TRAINING && Connection != OFFLINE && PlayerCount != 1 && (keysdown & KEY_START))
+	{
+		SendVoteStartNow = true;
+	}
+
 	if (localPlayer->Team != SPECTATOR && !localPlayer->IsDead && roundState != WAIT_START)
 	{
 		if (shopDisableTimer > 0 && roundState != TRAINING && allPartyModes[currentPartyMode].limitedShopByZoneAndTimer)
@@ -1356,7 +1506,7 @@ void GameLoop()
 		}
 
 		// Avoid game soft lock if the player pass through the map
-		if (localPlayer->position.y < -5)
+		if (localPlayer->position.y <= -5 && Connection == OFFLINE)
 		{
 			setPlayerPositionAtSpawns(0);
 		}
@@ -1365,7 +1515,6 @@ void GameLoop()
 		if (canShoot && !localPlayer->isReloading && ((getPlayerCurrentGunIndex(localPlayer) < GunCount && ((isKey(FIRE_BUTTON) && getPlayerCurrentGun(localPlayer).holdFireButton) || (isKeyDown(FIRE_BUTTON) && !getPlayerCurrentGun(localPlayer).holdFireButton)) && localPlayer->GunWaitCount >= getPlayerCurrentGun(localPlayer).fireRate)) && !isUsingBomb)
 		{
 			if (((localPlayer->currentGunInInventory == 1 || localPlayer->currentGunInInventory == 2) && localPlayer->AllAmmoMagazine[localPlayer->currentGunInInventory - 1].AmmoCount > 0) || getPlayerCurrentGun(localPlayer).isKnife)
-			// if (true)
 			{
 				if (!getPlayerCurrentGun(localPlayer).isKnife)
 				{
@@ -1377,36 +1526,47 @@ void GameLoop()
 				// Reset gun timer
 				localPlayer->GunWaitCount = 0;
 
+				// Reduce aiming accuracy
 				if (yOffset < 0.1)
 					yOffset += (rand() % 2 + 2) / 100.0;
 				else if (yOffset < 0.16)
 					yOffset += (rand() % 2 + 2) / 150.0;
 				else
 					yOffset += (rand() % 2 + 2) / 200.0;
-				// Set gun sprite position
 
 				speedAimingReCenter = 1;
 				speedAimingReCenterTimer = 8;
 
-				if (getPlayerCurrentGun(localPlayer).isDualGun)
-					AllPlayers[0].isRightGun = !AllPlayers[0].isRightGun;
-				else
-					AllPlayers[0].isRightGun = true;
-
+				// Set gun sprite offset position
 				setGunRecoil(localPlayer);
 
-				ShowMuzzle = 3;
-
-				setRaycastValues(localPlayer, x, y + yOffset, z);
-
-				// Raycast
-				int hittedClient = Raycast(0);
-				if (hittedClient != NO_PLAYER)
+				// Do multiple raycast if needed
+				for (int i = 0; i < getPlayerCurrentGun(localPlayer).bulletCountPerShoot; i++)
 				{
-					makeHit(0, hittedClient);
-				}
+					if (getPlayerCurrentGun(localPlayer).bulletCountPerShoot != 1)
+					{
+						float xShoot, yShoot, zShoot;
+						float xOffset = ((rand() % 100) - 50) / 3.0;
+						float yOffset2 = ((rand() % 100) - 50) / 3.0;
+						UpdateLookRotationAI(CameraAngleY + yOffset2, localPlayer->Angle + xOffset, &xShoot, &yShoot, &zShoot);
+						setRaycastValues(localPlayer, xShoot, yShoot + yOffset, zShoot);
+					}
+					else
+					{
+						setRaycastValues(localPlayer, x, y + yOffset, z);
+					}
 
-				rumble(1);
+					// Raycast
+					hittedClient[i] = Raycast(0, i, &hitDistance[i]);
+					if (hittedClient[i] != NO_PLAYER)
+					{
+						makeHit(0, hittedClient[i], hitDistance[i], i);
+
+						// If the player shoots a friend, show the warning message
+						if (allPartyModes[currentPartyMode].teamDamage && AllPlayers[hittedClient[i]].Team == localPlayer->Team)
+							showShootFriendMessage = 240;
+					}
+				}
 
 				// Send shoot on network
 				SendShoot = true;
@@ -1437,7 +1597,7 @@ void GameLoop()
 					BombPosition.r = localPlayer->Angle;
 
 					bombPlantedAt = checkBombZoneWaypoint();
-					BombPlanted = true;
+
 					if (applyRules)
 					{
 						bombSet = true;
@@ -1446,27 +1606,32 @@ void GameLoop()
 							PartyMinutes = allPartyModes[currentPartyMode].bombWaitingMinutesDuration;
 							PartySeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
 						}
-						BombSeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
-						localPlayer->haveBomb = false;
-						SetGunInInventory(-1, 8);
-						NE_ModelSetCoord(Model[7], BombPosition.x, BombPosition.y, BombPosition.z);
-						NE_ModelSetCoord(Model[10], BombPosition.x, BombPosition.y, BombPosition.z);
-						Model[7]->rz = BombPosition.r;
-						bombBipTimer = 120;
-						SetBombDefuseZone(BombPosition.x, BombPosition.z, &bombDefuseZone);
-						showPartyEventText(2);
 					}
 					else
 					{
 						SendBombPlace = true;
 					}
+
+					localPlayer->haveBomb = false;
+					SetGunInInventory(-1, 8);
+					NE_ModelSetCoord(Model[7], BombPosition.x, BombPosition.y, BombPosition.z);
+					NE_ModelSetCoord(Model[10], BombPosition.x, BombPosition.y, BombPosition.z);
+					Model[7]->rz = BombPosition.r;
+					BombSeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
+
+					bombBipTimer = 120;
+					BombPlanted = true;
+					SetBombDefuseZone(BombPosition.x, BombPosition.z, &bombDefuseZone); // Remove?
+					showPartyEventText(2);
+
 					SetRandomDefuser();
 				}
 			}
 		}
 		else if (getPlayerCurrentGunIndex(localPlayer) < GunCount + shopGrenadeCount && getPlayerCurrentGunIndex(localPlayer) >= GunCount && isKeyDown(FIRE_BUTTON) && !isUsingBomb) // Launch grenade
 		{
-			PhysicalGrenade *newGrenade = CreateGrenade(getPlayerCurrentGunIndex(localPlayer), localPlayer->Id);
+			int grenadeType = AllGrenades[getPlayerCurrentGunIndex(localPlayer) - GunCount].type;
+			PhysicalGrenade *newGrenade = CreateGrenade(grenadeType, localPlayer->Id);
 			if (newGrenade != NULL)
 			{
 				lanchGrenade(newGrenade, x, y, z, localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z);
@@ -1475,6 +1640,9 @@ void GameLoop()
 				ChangeGunInInventoryForLocalPlayer(1);
 
 				SendGrenade = true;
+				// Force player to send position
+				SendPosition = true;
+				SendPositionData = 0;
 			}
 		}
 		else if (isKey(DEFUSE_BUTTON) && canDefuseBomb && (roundState == PLAYING || roundState == END_ROUND) && !BombDefused && BombPlanted && localPlayer->Team == COUNTERTERRORISTS && !isLocalPlayerMoving()) // Defuse bomb
@@ -1506,9 +1674,7 @@ void GameLoop()
 					addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, COUNTERTERRORISTS);
 
 					showPartyEventText(3);
-					PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
-					PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
-					roundState = END_ROUND;
+					setEndRound();
 					CheckAfterRound();
 				}
 				else
@@ -1544,45 +1710,6 @@ void GameLoop()
 		localPlayer->PlayerPhysic->xspeed = 0;
 		localPlayer->PlayerPhysic->zspeed = 0;
 
-		// Cut 3.2 220
-		// Pistol heavy like Revolver 3,6 200
-		// Pistol like Dual Berattas, glock,usp-s, five-seveN, tec-9, p250, 3,3 210
-		// AK 3.7 195
-		// AWP 4.0 180 Scope : 2 time speed 8
-		// Negev 5.2 130
-		// MP9 3.3 215
-		// Deagle 3.6 200
-		// SSG 08 3.5 205 Scope : 2 3.5
-		// XM104 3.7 185
-		// Aug 3.6 200 Scope : 1 speed 5
-		// Nova 3.6 200
-		// galil AR 3.7 185
-		// M249 4.1 175
-		// MP5SD 3.4 210
-		// UMP45 3.4 210
-		// SG 553 3.8 190 Scope : 1 speed 5
-		// FAMAS 3.6 200
-		// G3SG1 3.7 Scope : 2 speed 6,5
-		// SCAR-20 3.7 Scope : 2 speed 6,5
-		// P90 3.5
-		// M4A4 3.6
-		// PP bizon 3.4
-		// Mag 7 3.6
-		// Sawed off 3.8
-		// Mac 10 3.3
-
-		// 3.2 220
-		// 3.4 220
-		// 3.6 200
-		// 3.8 190
-		// 4.0 180
-		// 4.2 160
-		// 4.4 140
-		// 4.6 120
-
-		// 5.2 140
-		// 5.2 130
-
 		// Player movements
 		bool NeedBobbing = false;
 		int CurrentSpeed = defaultWalkSpeed;
@@ -1595,22 +1722,7 @@ void GameLoop()
 		// Gun headbobing
 		if (NeedBobbing && (CanJumpRealTimer == 0 || CanJump > 0))
 		{
-			BobbingOffset += BobbingSpeed;
-
-			// Do sound every half bobbing cycle
-			if (!HasBobbed && BobbingOffset >= M_PI)
-			{
-				DoStepSound(110, 128, 0);
-				SendStepSound = true;
-				HasBobbed = true;
-			}
-			else if (BobbingOffset >= M_TWOPI)
-			{
-				BobbingOffset = 0;
-				DoStepSound(110, 128, 0);
-				SendStepSound = true;
-				HasBobbed = false;
-			}
+			ApplyGunWalkAnimation(0);
 		}
 	}
 	else
@@ -1619,73 +1731,16 @@ void GameLoop()
 		{
 			if (keysdown & KEY_LEFT)
 			{
-				bool Found = false;
-				int FirstFound = NO_PLAYER;
-				for (int i = 1; i < MaxPlayer; i++)
-				{
-					Player *player = &AllPlayers[i];
-					if (!player->IsDead && player->Id != UNUSED && (allPartyModes[currentPartyMode].canSeeOtherTeamView || player->Team == localPlayer->Team))
-					{
-						if (FirstFound == NO_PLAYER)
-							FirstFound = i;
-
-						if (i > CurrentCameraPlayer)
-						{
-							CurrentCameraPlayer = i;
-							ShowMuzzle = 0;
-							UpdateGunTexture();
-							Found = true;
-							break;
-						}
-					}
-				}
-
-				if (!Found && FirstFound != NO_PLAYER)
-				{
-					if (CurrentCameraPlayer != FirstFound)
-					{
-						CurrentCameraPlayer = FirstFound;
-						UpdateGunTexture();
-					}
-				}
+				changeCameraPlayerView(false);
 			}
 			else if (keysdown & KEY_RIGHT)
 			{
-				bool Found = false;
-				int FirstFound = NO_PLAYER;
-				for (int i = MaxPlayer - 1; i > 0; i--)
-				{
-					Player *player = &AllPlayers[i];
-					if (!player->IsDead && player->Id != UNUSED && (allPartyModes[currentPartyMode].canSeeOtherTeamView || player->Team == localPlayer->Team))
-					{
-						if (FirstFound == NO_PLAYER)
-							FirstFound = i;
-
-						if (i < CurrentCameraPlayer)
-						{
-							CurrentCameraPlayer = i;
-							ShowMuzzle = 0;
-							UpdateGunTexture();
-							Found = true;
-							break;
-						}
-					}
-				}
-
-				if (!Found && FirstFound != NO_PLAYER)
-				{
-					if (CurrentCameraPlayer != FirstFound)
-					{
-						ShowMuzzle = 0;
-						CurrentCameraPlayer = FirstFound;
-						UpdateGunTexture();
-					}
-				}
+				changeCameraPlayerView(true);
 			}
 
 			if (deathCameraAnimation < 1)
 			{
-				deathCameraAnimation += deathCameraAnimationSpeed;
+				deathCameraAnimation += DEATH_ANIMATION_SPEED;
 				deathCameraYOffset = (1 - cosf(deathCameraAnimation * M_PI / 2.0)) * 1.4;
 			}
 
@@ -1699,110 +1754,88 @@ void GameLoop()
 
 	if (applyRules)
 	{
-		for (int i = 1; i < MaxPlayer; i++)
+		if (roundState == PLAYING)
 		{
-			Player *player = &AllPlayers[i];
-			if (player->Id == UNUSED)
-				continue;
-
-			if (player->PathCount != 0)
+			for (int i = 1; i < MaxPlayer; i++)
 			{
-				player->BobbingOffset += BobbingSpeed;
+				Player *player = &AllPlayers[i];
+				if (player->Id == UNUSED)
+					continue;
 
-				// Do sound every half bobbing cycle
-				if (!player->HasBobbed && player->BobbingOffset >= M_PI)
+				if (player->isPlantingBomb)
 				{
-					int Panning, Volume;
-					GetPanning(player->Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.11);
-					DoStepSound(Volume, Panning, i);
-					player->HasBobbed = true;
-				}
-				else if (player->BobbingOffset >= M_TWOPI)
-				{
-					int Panning, Volume;
-					GetPanning(player->Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.11);
-					player->BobbingOffset = 0;
-					DoStepSound(Volume, Panning, i);
-					player->HasBobbed = false;
-				}
-			}
-
-			if (player->isPlantingBomb)
-			{
-				if (player->Team == TERRORISTS)
-				{
-					// On bomb planting make a sound
-					if (player->bombTimer == bombPlantingTime)
+					if (player->Team == TERRORISTS)
 					{
-						int Panning, Volume;
-						GetPanning(player->Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
-						Play3DSound(SFX_BOMBPLANTING, Volume, Panning);
-					}
-					player->bombTimer--;
-					// Set bomb position when planted
-					if (player->bombTimer == 0)
-					{
-						CalculatePlayerPosition(i);
-						BombPosition.x = player->position.x;
-						BombPosition.y = player->position.y - 0.845;
-						BombPosition.z = player->position.z;
-						BombPosition.r = player->Angle;
-
-						BombPlanted = true;
-						bombSet = true;
-						player->isPlantingBomb = false;
-						bombPlantedAt = player->LastWayPoint;
-						if (roundState == PLAYING)
-						{
-							PartyMinutes = allPartyModes[currentPartyMode].bombWaitingMinutesDuration;
-							PartySeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
-						}
-						BombSeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
-						player->haveBomb = false;
-						SetGunInInventoryForNonLocalPlayer(i, EMPTY, 8);
-						NE_ModelSetCoord(Model[7], BombPosition.x, BombPosition.y, BombPosition.z);
-						NE_ModelSetCoord(Model[10], BombPosition.x, BombPosition.y, BombPosition.z);
-						Model[7]->rz = BombPosition.r;
-						bombBipTimer = 120;
-						SetBombDefuseZone(BombPosition.x, BombPosition.z, &bombDefuseZone);
-						showPartyEventText(2);
-						SetRandomDefuser();
-					}
-				}
-				else
-				{
-					if (!BombDefused)
-					{
-						// On bomb defuse make a sound
-						if (player->bombTimer == bombDefuseTime)
+						// On bomb planting make a sound
+						if (player->bombTimer == bombPlantingTime)
 						{
 							int Panning, Volume;
 							GetPanning(player->Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
-							Play3DSound(SFX_BOMBPLANTING, Volume, Panning);
+							Play3DSound(SFX_BOMBPLANTING, Volume, Panning, player);
 						}
 						player->bombTimer--;
-						// Set bomb when defused
+						// Set bomb position when planted
 						if (player->bombTimer == 0)
 						{
-							BombDefused = true;
+							CalculatePlayerPosition(i);
+							BombPosition.x = player->position.x;
+							BombPosition.y = player->position.y - 0.845;
+							BombPosition.z = player->position.z;
+							BombPosition.r = player->Angle;
+
+							BombPlanted = true;
+							bombSet = true;
 							player->isPlantingBomb = false;
-							currentDefuserIndex = NO_PLAYER;
-							CounterScore++;
+							bombPlantedAt = player->LastWayPoint;
 
-							if (LoseCountTerrorists > 0)
-								LoseCountTerrorists--;
+							PartyMinutes = allPartyModes[currentPartyMode].bombWaitingMinutesDuration;
+							PartySeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
 
-							if (LoseCountCounterTerrorists < 4)
-								LoseCountCounterTerrorists++;
+							BombSeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
+							player->haveBomb = false;
+							SetGunInInventoryForNonLocalPlayer(i, EMPTY, 8);
+							NE_ModelSetCoord(Model[7], BombPosition.x, BombPosition.y, BombPosition.z);
+							NE_ModelSetCoord(Model[10], BombPosition.x, BombPosition.y, BombPosition.z);
+							Model[7]->rz = BombPosition.r;
+							bombBipTimer = 120;
+							SetBombDefuseZone(BombPosition.x, BombPosition.z, &bombDefuseZone);
+							showPartyEventText(2);
+							SetRandomDefuser();
+						}
+					}
+					else
+					{
+						if (!BombDefused)
+						{
+							// On bomb defuse make a sound
+							if (player->bombTimer == bombDefuseTime)
+							{
+								int Panning, Volume;
+								GetPanning(player->Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
+								Play3DSound(SFX_BOMBPLANTING, Volume, Panning, player);
+							}
+							player->bombTimer--;
+							// Set bomb when defused
+							if (player->bombTimer == 0)
+							{
+								BombDefused = true;
+								player->isPlantingBomb = false;
+								currentDefuserIndex = NO_PLAYER;
+								CounterScore++;
 
-							addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney, TERRORISTS);
-							addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, COUNTERTERRORISTS);
+								if (LoseCountTerrorists > 0)
+									LoseCountTerrorists--;
 
-							showPartyEventText(3);
-							PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
-							PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
-							roundState = END_ROUND;
-							CheckAfterRound();
+								if (LoseCountCounterTerrorists < 4)
+									LoseCountCounterTerrorists++;
+
+								addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney, TERRORISTS);
+								addMoneyToTeam(allPartyModes[currentPartyMode].winTheRoundBombMoney, COUNTERTERRORISTS);
+
+								showPartyEventText(3);
+								setEndRound();
+								CheckAfterRound();
+							}
 						}
 					}
 				}
@@ -1811,6 +1844,10 @@ void GameLoop()
 
 		partyTimerTick();
 	}
+	else
+	{
+		partyTimerTickOnline();
+	}
 
 	// Make bomb sounds
 	if (BombPlanted && !BombDefused)
@@ -1818,28 +1855,28 @@ void GameLoop()
 		if (bombBipTimer > 0)
 			bombBipTimer--;
 
-		if (bombBipTimer == 0 && BombSeconds > 0 && !BombWillExplose)
+		if (bombBipTimer == 0 && BombSeconds > 0 && !BombWillExplode)
 		{
 			// make bib sound
 			int Panning, Volume;
 			GetPanningByPosition(&Panning, &Volume, BombPosition, xWithoutYForAudio, zWithoutYForAudio, 0.12);
-			Play3DSound(SFX_BOMBBIP, Volume, Panning);
+			Play3DSound(SFX_BOMBBIP, Volume, Panning, NULL);
 			bombBipTimer = (BombSeconds / 40.0) * 120.0 + 5;
 			if (bombBipTimer > 50)
 			{
 				SetRandomDefuser();
 			}
 		}
-		else if (bombBipTimer == 0 && BombSeconds == 0 && !BombWillExplose)
+		else if (bombBipTimer == 0 && BombSeconds == 0 && !BombWillExplode)
 		{
 			// Make detonate sound
 			int Panning, Volume;
 			GetPanningByPosition(&Panning, &Volume, BombPosition, xWithoutYForAudio, zWithoutYForAudio, 0.15);
-			Play3DSound(SFX_DETONATE, Volume, Panning);
+			Play3DSound(SFX_DETONATE, Volume, Panning, NULL);
 			bombBipTimer = 120;
-			BombWillExplose = true;
+			BombWillExplode = true;
 		}
-		else if (bombBipTimer == 0 && BombWillExplose) // TODO Check bomb explosion online without PartySeconds == 0
+		else if (bombBipTimer == 0 && BombWillExplode) // TODO Check bomb explosion online without PartySeconds == 0
 		{
 			// Make explosion sound
 			PlayBasicSound(SFX_BOMBEXPLODE);
@@ -1850,7 +1887,8 @@ void GameLoop()
 
 			if (applyRules)
 			{
-				BombWillExplose = false;
+				BombWillExplode = false;
+				// Apply explosion damage to all players
 				for (int i = 0; i < MaxPlayer; i++)
 				{
 					Player *player = &AllPlayers[i];
@@ -1877,8 +1915,6 @@ void GameLoop()
 	// Loop using "AllPlayers" array for updating non local player (online players or bots) position smoothly
 	SetOnlinelPlayersPositions();
 
-	ScanForInput();
-
 	if (roundState != WAIT_START)
 	{
 		AiCheckForAction();
@@ -1887,6 +1923,75 @@ void GameLoop()
 	}
 }
 
+/**
+ * @brief Change player's camera view
+ *
+ * @param left Way (true - left, false - right)
+ */
+void changeCameraPlayerView(bool left)
+{
+	bool Found = false;
+	int FirstFound = NO_PLAYER;
+
+	// Find first player available for view
+	if (left)
+	{
+		for (int i = MaxPlayer - 1; i > 0; i--)
+		{
+			checkCameraPlayerView(left, &Found, &FirstFound, i);
+			if (Found)
+				break;
+		}
+	}
+	else
+	{
+		for (int i = 1; i < MaxPlayer; i++)
+		{
+			checkCameraPlayerView(left, &Found, &FirstFound, i);
+			if (Found)
+				break;
+		}
+	}
+
+	// Set new camera view
+	if (!Found && FirstFound != NO_PLAYER)
+	{
+		if (CurrentCameraPlayer != FirstFound)
+		{
+			ShowMuzzle = 0;
+			SetCurrentCameraPlayer(FirstFound);
+		}
+	}
+}
+
+/**
+ * @brief Check if player can be used for camera view
+ *
+ * @param left Way (true - left, false - right)
+ * @param Found Found player (true - found, false - not found)
+ * @param FirstFound First found player index
+ * @param i Player index
+ */
+void checkCameraPlayerView(bool left, bool *Found, int *FirstFound, int i)
+{
+	Player *player = &AllPlayers[i];
+	if (!player->IsDead && player->Id != UNUSED && (allPartyModes[currentPartyMode].canSeeOtherTeamView || player->Team == localPlayer->Team))
+	{
+		if (*FirstFound == NO_PLAYER)
+			*FirstFound = i;
+
+		if ((i < CurrentCameraPlayer && left) || (!left && i > CurrentCameraPlayer))
+		{
+			SetCurrentCameraPlayer(i);
+			ShowMuzzle = 0;
+			*Found = true;
+		}
+	}
+}
+
+/**
+ * @brief Add screen shake for explosion
+ */
 void addExplosionScreenShake()
 {
 	if (IsExplode)
@@ -1908,17 +2013,39 @@ void addExplosionScreenShake()
 	}
 }
 
+/**
+ * @brief Check if the local player is moving
+ *
+ * @return true
+ * @return false
+ */
 bool isLocalPlayerMoving()
 {
 	return localPlayer->PlayerPhysic->xspeed + localPlayer->PlayerPhysic->yspeed + localPlayer->PlayerPhysic->zspeed != 0;
 }
 
+/**
+ * @brief Update game engine for drawing (when not in party)
+ *
+ */
 void UpdateEngineNotInGame()
 {
-	if (UpdateBottomScreenOneFrame > 8)
-		UpdateBottomScreenOneFrame--;
+	ScanForInput();
 
-	NE_ProcessDual(Draw3DSceneNotInGame, Draw3DScene2);
+	increaseFrameCount();
+
+	if (UpdateBottomScreenFrameCount > 8)
+		UpdateBottomScreenFrameCount--;
+
+	// Draw UI and 3D
+	if (!isDebugBottomScreen)
+	{
+		NE_ProcessDual(Draw3DSceneNotInGame, drawBottomScreenUI);
+	}
+	else
+	{
+		NE_Process(Draw3DSceneNotInGame); // For debug
+	}
 
 	if (uiTimer > 0)
 	{
@@ -1935,23 +2062,56 @@ void UpdateEngineNotInGame()
 	NE_WaitForVBL(NE_CAN_SKIP_VBL);
 }
 
+/**
+ * @brief Increase the frame count (used for the server to know the speed of actions)
+ *
+ */
+void increaseFrameCount()
+{
+	frameCount++;
+	if (frameCount == 2000000000)
+	{
+		frameCount = 0;
+	}
+}
+
+/**
+ * @brief Reset frame count
+ *
+ */
+void resetFrameCount()
+{
+	frameCount = 0;
+}
+
+/**
+ * @brief Update game engine for drawing
+ *
+ */
 void UpdateEngine()
 {
+	ScanForInput();
+
+	increaseFrameCount();
+
 	if (!isDebugBottomScreen)
 	{
 		// Draw 3D objects and sprites
-		if (!AlwaysUpdateBottomScreen && UpdateBottomScreenOneFrame == 0)
+		if (!AlwaysUpdateBottomScreen && UpdateBottomScreenFrameCount == 0)
 			NE_Process(Draw3DScene);
 		else
 		{
-			if (UpdateBottomScreenOneFrame > 0)
-				UpdateBottomScreenOneFrame--;
+			if (UpdateBottomScreenFrameCount > 0)
+				UpdateBottomScreenFrameCount--;
 
-			NE_ProcessDual(Draw3DScene, Draw3DScene2);
+			NE_ProcessDual(Draw3DScene, drawBottomScreenUI);
 		}
 	}
 	else
 	{
+		if (UpdateBottomScreenFrameCount > 0)
+			UpdateBottomScreenFrameCount--;
+
 		NE_Process(Draw3DScene); // For debug
 	}
 
@@ -1968,85 +2128,131 @@ void UpdateEngine()
 	}
 
 	// Update physics and animations
-	if (localPlayer->Id != UNUSED)
+	if (localPlayer->Id != UNUSED && localPlayer->Team != SPECTATOR)
 		NE_PhysicsUpdate(localPlayer->PlayerPhysic);
-	// NE_WaitForVBL(NE_UPDATE_ANIMATIONS | NE_CAN_SKIP_VBL);
-	// NE_WaitForVBL(NE_UPDATE_ANIMATIONS);
-	// NE_WaitForVBL(NE_UPDATE_ANIMATIONS | NE_CAN_SKIP_VBL);
+
 	NE_WaitForVBL(NE_CAN_SKIP_VBL);
 }
 
+/**
+ * @brief Buy select gun from shop for local player
+ *
+ */
 void buyGun()
 {
 	int grenadeIndex = GetSelectedGunShop() - GunCount;
 	int equipmentIndex = GetSelectedGunShop() - GunCount - shopGrenadeCount;
 	if (ShopCategory < EQUIPMENT && AllGuns[GetSelectedGunShop()].Price <= localPlayer->Money)
 	{
-		if (!allPartyModes[currentPartyMode].infiniteMoney)
+		// Check if the player already have this gun
+		if (localPlayer->AllGunsInInventory[1] == GetSelectedGunShop() || localPlayer->AllGunsInInventory[2] == GetSelectedGunShop())
 		{
-			reducePlayerMoney(0, AllGuns[GetSelectedGunShop()].Price);
-		}
-
-		if (ShopCategory == PISTOLS)
-		{
-			SetGunInInventory(GetSelectedGunShop(), 1);
 		}
 		else
 		{
-			SetGunInInventory(GetSelectedGunShop(), 2);
+			if (!allPartyModes[currentPartyMode].infiniteMoney)
+			{
+				reducePlayerMoney(0, AllGuns[GetSelectedGunShop()].Price);
+			}
+
+			// Set inventory slot
+			if (ShopCategory == PISTOLS)
+			{
+				SetGunInInventory(GetSelectedGunShop(), 1);
+				setSelectedGunInInventory(0, 1);
+			}
+			else
+			{
+				SetGunInInventory(GetSelectedGunShop(), 2);
+				setSelectedGunInInventory(0, 2);
+			}
 		}
 	}
 	else if (ShopCategory == GRENADES && AllGrenades[grenadeIndex].Price <= localPlayer->Money)
 	{
+		// Search for the first empty slot for grenade
 		for (int grenadeCheckIndex = InventoryGrenadeStartPosition; grenadeCheckIndex < InventoryEquipementStartPosition; grenadeCheckIndex++)
 		{
 			if (localPlayer->AllGunsInInventory[grenadeCheckIndex] == -1 && localPlayer->grenadeBought[grenadeIndex] < AllGrenades[grenadeIndex].maxQuantity[currentPartyMode])
 			{
 				localPlayer->AllGunsInInventory[grenadeCheckIndex] = GetSelectedGunShop();
-				localPlayer->grenadeBought[grenadeIndex]++;
+				if (currentPartyMode != 2)
+					localPlayer->grenadeBought[grenadeIndex]++;
 
 				if (!allPartyModes[currentPartyMode].infiniteMoney)
 				{
 					reducePlayerMoney(0, AllGrenades[grenadeIndex].Price);
 				}
+				setSelectedGunInInventory(0, grenadeCheckIndex);
 				break;
 			}
 		}
 	}
-	else if (ShopCategory == EQUIPMENT && AllEquipements[equipmentIndex].Price <= localPlayer->Money)
+	else if (ShopCategory == EQUIPMENT && allEquipments[equipmentIndex].Price <= localPlayer->Money)
 	{
-		if (!allPartyModes[currentPartyMode].infiniteMoney)
-		{
-			reducePlayerMoney(0, AllEquipements[equipmentIndex].Price);
-		}
+		bool canBuy = true;
 
-		switch (AllEquipements[equipmentIndex].type)
+		switch (allEquipments[equipmentIndex].type)
 		{
 		case DEFUSER:
-			localPlayer->haveDefuseKit = true;
+			if (localPlayer->haveDefuseKit)
+			{
+				canBuy = false;
+			}
+			else
+			{
+				localPlayer->haveDefuseKit = true;
+			}
 			break;
+
 		case KEVLAR_VEST:
-			localPlayer->armor = 100;
+			if (localPlayer->armor == 100)
+			{
+				canBuy = false;
+			}
+			else
+			{
+				localPlayer->armor = 100;
+			}
 			break;
+
 		case KEVLAR_VEST_AND_HELMET:
-			localPlayer->armor = 100;
-			localPlayer->haveHeadset = true;
+			if (localPlayer->haveHeadset)
+			{
+				canBuy = false;
+			}
+			else
+			{
+				localPlayer->armor = 100;
+				localPlayer->haveHeadset = true;
+			}
 			break;
+
 		case C4:
+			canBuy = false;
 			break;
+		}
+
+		if (!allPartyModes[currentPartyMode].infiniteMoney && canBuy)
+		{
+			reducePlayerMoney(0, allEquipments[equipmentIndex].Price);
 		}
 	}
 }
 
+/**
+ * @brief Set on new round the most powerful gun in the hand or the bomb
+ *
+ */
 void setNewRoundHandWeapon()
 {
-	for (int index = 0; index < MaxPlayer; index++)
+	for (int playerIndex = 0; playerIndex < MaxPlayer; playerIndex++)
 	{
-		Player *player = &AllPlayers[index];
+		Player *player = &AllPlayers[playerIndex];
 		if (player->Id == UNUSED)
 			continue;
 
-		if (index == 0 && player->haveBomb)
+		if (playerIndex == 0 && player->haveBomb)
 		{
 			player->currentGunInInventory = 8;
 		}
@@ -2059,24 +2265,46 @@ void setNewRoundHandWeapon()
 			}
 		}
 
-		if (index == 0)
+		if (playerIndex == 0)
 			UpdateGunTexture();
 	}
 }
 
-// Change value "scale" ex map(128, 0,255,0,1024) = 512.0
+/**
+ * @brief Change value "scale" ex map(128, 0,255,0,1024) = 512.0
+ *
+ * @param x The number to map
+ * @param in_min The lower bound of the value’s current range
+ * @param in_max The upper bound of the value’s current range
+ * @param out_min The lower bound of the value’s target range
+ * @param out_max The upper bound of the value’s target range
+ * @return double The mapped value
+ */
 double map(double x, double in_min, double in_max, double out_min, double out_max)
 {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-// Change value "scale" ex map(128, 0,255,0,1024) = 512
+/**
+ * @brief Change value "scale" ex map(128, 0,255,0,1024) = 512
+ *
+ * @param x The number to map
+ * @param in_min The lower bound of the value’s current range
+ * @param in_max The upper bound of the value’s current range
+ * @param out_min The lower bound of the value’s target range
+ * @param out_max The upper bound of the value’s target range
+ * @return int The mapped value
+ */
 int mapInt(int x, int in_min, int in_max, int out_min, int out_max)
 {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-// Get player position and set it to float
+/**
+ * @brief Get player position and set it to float
+ *
+ * @param PlayerIndex Player index
+ */
 void CalculatePlayerPosition(int PlayerIndex)
 {
 	Player *player = &AllPlayers[PlayerIndex];
@@ -2085,6 +2313,11 @@ void CalculatePlayerPosition(int PlayerIndex)
 	player->position.z = player->PlayerModel->z / 4096.0;
 }
 
+/**
+ * @brief Eanble rumble for an amount of frame
+ *
+ * @param timer Frame count
+ */
 void rumble(int timer)
 {
 	if (useRumble)
@@ -2094,6 +2327,11 @@ void rumble(int timer)
 	}
 }
 
+/**
+ * @brief Kill a player
+ *
+ * @param player Player pointer
+ */
 void killPlayer(Player *player)
 {
 	player->Health = 0;
@@ -2105,41 +2343,57 @@ void killPlayer(Player *player)
 	}
 }
 
+/**
+ * @brief Drop the bomb
+ *
+ * @param HittedClient Hitted client pointer
+ * @param hittedPlayerIndex Hitted client index
+ */
+void dropBomb(Player *HittedClient, int hittedPlayerIndex)
+{
+	bombDropped = true;
+	HittedClient->haveBomb = false;
+	SetGunInInventoryForNonLocalPlayer(hittedPlayerIndex, EMPTY, 8);
+	//  Set the position of the dropped bomb (so the player position)
+	droppedBombPositionAndRotation.x = HittedClient->position.x;
+	droppedBombPositionAndRotation.y = HittedClient->position.y - 0.845;
+	droppedBombPositionAndRotation.z = HittedClient->position.z;
+	droppedBombPositionAndRotation.r = HittedClient->Angle;
+	NE_ModelSetCoord(Model[7], droppedBombPositionAndRotation.x, droppedBombPositionAndRotation.y, droppedBombPositionAndRotation.z);
+	Model[7]->rz = droppedBombPositionAndRotation.r;
+	SetBombTakingZone(droppedBombPositionAndRotation.x, droppedBombPositionAndRotation.z, &bombDefuseZone); // Set zone for taking the bomb
+}
+
+/**
+ * @brief Check player health after damage
+ *
+ * @param shooterPlayerIndex Shooter player index
+ * @param hittedPlayerIndex Hitted player index
+ * @param CheckScore Need to check score
+ */
 void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckScore)
 {
 	Player *HittedClient = &AllPlayers[hittedPlayerIndex];
-	Player *killerClient = &AllPlayers[shooterPlayerIndex];
+	Player *killerClient = NULL;
+	if (shooterPlayerIndex != NO_PLAYER)
+		killerClient = &AllPlayers[shooterPlayerIndex];
 
 	if (HittedClient->Health <= 0 && !HittedClient->IsDead)
 	{
-		killPlayer(HittedClient);
-		// HittedClient->Health = 0;
 		//  Set client has dead
-		// HittedClient->IsDead = true;
+		killPlayer(HittedClient);
 
 		// Reset raycast values on death
 		if (hittedPlayerIndex == 0)
 		{
 			DisableAim();
-			Hit = NO_PLAYER;
 		}
 
 		if (HittedClient->haveBomb)
 		{
-			bombDropped = true;
-			HittedClient->haveBomb = false;
-			SetGunInInventoryForNonLocalPlayer(hittedPlayerIndex, EMPTY, 8);
-			//  Set the position of the dropped bomb (so the player position)
-			droppedBombPositionAndRotation.x = HittedClient->position.x;
-			droppedBombPositionAndRotation.y = HittedClient->position.y - 0.845;
-			droppedBombPositionAndRotation.z = HittedClient->position.z;
-			droppedBombPositionAndRotation.r = HittedClient->Angle;
-			NE_ModelSetCoord(Model[7], droppedBombPositionAndRotation.x, droppedBombPositionAndRotation.y, droppedBombPositionAndRotation.z);
-			Model[7]->rz = droppedBombPositionAndRotation.r;
-			SetBombTakingZone(droppedBombPositionAndRotation.x, droppedBombPositionAndRotation.z, &bombDefuseZone); // Set zone for taking the bomb
+			dropBomb(HittedClient, hittedPlayerIndex);
 		}
 
-		// HittedClient->ScanFinished = true;
 		HittedClient->target = NO_PLAYER;
 		HittedClient->bombTimer = 0;
 		HittedClient->isPlantingBomb = false;
@@ -2152,7 +2406,7 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 		HittedClient->DeathCount++;
 
 		// If the killer kills the right target, set current target as "null"
-		if (killerClient->target == HittedClient->Id)
+		if (killerClient != NULL && killerClient->target == HittedClient->Id)
 		{
 			killerClient->target = NO_PLAYER;
 			killerClient->lastSeenTarget = NO_PLAYER;
@@ -2175,9 +2429,6 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 			{
 				killerClient->KillCount--;
 				reducePlayerMoney(shooterPlayerIndex, allPartyModes[currentPartyMode].killPenalties);
-				// killerClient->Money -= allPartyModes[currentPartyMode].killPenalties;
-				// if (killerClient->Money < 0)
-				// killerClient->Money = 0;
 			}
 			else
 			{
@@ -2189,8 +2440,13 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 		}
 
 		// Update bottom screen if scoreboard is showed
-		if (currentMenu == 2)
-			UpdateBottomScreenOneFrame += 8;
+		if (currentMenu == SCORE_BOARD)
+			UpdateBottomScreenFrameCount += 8;
+
+		if (currentPartyMode == 2)
+		{
+			setNeedRespawn(HittedClient);
+		}
 
 		if (!CheckScore)
 			return;
@@ -2219,9 +2475,7 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 				addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney + allPartyModes[currentPartyMode].loseIncrease * LoseCountCounterTerrorists, COUNTERTERRORISTS);
 
 				// Set round to finished round state
-				PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
-				PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
-				roundState = END_ROUND;
+				setEndRound();
 				showPartyEventText(0);
 				CheckAfterRound();
 			}
@@ -2242,40 +2496,59 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 				addMoneyToTeam(allPartyModes[currentPartyMode].loseTheRoundMoney + allPartyModes[currentPartyMode].loseIncrease * LoseCountTerrorists, TERRORISTS);
 
 				// Set round to finished round state
-				PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
-				PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
-				roundState = END_ROUND;
+				setEndRound();
 				showPartyEventText(1);
 				CheckAfterRound();
 			}
 		}
 		else if (roundState == TRAINING) // If the party is in training mode
 		{
-			// Respawn the dead player
-			HittedClient->RespawnTimer = allPartyModes[currentPartyMode].trainingRespawnSecondsDuration * 60;
-			HittedClient->NeedRespawn = true;
+			setNeedRespawn(HittedClient);
 		}
 	}
 }
 
-void makeHit(int hitBy, int playerHit)
+/**
+ * @brief Set need respawn for a player
+ *
+ * @param player Player pointer
+ */
+void setNeedRespawn(Player *player)
 {
-	int hitType = 0;
-	int Damage = AllGuns[AllPlayers[hitBy].startGunIdRaycast].Damage;
+	player->RespawnTimer = allPartyModes[currentPartyMode].trainingRespawnSecondsDuration * 60;
+	player->NeedRespawn = true;
+}
 
+/**
+ * @brief Hit a player (Apply damage)
+ *
+ * @param hitBy Shooter player index
+ * @param playerHit Hitted player index
+ * @param distance Hit distance
+ */
+void makeHit(int hitBy, int playerHit, float distance, int shootIndex)
+{
 	Player *hittedPlayer = &AllPlayers[playerHit];
 	Player *shooterPlayer = &AllPlayers[hitBy];
 
+	int hitType = 0;
+	int Damage = (int)(AllGuns[shooterPlayer->startGunIdRaycast].Damage * pow(AllGuns[shooterPlayer->startGunIdRaycast].DamageFalloff, distance / 500.0));
 	// Apply more or less damage with the location of the bullet
-	if (shooterPlayer->IsHeadShot)
+	if (shooterPlayer->IsHeadShot[shootIndex])
 	{
 		hitType = 1;
 		Damage *= 4;
 	}
-	else if (shooterPlayer->IsLegShot)
+	else if (shooterPlayer->IsLegShot[shootIndex])
 	{
 		hitType = 2;
 		Damage /= 2.0;
+	}
+
+	// Reduce damage when clients are in the same team
+	if (hittedPlayer->Team == shooterPlayer->Team)
+	{
+		Damage = (int)(Damage / 3.0);
 	}
 
 	if (shooterPlayer->startGunIdRaycast < GunCount && AllGuns[shooterPlayer->startGunIdRaycast].isKnife)
@@ -2287,7 +2560,7 @@ void makeHit(int hitBy, int playerHit)
 	{
 		// Reduce damage of the bullet
 		int oldDamage = Damage;
-		Damage *= AllGuns[shooterPlayer->startGunIdRaycast].penetration / 100.0;
+		Damage = (int)(Damage * AllGuns[shooterPlayer->startGunIdRaycast].penetration / 100.0);
 		// Remove headset
 		if (hitType == 1)
 		{
@@ -2337,16 +2610,16 @@ void makeHit(int hitBy, int playerHit)
 
 	// Play sounds
 	if (hitType == 0)
-		Play3DSound(SFX_FLESH_IMPACT, Volume, Panning); // TODO Check kevlar sound
+		Play3DSound(SFX_FLESH_IMPACT, Volume, Panning, hittedPlayer); // TODO Check kevlar sound
 	else if (hitType == 1)
 	{
 		if (!makeHeadSetSound)
-			Play3DSound(SFX_HEADSHOT1, Volume, Panning);
+			Play3DSound(SFX_HEADSHOT1, Volume, Panning, hittedPlayer);
 		else
-			Play3DSound(SFX_HIT_HELMET, Volume, Panning);
+			Play3DSound(SFX_HIT_HELMET, Volume, Panning, hittedPlayer);
 	}
 	else if (hitType == 2)
-		Play3DSound(SFX_FLESH_IMPACT, Volume, Panning);
+		Play3DSound(SFX_FLESH_IMPACT, Volume, Panning, hittedPlayer);
 	else
-		Play3DSound(SFX_KNIFE_HIT_PLAYER, Volume, Panning);
+		Play3DSound(SFX_KNIFE_HIT_PLAYER, Volume, Panning, hittedPlayer);
 }

@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #ifndef GUN_H_ /* Include guard */
 #define GUN_H_
 
@@ -8,7 +14,7 @@ typedef struct //
 {
     int fireRate;
     void *texture;
-    int DamageFalloff;
+    float DamageFalloff;
     int Damage;
     float penetration;
     bool holdFireButton;
@@ -28,6 +34,7 @@ typedef struct //
     int yMuzzleFlashOffset;
     bool isBigGun;
     bool isDualGun;
+    int bulletCountPerShoot;
 } Gun;
 
 extern int cheapestGunsCostCounter[4];

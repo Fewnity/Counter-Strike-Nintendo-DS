@@ -1,7 +1,17 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #ifndef UI_H_ /* Include guard */
 #define UI_H_
 #include <NEMain.h>
 #include "main.h"
+
+#define DISCORD_LINK "Discord : dsc.gg/fewnity"
+#define DEV_NAME "Fewnity"
+#define GAME_NAME "Counter Strike"
 
 #define maxCharAtScreen 32
 #define maxCharAtScreenDivided2 16 // 32/2
@@ -12,14 +22,18 @@
 #define ScreenCenterWidth 128 // 256/2
 #define ScreenCenterHeight 96 // 192/2
 
-#define CheckBoxCount 2
+#define ButtonCount 8
+#define CheckBoxCount 3
 #define SliderCount 1
 
 #define ColorTerroristsTeam RGB15(26, 26, 13)
 #define ColorCounterTeam RGB15(14, 20, 29)
 #define ColorCounterTeamLiter RGB15(19, 25, 31)
 #define maxCharAtLine 32
-#define CONTROLS_PAGE_COUNT 2
+#define CONTROLS_PAGE_COUNT 3
+
+#define ERROR_TEXT_LENGTH 100
+#define PLAYER_MAX_LENGTH 14
 
 extern int selectedServer;
 extern enum shopCategory ShopCategory;
@@ -32,12 +46,19 @@ extern int checkBoxToShow;
 extern int sliderToShow;
 extern int trace;
 extern int currentSelectionMap;
+extern float debugValue1;
+extern float debugValue2;
+extern float debugValue3;
+extern char errorText[ERROR_TEXT_LENGTH];
+extern bool showFinalScore;
+extern bool showPing;
+extern int showShootFriendMessage;
 
 enum UiMenu
 {
     GAME = 0,
     GAME_FINISHED = 1,
-    SCORE = 2,
+    SCORE_BOARD = 2,
     SHOPCATEGORIES = 3,
     SETTINGS = 4,
     QUIT = 5,
@@ -51,7 +72,11 @@ enum UiMenu
     CONTROLSCHANGE = 12,
     MAP_SELECTION_IMAGE = 13,
     MAP_SELECTION_LIST = 14,
-    PARTY_MODE_SELECTION_LIST = 15
+    PARTY_MODE_SELECTION_LIST = 15,
+    FINAL_SCORE = 16,
+    JOIN_CREATE_PARTY = 17,
+    ENTER_CODE = 18,
+    ONLINE_ERROR = 19,
 };
 
 enum shopCategory
@@ -62,6 +87,14 @@ enum shopCategory
     RIFLES = 3,
     EQUIPMENT = 4,
     GRENADES = 5
+};
+
+enum TextEnum
+{
+    TERRORISTS_WIN = 0,
+    COUNTER_TERRORISTS_WIN = 1,
+    BOMB_PLANTED = 2,
+    BOMB_DEFUSED = 3,
 };
 
 typedef struct //
@@ -101,9 +134,6 @@ typedef struct //
     void (*OnClick)(int);
 } Button;
 
-void SetButtonsRefForUI();
-void SetSpritesForUI();
-void SetCheckBoxsRefForUI();
 enum shopCategory GetShopCategory();
 int GetWeaponCountVar();
 void SetCheckBoxToShow(int value);
@@ -114,13 +144,16 @@ int printLongText(int minX, int maxX, int y, char *text);
 int printLongConstChar(int minX, int maxX, int y, const char *text);
 void SetTeam(int i);
 void OpenShopCategory(int categoryId);
-void ChangeWeapon(int Left);
+void ChangeShopElement(int Left);
 void BuyWeapon(int unused);
 void Jump();
 void changeServer(int up);
 void showPartyEventText(int event);
 void showKillText(int killerIndex, int deadPlayerIndex);
+void showConnectedText(int connectedPlayerIndex);
+void showDisconnectedText(int disconnectedPlayerIndex);
 int centerPositionOfAText(int xMin, int xMax, int textLength);
+void stopScanForInput();
 
 void changeMapState();
 void closeMap();
@@ -145,8 +178,12 @@ void initControlsSettingsMenu();
 void initControlsChangeMenu();
 void initSelectionMapImageMenu();
 void initSelectionMapListMenu();
+void initFinalScoreMenu();
+void initJoinCreatePartyMenu();
+void initEnterCodeMenu();
+void initOnlineErrorMenu();
 
-void drawNameChanging();
+void drawKeyboardInput();
 
 void drawTopScreenUI();
 void drawBottomScreenUI();
@@ -169,9 +206,15 @@ void drawControlsSettingsMenu();
 void drawControlsChangeMenu();
 void drawSelectionMapImageMenu();
 void drawSelectionMapListMenu();
+void drawJoinCreatePartyMenu();
+void drawEnterCodeMenu();
+void drawOnlineErrorMenu();
 
 void unloadShopMenu();
 void unloadControllerMenu();
 void unloadSelectionMapImageMenu();
+void unloadChangeNameMenu();
+void unloadEnterCodeMenu();
+void unloadControlsChangeMenu();
 
 #endif // UI_H_

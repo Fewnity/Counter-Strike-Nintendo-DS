@@ -1,10 +1,16 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #ifndef EQUIPMENT_H_ /* Include guard */
 #define EQUIPMENT_H_
 
 #include <NEMain.h>
 #include "main.h"
 
-#define equipementCount 4 // 4 (bomb, headset, kevlar, defuser)
+#define equipementCount 4 // 4 (bomb, defuser, kevlar, kevlar & headset)
 
 enum EQUIPMENT_ENUM
 {
@@ -16,16 +22,16 @@ enum EQUIPMENT_ENUM
 
 typedef struct //
 {
-    void *texture;
-    int Price;
-    char name[20];
-    char description[50];
-    enum teamEnum team; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    bool isHided;
-    enum EQUIPMENT_ENUM type;
-} Equipement;
+    void *texture;            // Equipment texture for shop
+    int Price;                // Equipment price
+    char name[20];            // Equipment name
+    char description[50];     // Equipment description
+    enum teamEnum team;       // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    bool isHided;             // Is hided from shop?
+    enum EQUIPMENT_ENUM type; // Equipment type
+} Equipment;
 
-extern Equipement AllEquipements[equipementCount];
+extern Equipment allEquipments[equipementCount];
 
 void LoadEquipments();
 

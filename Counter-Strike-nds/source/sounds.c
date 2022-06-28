@@ -1,12 +1,82 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "sounds.h"
 #include <maxmod9.h>
-#include "soundbank.h"
-#include "soundbank_bin.h"
-#include <math.h>
+#include <fat.h>
+#include <filesystem.h>
 
-int Step = 0;
+// Music remaining time
+int musicLength = 0;
+// Is music playing
+bool isMusicPlaying = false;
+// Are sounds loaded
+bool soundsLoaded = false;
+// Are sound bank file loaded
+bool soundBankLoaded = false;
+// Is music file is accessible
+bool musicFilePresent = false;
 
+// Music file
+FILE *musicFile = NULL;
+
+/**
+ * @brief Stream callback for maxmod
+ *
+ * @param length remaining streaming time
+ * @param dest
+ * @param format
+ * @return mm_word
+ */
+mm_word stream(mm_word length, mm_addr dest, mm_stream_formats format)
+{
+    if (musicFile)
+    {
+        size_t samplesize;
+        switch (format)
+        {
+        case MM_STREAM_8BIT_MONO:
+            samplesize = 1;
+            break;
+        case MM_STREAM_8BIT_STEREO:
+            samplesize = 2;
+            break;
+        case MM_STREAM_16BIT_MONO:
+            samplesize = 2;
+            break;
+        case MM_STREAM_16BIT_STEREO:
+            samplesize = 4;
+            break;
+        default:
+            samplesize = 2;
+            break;
+        }
+
+        int res = fread(dest, samplesize, length, musicFile);
+
+        if (res)
+        {
+            length = res;
+        }
+        else
+        {
+            mmStreamClose();
+            fclose(musicFile);
+            length = 0;
+        }
+    }
+    musicLength = length;
+    return length;
+}
+
+/**
+ * @brief Init sound system and load sound bank and music
+ *
+ */
 void initSoundSystem()
 {
     // Init sound system
@@ -27,105 +97,160 @@ void initSoundSystem()
 
     // initialize maxmod
     mmInit(&sys);
-    // mmSelectMode(MM_MODE_C);
 
-    // Load sound back
-    mmSoundBankInFiles("soundbank.bin");
-
-    // Load sound effects
-    mmLoadEffect(SFX_TERRORISTSWIN);
-    mmLoadEffect(SFX_COUNTERTERRORISTWIN);
-    mmLoadEffect(SFX_DETONATE);
-    mmLoadEffect(SFX_BOMBPLANTING);
-    mmLoadEffect(SFX_BOMBEXPLODE);
-    mmLoadEffect(SFX_BOMBHASBEENDEFUSED);
-    mmLoadEffect(SFX_BOMBHASBEENPLANTED);
-    mmLoadEffect(SFX_BOMBBIP);
-
-    mmLoadEffect(SFX_KEYBOARD_SOUND);
-    /*mmLoadEffect(SFX_AWP);
-    mmLoadEffect(SFX_GLOCK);
-    mmLoadEffect(SFX_M4A1);
-    mmLoadEffect(SFX_MP7);
-    mmLoadEffect(SFX_MP9);
-    mmLoadEffect(SFX_NOVA);
-    mmLoadEffect(SFX_USP);
-    mmLoadEffect(SFX_XM1014);*/
-    mmLoadEffect(SFX_KNIFE_HIT_PLAYER);
-    mmLoadEffect(SFX_KNIFE_HIT_WALL);
-    mmLoadEffect(SFX_RIC);
-    mmLoadEffect(SFX_HEADSHOT1);
-    mmLoadEffect(SFX_HIT_HELMET);
-    mmLoadEffect(SFX_DEATH);
-    mmLoadEffect(SFX_FLESH_IMPACT);
-
-    mmLoadEffect(SFX_CONCRETE_CT_1);
-    mmLoadEffect(SFX_CONCRETE_CT_2);
-    mmLoadEffect(SFX_CONCRETE_CT_3);
-    mmLoadEffect(SFX_CONCRETE_CT_4);
-
-    mmLoadEffect(SFX_LAND);
-
-    mmLoadEffect(SFX_HEGRENADE_EXPLOSE);
-    mmLoadEffect(SFX_HEGRENADE_BOUNCE);
-
-    mmLoadEffect(SFX_FLASHBANG_BOUNCE);
-    mmLoadEffect(SFX_SMOKE_EMIT);
-    mmLoadEffect(SFX_MOLOTOV_DETONATE);
-    mmLoadEffect(SFX_FLASHBANG_EXPLODE);
-    mmLoadEffect(SFX_FIRE_LOOP);
-
-    mmLoadEffect(SFX_AK47);
-    mmLoadEffect(SFX_AUG);
-    mmLoadEffect(SFX_DEAGLE);
-    mmLoadEffect(SFX_ELITE);
-    mmLoadEffect(SFX_FAMAS);
-    mmLoadEffect(SFX_FIVESEVEN);
-    mmLoadEffect(SFX_G3SG1);
-    mmLoadEffect(SFX_GALIL);
-    mmLoadEffect(SFX_GLOCK18);
-    mmLoadEffect(SFX_M249);
-    mmLoadEffect(SFX_M3);
-    mmLoadEffect(SFX_M4A1);
-    mmLoadEffect(SFX_MAC10);
-    mmLoadEffect(SFX_MP5);
-    mmLoadEffect(SFX_P228);
-    mmLoadEffect(SFX_P90);
-    mmLoadEffect(SFX_SCOUT);
-    mmLoadEffect(SFX_SG550);
-    mmLoadEffect(SFX_SG552);
-    mmLoadEffect(SFX_TMP);
-    mmLoadEffect(SFX_UMP45);
-    mmLoadEffect(SFX_USP);
-    mmLoadEffect(SFX_XM1014);
-    mmLoadEffect(SFX_XM1014);
-    mmLoadEffect(SFX_SCOPE);
-    //  mmLoadEffect(SFX_ZOOM);
-    /*file = fopen("awp_01.raw", "rb");
-
-    mm_stream mystream;
-    mystream.buffer_length = 1024;
-    mystream.callback = stream;
-    mystream.timer = MM_TIMER0;
-    mystream.manual = true;
-    mystream.sampling_rate = 22050;
-    mystream.format = MM_STREAM_16BIT_STEREO;
-    mmStreamOpen(&mystream);
-
-    while (1)
+    //
+    if (access("fat:/counter_strike_music.raw", F_OK) == 0 || access("counter_strike_music.raw", F_OK) == 0 || access("sd:/counter_strike_music.raw", F_OK) == 0)
     {
+        musicFilePresent = true;
+    }
+    else
+    {
+        musicFilePresent = false;
+    }
 
-        mmStreamUpdate();
-
-        mm_word position = mmStreamGetPosition() / 22050;
-        iprintf("\x1b[12;13H%02d:%02d\n", position / 60, position % 60);
-
-        swiWaitForVBlank();
-    }*/
+    if (access("fat:/soundbank.bin", F_OK) == 0 || access("soundbank.bin", F_OK) == 0 || access("sd:/soundbank.bin", F_OK) == 0)
+    {
+        // Load sound back
+        mmSoundBankInFiles("soundbank.bin");
+        soundBankLoaded = true;
+    }
+    else
+    {
+        // file doesn't exist
+        soundBankLoaded = false;
+    }
 }
 
+/**
+ * @brief Start the music
+ *
+ */
+void launchMusic()
+{
+    if (!isMusicPlaying)
+    {
+        isMusicPlaying = true;
+        unloadSounds();
+        loadMusic();
+    }
+}
+
+/**
+ * @brief Close music stream
+ *
+ */
+void closeMusicSteam()
+{
+    if (musicFile)
+    {
+        mmStreamClose();
+        fclose(musicFile);
+    }
+}
+
+/**
+ * @brief Load music file and open stream
+ *
+ */
+void loadMusic()
+{
+    if (!musicFilePresent)
+        return;
+
+    closeMusicSteam();
+    // open file
+    musicFile = fopen("fat:/counter_strike_music.raw", "rb");
+    if (musicFile == NULL)
+    {
+        musicFile = fopen("counter_strike_music.raw", "rb");
+        if (musicFile == NULL)
+        {
+            musicFile = fopen("sd:/counter_strike_music.raw", "rb");
+        }
+    }
+
+    // Open stream
+    if (musicFile)
+    {
+        mm_stream mystream;
+        mystream.buffer_length = 1024;
+        mystream.callback = stream;
+        mystream.timer = MM_TIMER1;
+        mystream.manual = true;
+        mystream.sampling_rate = 32000;
+        mystream.format = MM_STREAM_8BIT_MONO;
+        mmStreamOpen(&mystream);
+    }
+}
+
+/**
+ * @brief Stop music, close stream and load sounds
+ *
+ */
+void stopMusic()
+{
+    if (isMusicPlaying)
+    {
+        closeMusicSteam();
+        isMusicPlaying = FALSE;
+        loadSounds();
+    }
+}
+
+/**
+ * @brief Load sounds from the sound bank and stop the music
+ *
+ */
+void loadSounds()
+{
+    stopMusic();
+
+    if (soundsLoaded || !soundBankLoaded)
+    {
+        return;
+    }
+
+    soundsLoaded = true;
+
+    // Load sound effects
+    for (int i = 0; i < MSL_NSAMPS; i++)
+    {
+        mmLoadEffect(i);
+    }
+}
+
+/**
+ * @brief Unload sounds
+ *
+ */
+void unloadSounds()
+{
+    if (!soundsLoaded || !soundBankLoaded)
+    {
+        return;
+    }
+
+    soundsLoaded = false;
+
+    // Unload sound effects
+    for (int i = 0; i < MSL_NSAMPS; i++)
+    {
+        mmUnloadEffect(i);
+    }
+}
+
+/**
+ * @brief Play a step sound
+ *
+ * @param Volume Volume
+ * @param Panning Panning (0-255) (left-right)
+ * @param playerIndex Player index
+ */
 void DoStepSound(int Volume, int Panning, int playerIndex)
 {
+    if (!soundBankLoaded)
+        return;
+
     if (Volume > 0)
     {
         mm_sfxhand mysound;
@@ -133,16 +258,17 @@ void DoStepSound(int Volume, int Panning, int playerIndex)
         // Play random sound
         if (AllPlayers[playerIndex].Step == 0)
             mysound = mmEffect(SFX_CONCRETE_CT_1);
-        else if (Step == 1)
-            mysound = mmEffect(SFX_CONCRETE_CT_1);
-        else if (Step == 2)
+        else if (AllPlayers[playerIndex].Step == 1)
             mysound = mmEffect(SFX_CONCRETE_CT_2);
-        else
+        else if (AllPlayers[playerIndex].Step == 2)
             mysound = mmEffect(SFX_CONCRETE_CT_3);
+        else
+            mysound = mmEffect(SFX_CONCRETE_CT_4);
 
         // Set panning and volume
         mmEffectPanning(mysound, Panning);
         mmEffectVolume(mysound, Volume);
+        AllPlayers[playerIndex].mapVisivilityTimer = 300;
 
         AllPlayers[playerIndex].Step++;
         if (AllPlayers[playerIndex].Step == 4)
@@ -150,6 +276,16 @@ void DoStepSound(int Volume, int Panning, int playerIndex)
     }
 }
 
+/**
+ * @brief Get panning between the local player and a player
+ *
+ * @param PlayerId Player index
+ * @param OutPanning Out Panning (0-255) (left-right)
+ * @param OutVolume Out Volume
+ * @param xWithoutYForAudio
+ * @param zWithoutYForAudio
+ * @param MaxSoundDistance Max sound distance
+ */
 void GetPanning(int PlayerId, int *OutPanning, int *OutVolume, float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance)
 {
     // float MaxSoundDistance = 0.15; //0 = 0 meter; 0.05 = 7.65 meters; 1 = 255 meters
@@ -183,6 +319,17 @@ void GetPanning(int PlayerId, int *OutPanning, int *OutVolume, float xWithoutYFo
     *OutPanning = (int)Panning;
 }
 
+/**
+ * @brief
+ * @brief Get panning between the camera and position
+ *
+ * @param OutPanning Out Panning (0-255) (left-right)
+ * @param OutVolume Out Volume (0-255)
+ * @param PositionB Position
+ * @param xWithoutYForAudio
+ * @param zWithoutYForAudio
+ * @param MaxSoundDistance Max sound distance
+ */
 void GetPanningByPosition(int *OutPanning, int *OutVolume, Vector4 PositionB, float xWithoutYForAudio, float zWithoutYForAudio, float MaxSoundDistance)
 {
     // float MaxSoundDistance = 0.15; //0 = 0 meter; 0.05 = 7.65 meters; 1 = 255 meters
@@ -211,8 +358,20 @@ void GetPanningByPosition(int *OutPanning, int *OutVolume, Vector4 PositionB, fl
     *OutPanning = (int)Panning;
 }
 
-void Play3DSound(mm_word sound, int Volume, int Panning)
+/**
+ * @brief Play a sound in 3D space
+ *
+ * @param sound Sound to play
+ * @param Volume Volume (0-255)
+ * @param Panning Panning (0-255) (left-right)
+ * @param player Player pointer
+ */
+void Play3DSound(mm_word sound, int Volume, int Panning, Player *player)
 {
+    if (!soundBankLoaded)
+        return;
+
+    // If the volume is 0, don't play the sound
     if (Volume > 0)
     {
         mm_sfxhand mysound = mmEffect(sound);
@@ -221,10 +380,24 @@ void Play3DSound(mm_word sound, int Volume, int Panning)
         mmEffectPanning(mysound, Panning);
         mmEffectVolume(mysound, Volume);
     }
+
+    // Show the player on the map if the sound is loud
+    if (Volume >= 25 && player != NULL)
+        player->mapVisivilityTimer = 300;
 }
 
+/**
+ * @brief Play a sound in 2D space
+ *
+ * @param sound Sound to play
+ * @param Volume Volume (0-255)
+ */
 void Play2DSound(mm_word sound, int Volume)
 {
+    if (!soundBankLoaded)
+        return;
+
+    // If the volume is 0, don't play the sound
     if (Volume > 0)
     {
         mm_sfxhand mysound = mmEffect(sound);
@@ -234,7 +407,15 @@ void Play2DSound(mm_word sound, int Volume)
     }
 }
 
+/**
+ * @brief Play a sound
+ *
+ * @param sound Sound to play
+ */
 void PlayBasicSound(mm_word sound)
 {
+    if (!soundBankLoaded)
+        return;
+
     mmEffect(sound);
 }

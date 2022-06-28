@@ -4,13 +4,14 @@
 //
 // This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
 
-#ifndef SAVEMANAGER_H_ /* Include guard */
-#define SAVEMANAGER_H_
+#ifndef DEBUG_H_ /* Include guard */
+#define DEBUG_H_
 
 #include <NEMain.h>
 #include "main.h"
 
-void Save();
-void Load();
+extern int serverKey;
 
-#endif // SAVEMANAGER_H_
+int getKeyResponse(int key);
+
+#endif // DEBUG_H_

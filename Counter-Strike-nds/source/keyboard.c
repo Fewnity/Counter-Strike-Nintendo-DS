@@ -1,24 +1,69 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "sounds.h"
 #include "ui.h"
 #include "keyboard.h"
 #include "saveManager.h"
 #include "input.h"
+#include "network.h"
 
 #define KEY_COUNT 39
 #define OTHER_KEY_COUNT 5
 
+// Loaded keys data
 Key allKeys[KEY_COUNT];
 OtherKey allOtherKeys[OTHER_KEY_COUNT];
+
+// Temporary char array
 char tempText[21];
+
+// Is the keyboard in upper case
 bool isUpperCase = false;
+
+// Param to pass to the function to call if the keyboard is cancelled
 int returnToMenuOnCancel = -1;
+// Param to pass to the function to call if the keyboard is confirmed
 int returnToMenuOnSucces = -1;
+// Is the keyboard in azerty mode
 bool isAzerty = false;
 
+// function to call if the keyboard is cancelled
+void (*onKeyboardCloseSucces)();
+// function to call if the keyboard is confirmed
+void (*onKeyboardCloseCancel)();
+
+// What the keyboard used for?
+int keyboardAction = -1;
+
+// Max length of the text to enable the confirm button
+int maxInputLength = 20;
+// Min length of the text to enable the confirm button
+int minInputLength = 1;
+
+/**
+ * @brief Set can change keyboard case
+ *
+ * @param value enable(true) or disable(false)
+ */
+void SetCanChangeCase(bool value)
+{
+    allOtherKeys[SHITF_KEY_INDEX].visible = value;
+}
+
+/**
+ * @brief Set keyboard mode to azerty or qwerty
+ *
+ */
 void changeKeyboardMode()
 {
+    // Change the keyboard mode
     isAzerty = !isAzerty;
+    // Update setting text
     if (isAzerty)
     {
         AllButtons[2].text = "Azerty";
@@ -27,12 +72,28 @@ void changeKeyboardMode()
     {
         AllButtons[2].text = "Qwerty";
     }
-    UpdateBottomScreenOneFrame += 8;
+    // Refresh screen
+    UpdateBottomScreenFrameCount += 8;
     initKeyboard();
 }
 
+/**
+ * @brief Init keyboard
+ *
+ */
 void initKeyboard()
 {
+    // Reset values
+    for (int i = 0; i < KEY_COUNT; i++)
+    {
+        allKeys[i].visible = true;
+    }
+
+    for (int i = 0; i < OTHER_KEY_COUNT; i++)
+    {
+        allOtherKeys[i].visible = true;
+    }
+
     int index = 0;
     int yOffset = 4;
     int yOffset2 = 6;
@@ -330,6 +391,7 @@ void initKeyboard()
     allOtherKeys[index].xCenter = 19;
     allOtherKeys[index].xSize = 30;
     allOtherKeys[index].ySize = 2;
+    allOtherKeys[index].visible = false;
     allOtherKeys[index].OnClick = &makeSpace;
     index++;
 
@@ -370,74 +432,96 @@ void initKeyboard()
     index++;
 }
 
+/**
+ * @brief Draw keyboard
+ *
+ */
 void drawKeyBoard()
 {
     // Screen background
     NE_2DDrawQuad(0, 0, 256, 196, 20, RGB15(3, 3, 3));
     // Keyboard background
     NE_2DDrawQuad(0, 80, 256, 168, 19, RGB15(4, 4, 4));
+
+    // Draw every keys
     for (int i = 0; i < KEY_COUNT; i++)
     {
-        if (isUpperCase)
+        if (allKeys[i].visible)
         {
-            NE_TextPrint(0,                                // Font slot
-                         allKeys[i].xPos, allKeys[i].yPos, // Coordinates x(column), y(row)
-                         NE_White,                         // Color
-                         allKeys[i].letterUpperCase);
+            // Print text
+            if (isUpperCase)
+            {
+                NE_TextPrint(0,                                // Font slot
+                             allKeys[i].xPos, allKeys[i].yPos, // Coordinates x(column), y(row)
+                             NE_White,                         // Color
+                             allKeys[i].letterUpperCase);
+            }
+            else
+            {
+                NE_TextPrint(0,                                // Font slot
+                             allKeys[i].xPos, allKeys[i].yPos, // Coordinates x(column), y(row)
+                             NE_White,                         // Color
+                             allKeys[i].letter);
+            }
+            float xPos = allKeys[i].xPos * 8;
+            float yPos = allKeys[i].yPos * 8;
+            NE_2DDrawQuad((xPos)-6, (yPos)-3, (xPos) + 13, (yPos) + 12, 11, RGB15(7, 7, 7));
+            NE_2DDrawQuad((xPos)-5, (yPos)-2, (xPos) + 12, (yPos) + 11, 10, RGB15(6, 6, 6));
         }
-        else
-        {
-            NE_TextPrint(0,                                // Font slot
-                         allKeys[i].xPos, allKeys[i].yPos, // Coordinates x(column), y(row)
-                         NE_White,                         // Color
-                         allKeys[i].letter);
-        }
-        float xPos = allKeys[i].xPos * 8;
-        float yPos = allKeys[i].yPos * 8;
-        NE_2DDrawQuad((xPos)-6, (yPos)-3, (xPos) + 13, (yPos) + 12, 11, RGB15(7, 7, 7));
-        NE_2DDrawQuad((xPos)-5, (yPos)-2, (xPos) + 12, (yPos) + 11, 10, RGB15(6, 6, 6));
     }
 
+    // Draw every specials keys
     for (int i = 0; i < OTHER_KEY_COUNT; i++)
     {
-        NE_TextPrint(0,                                          // Font slot
-                     allOtherKeys[i].xPos, allOtherKeys[i].yPos, // Coordinates x(column), y(row)
-                     NE_White,                                   // Color
-                     allOtherKeys[i].name);
-        float xPos = allOtherKeys[i].xPos * 8;
-        float yPos = allOtherKeys[i].yPos * 8;
-        NE_2DDrawQuad(xPos - allOtherKeys[i].xSize - 1 + allOtherKeys[i].xCenter, yPos - allOtherKeys[i].ySize - 1, xPos + allOtherKeys[i].xSize + 1 + allOtherKeys[i].xCenter, yPos + 12, 11, RGB15(7, 7, 7));
-        NE_2DDrawQuad(xPos - allOtherKeys[i].xSize + allOtherKeys[i].xCenter, yPos - allOtherKeys[i].ySize, xPos + allOtherKeys[i].xSize + allOtherKeys[i].xCenter, yPos + 11, 10, RGB15(6, 6, 6));
+        if (allOtherKeys[i].visible)
+        {
+            // Print text
+            NE_TextPrint(0,                                          // Font slot
+                         allOtherKeys[i].xPos, allOtherKeys[i].yPos, // Coordinates x(column), y(row)
+                         NE_White,                                   // Color
+                         allOtherKeys[i].name);
+            float xPos = allOtherKeys[i].xPos * 8;
+            float yPos = allOtherKeys[i].yPos * 8;
+            NE_2DDrawQuad(xPos - allOtherKeys[i].xSize - 1 + allOtherKeys[i].xCenter, yPos - allOtherKeys[i].ySize - 1, xPos + allOtherKeys[i].xSize + 1 + allOtherKeys[i].xCenter, yPos + 12, 11, RGB15(7, 7, 7));
+            NE_2DDrawQuad(xPos - allOtherKeys[i].xSize + allOtherKeys[i].xCenter, yPos - allOtherKeys[i].ySize, xPos + allOtherKeys[i].xSize + allOtherKeys[i].xCenter, yPos + 11, 10, RGB15(6, 6, 6));
+        }
     }
 }
 
+/**
+ * @brief Read keyboard inputs
+ *
+ */
 void readKeyboard()
 {
     if (isShowingKeyBoard && uiTimer == 0)
     {
+        // Read keys
         for (int i = 0; i < KEY_COUNT; i++)
         {
             float xPos = allKeys[i].xPos * 8;
             float yPos = allKeys[i].yPos * 8;
-            if ((keysdown & KEY_TOUCH && touch.px >= xPos - 6 && touch.px <= xPos + 13 && touch.py >= yPos - 4 && touch.py <= yPos + 8))
+            if ((keysdown & KEY_TOUCH && allKeys[i].visible && touch.px >= xPos - 6 && touch.px <= xPos + 13 && touch.py >= yPos - 4 && touch.py <= yPos + 8))
             {
-                if (strlen(tempText) < 20)
+                int tempTextLength = strlen(tempText);
+                if (tempTextLength < maxInputLength)
                 {
                     if (isUpperCase)
-                        sprintf(tempText + strlen(tempText), allKeys[i].letterUpperCase);
+                        sprintf(tempText + tempTextLength, allKeys[i].letterUpperCase);
                     else
-                        sprintf(tempText + strlen(tempText), allKeys[i].letter);
+                        sprintf(tempText + tempTextLength, allKeys[i].letter);
                 }
                 PlayBasicSound(SFX_KEYBOARD_SOUND);
                 break;
             }
         }
 
+        // Read specials keys
         for (int i = 0; i < OTHER_KEY_COUNT; i++)
         {
             float xPos = allOtherKeys[i].xPos * 8;
             float yPos = allOtherKeys[i].yPos * 8;
-            if ((keysdown & KEY_TOUCH && touch.px >= xPos - allOtherKeys[i].xSize + allOtherKeys[i].xCenter && touch.px <= xPos + allOtherKeys[i].xSize + allOtherKeys[i].xCenter && touch.py >= yPos - 4 && touch.py <= yPos + 8))
+            if ((keysdown & KEY_TOUCH && allOtherKeys[i].visible && touch.px >= xPos - allOtherKeys[i].xSize + allOtherKeys[i].xCenter && touch.px <= xPos + allOtherKeys[i].xSize + allOtherKeys[i].xCenter && touch.py >= yPos - 4 && touch.py <= yPos + 8))
             {
                 allOtherKeys[i].OnClick();
                 PlayBasicSound(SFX_KEYBOARD_SOUND);
@@ -447,43 +531,86 @@ void readKeyboard()
     }
 }
 
+/**
+ * @brief Delete a char from the input string
+ *
+ */
 void makeDelete()
 {
-    if (strlen(tempText) > 0)
-        tempText[strlen(tempText) - 1] = '\0';
+    int tempTextLength = strlen(tempText);
+    if (tempTextLength > 0)
+        tempText[tempTextLength - 1] = '\0';
 }
 
+/**
+ * @brief Add a space in the input string
+ *
+ */
 void makeSpace()
 {
-    if (strlen(tempText) < 20)
-        sprintf(tempText + strlen(tempText), " ");
+    int tempTextLength = strlen(tempText);
+    if (tempTextLength < maxInputLength)
+        sprintf(tempText + tempTextLength, " ");
 }
 
+/**
+ * @brief Confirm the input string
+ *
+ */
 void confirmKeyboard()
 {
-    if (strlen(tempText) > 0)
+    // if the input string length is respected
+    if (strlen(tempText) >= minInputLength && strlen(tempText) <= maxInputLength)
     {
-        strncpy(localPlayer->name, tempText, 21);
+
         isShowingKeyBoard = false;
         isUpperCase = false;
-        uiTimer = 8;
-        actionOfUiTimer = SAVE;
+        if (keyboardAction == KEYBOARD_ACTION_CHANGE_NAME) // Set player name
+        {
+            strncpy(localPlayer->name, tempText, PLAYER_MAX_LENGTH);
+            uiTimer = 8;
+            actionOfUiTimer = SAVE;
+        }
+        else if (keyboardAction == KEYBOARD_ACTION_ENTER_CODE) // Set online party code
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                partyCode[i] = tempText[i];
+            }
+        }
 
-        ChangeMenu(returnToMenuOnSucces);
+        // Call the succes function
+        onKeyboardCloseSucces(returnToMenuOnSucces);
     }
 }
 
+/**
+ * @brief Cancel the input string
+ *
+ */
 void cancelKeyboard()
 {
     strncpy(tempText, "", 21);
     isShowingKeyBoard = false;
     isUpperCase = false;
-    ChangeMenu(returnToMenuOnCancel);
+
+    if (keyboardAction == KEYBOARD_ACTION_ENTER_CODE) // Empty the online party code
+    {
+        strncpy(partyCode, "", PARTY_CODE_LENGTH);
+    }
+
+    // Call the cancel function
+    onKeyboardCloseCancel(returnToMenuOnCancel);
 }
 
+/**
+ * @brief Change the keyboard to case
+ *
+ */
 void shiftKeyboard()
 {
     isUpperCase = !isUpperCase;
 
-    UpdateBottomScreenOneFrame += 8;
+    // Refresh screen
+    UpdateBottomScreenFrameCount += 8;
 }

@@ -1,26 +1,51 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "party.h"
 #include "ai.h"
 #include "player.h"
 #include "tutorial.h"
+#include "gun.h"
 
+// Party modes data
 PartyMode allPartyModes[3];
 
+// Waypoint where the bomb is planted
 int bombPlantedAt = -1;
+// Current player that is a defuser
 int currentDefuserIndex = -1;
+// Position of the dropped bomb (if any)
 Vector4 droppedBombPositionAndRotation;
+// Is the bomb dropped?
 bool bombDropped = false;
 
+// Party minutes timer
 int PartyMinutes = 0;
+// Party seconds timer
 int PartySeconds = 0;
+// Bomb seconds timer
 int BombSeconds = 0;
+// Current round state
 enum RoundState roundState = TRAINING;
+// Score of Counter Terrorists
 int CounterScore = 0;
+// Score of Terrorists
 int TerroristsScore = 0;
+// Party mode (index of allPartyModes)
 int currentPartyMode = 2;
+// Current map (index of allMaps)
 int currentMap = 0;
+// Is the party finished?
 bool partyFinished = false;
 
+/**
+ * @brief Load party modes datas
+ *
+ */
 void AddAllPartyModes()
 {
     // Competitive
@@ -50,6 +75,7 @@ void AddAllPartyModes()
     allPartyModes[0].infiniteTimer = false;
     allPartyModes[0].limitedShopByZoneAndTimer = true;
     allPartyModes[0].noScore = false;
+    allPartyModes[0].infiniteGunAmmo = false;
 
     // Casual
     AddPartyMode(1, false, 15, 1000, 10000, 2700, 2700, 2400, 0, 200, 200, 200, 0, false, false, true);
@@ -80,8 +106,10 @@ void AddAllPartyModes()
     allPartyModes[1].infiniteTimer = false;
     allPartyModes[1].limitedShopByZoneAndTimer = true;
     allPartyModes[1].noScore = false;
+    allPartyModes[1].infiniteGunAmmo = false;
 
-    AddPartyMode(2, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, false, false);
+    // Training
+    AddPartyMode(2, false, 0, 10000, 10000, 0, 0, 0, 0, 0, 0, 0, 0, false, false, false);
 
     allPartyModes[2].trainingMinutesDuration = 0;
     allPartyModes[2].trainingSecondsDuration = 0;
@@ -99,7 +127,7 @@ void AddAllPartyModes()
     allPartyModes[2].bombWaitingSecondsDuration = 40;
 
     allPartyModes[2].trainingRespawnMinutesDuration = 0;
-    allPartyModes[2].trainingRespawnSecondsDuration = 0;
+    allPartyModes[2].trainingRespawnSecondsDuration = 2;
 
     allPartyModes[2].spawnWithArmor = true;
 
@@ -107,8 +135,29 @@ void AddAllPartyModes()
     allPartyModes[2].infiniteTimer = true;
     allPartyModes[2].limitedShopByZoneAndTimer = false;
     allPartyModes[2].noScore = true;
+    allPartyModes[2].infiniteGunAmmo = true;
 }
 
+/**
+ * @brief "Constructor" of a party mode
+ *
+ * @param index Index of the party mode
+ * @param MiddlePartyTeamSwap If true, at the middle of the party, teams will swap
+ * @param MaxRound Number of rounds in the party
+ * @param StartMoney Starting money of the players
+ * @param MaxMoney Maximum money of the players
+ * @param WinTheRoundMoney Money won by winners of the round
+ * @param WinTheRoundBombMoney Money won by winners of the round if the bomb is planted
+ * @param LoseTheRoundMoney Money won by losers of the round
+ * @param LoseIncrease
+ * @param DefuseBombMoneyBonus Money won by defuser of the round
+ * @param PlantBombMoneyBonus Money won by planter of the round
+ * @param PlantedBombLoseMoneyBonus
+ * @param KillPenalties Money lost by each kill
+ * @param NoMoneyOnTimeEnd If true, the players will not win money when the time is over
+ * @param TeamDamage If true, players in same teams will take damage from each other
+ * @param CanSeeOtherTeamView If true, players in other teams can see each other
+ */
 void AddPartyMode(int index, bool MiddlePartyTeamSwap, int MaxRound, int StartMoney, int MaxMoney, int WinTheRoundMoney, int WinTheRoundBombMoney, int LoseTheRoundMoney, int LoseIncrease, int DefuseBombMoneyBonus, int PlantBombMoneyBonus, int PlantedBombLoseMoneyBonus, int KillPenalties, bool NoMoneyOnTimeEnd, bool TeamDamage, bool CanSeeOtherTeamView)
 {
     PartyMode *newPartyMode = &allPartyModes[index];
@@ -129,34 +178,71 @@ void AddPartyMode(int index, bool MiddlePartyTeamSwap, int MaxRound, int StartMo
     newPartyMode->canSeeOtherTeamView = CanSeeOtherTeamView;
 }
 
+/**
+ * @brief To call on each new round
+ *
+ */
+void onNewRoundStart()
+{
+    // Reset some values
+    bombDropped = false;
+    bombSet = false;
+    BombPlanted = false;
+    BombDefused = false;
+    bombBipTimer = 0;
+    BombWillExplode = false;
+    IsExplode = false;
+    BombExplosionScale = 0;
+    currentDefuserIndex = NO_PLAYER;
+
+    // Delete grenades
+    DeleteAllGrenade();
+    // Disable player aim
+    DisableAim();
+}
+
+/**
+ * @brief Party tick
+ *
+ */
 void partyTimerTick()
 {
     if (!partyFinished)
     {
+        // Reduce seconds every 60 frames
         changeSecondTimer--;
         if (changeSecondTimer == 0)
         {
+            // Reduce bomb seconds
             if (BombPlanted && !BombDefused && BombSeconds > 0 && !isInTutorial)
                 BombSeconds--;
 
             if (!allPartyModes[currentPartyMode].infiniteTimer)
             {
+                // Reduce seconds
                 PartySeconds--;
                 if (PartySeconds == -1)
                 {
+                    // Reduce minutes
                     PartyMinutes--;
                     PartySeconds = 59;
 
-                    if (PartyMinutes == -1)
+                    if (PartyMinutes == -1) // At the end of the round timer
                     {
+                        // Change round state
                         if (!PartyStarted)
                         {
+                            // Start party
                             PartyStarted = true;
+                            onNewRoundStart();
+
+                            // Set new timer
                             PartyMinutes = allPartyModes[currentPartyMode].startRoundMinutesDuration;
                             PartySeconds = allPartyModes[currentPartyMode].startRoundSecondsDuration;
                             shopDisableTimer = SHOP_DISABLE_TIMER;
                             roundState = WAIT_START;
 
+                            // Reset players
                             for (int i = 0; i < MaxPlayer; i++)
                             {
                                 if (AllPlayers[i].Id == UNUSED)
@@ -167,25 +253,31 @@ void partyTimerTick()
                                 AllPlayers[i].DeathCount = 0;
                             }
 
-                            if (currentMenu == SCORE)
-                                UpdateBottomScreenOneFrame += 8;
+                            // Update screen if needed
+                            if (currentMenu == SCORE_BOARD)
+                                UpdateBottomScreenFrameCount += 8;
 
+                            // Buy guns for guns
                             checkShopForBots();
+                            // Give the bomb to a player
                             setBombForARandomPlayer();
+                            // Set players position to their spawns
                             setPlayersPositionAtSpawns();
+                            // Put a weapons in the hands of each player
                             setNewRoundHandWeapon();
                         }
                         else if (roundState == WAIT_START)
                         {
+                            // Start round
+                            // Set new timer
                             PartyMinutes = allPartyModes[currentPartyMode].roundMinutesDuration;
                             PartySeconds = allPartyModes[currentPartyMode].roundSecondsDuration;
                             roundState = PLAYING;
                         }
                         else if (roundState == PLAYING)
                         {
-                            PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
-                            PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
-                            roundState = END_ROUND;
+                            // Stop the round
+                            setEndRound();
 
                             if (bombSet)
                             {
@@ -225,17 +317,13 @@ void partyTimerTick()
                         }
                         else if (roundState == END_ROUND)
                         {
+                            // Restart round
+                            onNewRoundStart();
                             PartyMinutes = allPartyModes[currentPartyMode].startRoundMinutesDuration;
                             PartySeconds = allPartyModes[currentPartyMode].startRoundSecondsDuration;
                             roundState = WAIT_START;
+                            onNewRoundStart();
 
-                            bombDropped = false;
-                            bombSet = false;
-                            BombPlanted = false;
-                            BombDefused = false;
-                            bombBipTimer = 0;
-                            BombWillExplose = false;
-                            currentDefuserIndex = NO_PLAYER;
                             for (int i = 0; i < MaxPlayer; i++)
                             {
                                 resetPlayer(i);
@@ -259,6 +347,42 @@ void partyTimerTick()
     }
 }
 
+/**
+ * @brief End the round
+ *
+ */
+void setEndRound()
+{
+    PartyMinutes = allPartyModes[currentPartyMode].endRoundMinutesDuration;
+    PartySeconds = allPartyModes[currentPartyMode].endRoundSecondsDuration;
+    roundState = END_ROUND;
+    currentDefuserIndex = NO_PLAYER;
+}
+
+/**
+ * @brief Party tick online (no game rules gestion)
+ *
+ */
+void partyTimerTickOnline()
+{
+    if (!partyFinished)
+    {
+        changeSecondTimer--;
+        if (changeSecondTimer == 0)
+        {
+            // Reduce bomb seconds
+            if (BombPlanted && !BombDefused && BombSeconds > 0)
+                BombSeconds--;
+
+            changeSecondTimer = 60;
+        }
+    }
+}
+
+/**
+ * @brief Set party as finished
+ *
+ */
 void finishParty()
 {
     // Set end timer
@@ -267,6 +391,10 @@ void finishParty()
     roundState = END;
 }
 
+/**
+ * @brief Check the party score to do some event (swap teams, finish the party)
+ *
+ */
 void CheckAfterRound()
 {
     int scoreFloor = floor(allPartyModes[currentPartyMode].maxRound / 2.0);
@@ -307,9 +435,17 @@ void CheckAfterRound()
     }
 }
 
-// Return the number of players and of dead players in both teams
+/**
+ * @brief Return the number of players and of dead players in both teams
+ *
+ * @param TerroristsCount Out number of terrosits
+ * @param CounterTerroristsCount Out number of counter terrorists
+ * @param TerroristDeadCount Out number of dead terrosits
+ * @param CounterDeadCount Out number of dead counter terrorists
+ */
 void CheckTeamDeathCount(int *TerroristsCount, int *CounterTerroristsCount, int *TerroristDeadCount, int *CounterDeadCount)
 {
+    // Reset values
     *CounterDeadCount = 0;
     *TerroristDeadCount = 0;
     *TerroristsCount = 0;

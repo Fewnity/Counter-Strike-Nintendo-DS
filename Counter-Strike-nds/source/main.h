@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #ifndef MAIN_H_ /* Include guard */
 #define MAIN_H_
 #include <NEMain.h>
@@ -171,17 +177,22 @@
 #define CameraOffsetY 0.7
 #define CameraOffsetYMultiplied 2867.20 // 0.7 * 4096
 
-#define INPUT_COUNT 12
+#define FLASH_MODELS_COUNT 6
+
+#define INPUT_COUNT 14
 #define INPUT_NAMES_COUNT 15
 #define SHOP_DISABLE_TIMER 900
+
+#define GAME_VERSION "1.0.0"
 
 enum connectionType
 {
 	UNSELECTED,
 	OFFLINE,
+	DEBUG_IP_2,
+	DEBUG_IP_1,
+	ONLINE_SERVER_IP,
 	LOCAL,
-	IP1,
-	IP2
 };
 
 enum inputButtons
@@ -199,7 +210,10 @@ enum inputButtons
 	LOOK_DOWN_BUTTON = 9,
 
 	DEFUSE_BUTTON = 10,
-	SCOPE_BUTTON = 11
+	SCOPE_BUTTON = 11,
+
+	LEFT_GUN = 12,
+	RIGHT_GUN = 13,
 };
 
 enum teamEnum
@@ -219,8 +233,9 @@ enum actionAfterUiTimer
 
 typedef struct
 {
-	enum KEYPAD_BITS value;
-	// const char *name;
+	int value;
+	// enum KEYPAD_BITS value;
+	//  const char *name;
 	int nameIndex;
 } Input;
 
@@ -361,17 +376,14 @@ typedef struct // Player values
 	int lastSeenTarget; //
 	bool justCheking;
 	bool canCancelNextCheck;
-	bool canShootEnemy;
 	bool tooFar;
 	bool searchForDroppedBomb;
 
 	// Raycasting
-	bool IsHeadShot;
-	bool IsLegShot;
-	int OldStopAt;
-	int StopAt;
-	int PlayerFoundAtDistance;
-	bool ScanFinished;
+	bool IsHeadShot[FLASH_MODELS_COUNT];
+	bool IsLegShot[FLASH_MODELS_COUNT];
+
+	int ScanForGrenade;
 
 	Vector3 startRaycastPosition;
 	Vector3 startRaycastRotation;
@@ -379,14 +391,14 @@ typedef struct // Player values
 
 	int CurrentOcclusionZone; //
 
-	int invisibilityTimer;
+	int invincibilityTimer;
 
-	int RespawnTimer;			 //
-	bool NeedRespawn;			 //
-	float BobbingOffset;		 //
-	bool HasBobbed;				 //
-	int Step;					 //
-	char name[playerNameLength]; //
+	int RespawnTimer;			  //
+	bool NeedRespawn;			  //
+	float BobbingOffset;		  //
+	bool HasBobbed;				  //
+	int Step;					  //
+	char name[PLAYER_MAX_LENGTH]; //
 	bool allPlayerScanned[MaxPlayer];
 	float xSize;
 	float ySize;
@@ -394,6 +406,7 @@ typedef struct // Player values
 	bool inShadow;
 	int currentShadowCollBox;
 	float lightCoef;
+	int mapVisivilityTimer;
 } Player;
 
 typedef struct // 2D area (box) values for trigger with stairs start height, final height and direction
@@ -438,6 +451,7 @@ typedef struct //
 	char letterUpperCase[2];
 	int xPos;
 	int yPos;
+	bool visible;
 } Key;
 
 typedef struct //
@@ -450,6 +464,7 @@ typedef struct //
 	int xSize;
 	int xCenter;
 	int ySize;
+	bool visible;
 	void (*OnClick)();
 } OtherKey;
 
@@ -466,7 +481,6 @@ extern int rightGunYRecoil;
 extern int GunMaxRecoil;
 extern int GunMinRecoil;
 extern bool isInFullSmoke;
-extern float BobbingOffset;
 extern int redHealthTextCounter;
 
 extern bool BombPlanted;
@@ -474,36 +488,32 @@ extern int bombTimer;
 extern int CurrentScopeLevel;
 
 extern int KillTextShowTimer;
-// extern int AllGunsInInventory[inventoryCapacity];
+
 extern NE_Material *TopScreenSpritesMaterials[6];
 extern bool isDebugTopScreen;
-// extern AmmoMagazine AllAmmoMagazine[2];
-extern NE_Sprite *TopScreenSprites[5];
-extern char killText[33];
+
+extern NE_Sprite *TopScreenSprites[2];
 extern NE_Camera *Camera;
 extern NE_Material *PlayerMaterial;
 extern NE_Material *PlayerMaterialTerrorist;
 extern NE_Material *PlayerShadowMaterial;
 
-// extern Zone AllZones[OcclusionZonesCount];
 extern int textToShowTimer;
 extern int CurrentCameraPlayer;
-// extern int Money;
-extern char textToShow[30];
+
 extern bool NeedChangeScreen;
 extern bool AlwaysUpdateBottomScreen;
-extern int UpdateBottomScreenOneFrame;
+extern int UpdateBottomScreenFrameCount;
 extern Player AllPlayers[MaxPlayer];
 extern int SelectedGunShop;
 extern bool WaitForTeamResponse;
-extern Button AllButtons[8];
+extern Button AllButtons[ButtonCount];
 extern CheckBox AllCheckBoxs[CheckBoxCount];
 extern Slider AllSliders[SliderCount];
 extern int ButtonToShow;
 extern int currentMenu;
 extern NE_Material *BottomScreenSpritesMaterials[9];
-extern NE_Sprite *BottomScreenSprites[10];
-extern int BottomScreenSpriteCount;
+extern NE_Sprite *BottomScreenSprites[1];
 // extern CollisionBox2D AllTriggersCollisions[OcclusionZonesCount];
 extern NE_Material *GroundMaterial;
 extern NE_Material *GroundMaterialShadowed;
@@ -515,16 +525,15 @@ extern float xWithoutYForOcclusionSide1;
 extern float zWithoutYForOcclusionSide1;
 extern float xWithoutYForOcclusionSide2;
 extern float zWithoutYForOcclusionSide2;
+extern int WallHitXPos[FLASH_MODELS_COUNT];
+extern int WallHitYPos[FLASH_MODELS_COUNT];
+extern int WallHitZPos[FLASH_MODELS_COUNT];
+extern float hitDistance[FLASH_MODELS_COUNT];
 
-extern int WallHitXPos;
-extern int WallHitYPos;
-extern int WallHitZPos;
-// extern bool IsHeadShot;
-// extern bool IsLegShot;
 extern int tempTeam;
-// extern bool ScanFinished;
+
 extern float OldxPos, OldyPos, OldzPos;
-extern int Hit;
+extern int hittedClient[FLASH_MODELS_COUNT];
 extern float xOffset, yOffset;
 extern int PlayerCount;
 extern float deathCameraYOffset;
@@ -534,19 +543,20 @@ extern bool IsExplode;
 extern int bombBipTimer;
 extern bool BombDefused;
 extern NE_Model *Model[13];
-extern bool BombWillExplose;
+extern NE_Model *flashModels[FLASH_MODELS_COUNT];
+extern bool BombWillExplode;
 extern CollisionBox2D bombDefuseZone;
 extern float x, y, z;
 extern float xWithoutY, zWithoutY, xWithoutYForAudio, zWithoutYForAudio;
 extern Vector4 BombPosition;
-extern int ShowWallHitFlash;
+extern int ShowWallHitFlash[FLASH_MODELS_COUNT];
 extern bool applyRules;
+extern float BobbingSpeed;
 
 extern int doubleTapTimer;
 extern Scope AllScopeLevels[2];
 extern bool PartyStarted;
 extern enum connectionType Connection;
-extern int checkPlayerDistanceFromAiTimer;
 extern Player *localPlayer;
 
 extern int uiTimer;
@@ -554,7 +564,6 @@ extern enum actionAfterUiTimer actionOfUiTimer;
 extern int RumbleTimer;
 extern Site AllBombsTriggersCollisions[2];
 extern bool useRumble;
-extern bool is3dsMode;
 extern Input inputs[INPUT_COUNT];
 extern bool scanForInput;
 extern int currentInputScanned;
@@ -573,6 +582,8 @@ extern int frameCountDuringAir;
 extern bool NeedJump;
 extern bool canChangeGun;
 extern bool canShoot;
+extern int playerWantToStart;
+extern int playerWantToStartLimite;
 
 //////All functions
 void CalculatePlayerPosition(int PlayerId);
@@ -587,6 +598,11 @@ void setPlayerPositionAtSpawns(int playerIndex);
 void SetTwoScreenMode(bool value);
 void killPlayer(Player *player);
 void addExplosionScreenShake();
+void JoinParty(int option);
+void setNeedRespawn(Player *player);
+void prepareParty(bool multiplayerMode);
+void increaseFrameCount();
+void resetFrameCount();
 
 Stairs *GetStairs();
 Wall *GetWalls();
@@ -599,7 +615,7 @@ NE_Material **GetBottomScreenSpritesMaterials();
 NE_Palette **GetPalettes();
 
 void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckScore);
-void StartGame();
+void checkStartGameLoop();
 void CheckJump();
 int GetCurrentMenu();
 void SetCurrentMenu(int value);
@@ -610,6 +626,7 @@ void SetButtonToShow(int value);
 void StartSinglePlayer();
 void SetWaitForTeamResponse(bool value);
 void setCameraMapPosition();
+void checkMusicSteaming();
 
 bool GetAlwaysUpdateBottomScreen();
 bool GetNeedUpdateViewRotation();
@@ -641,11 +658,15 @@ void SetNeedUpdateViewRotation(bool Value);
 void ChangeGunInInventoryForLocalPlayer(int Left);
 void ChangeGunInInventory(int playerIndex, int Left);
 void setPlayersPositionAtSpawns();
+void OnPartyQuit();
+void QuitParty(int option);
 
 void setNewRoundHandWeapon();
-void makeHit(int hitBy, int playerHit);
+void makeHit(int hitBy, int playerHit, float distance, int shootIndex);
 void buyGun();
 void setSelectedGunInInventory(int playerIndex, int gunIndex);
+void changeCameraPlayerView(bool left);
+void checkCameraPlayerView(bool left, bool *Found, int *FirstFound, int i);
 
 void removeAllPlayers();
 void rumble(int timer);

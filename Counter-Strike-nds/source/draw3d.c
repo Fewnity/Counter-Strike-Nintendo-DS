@@ -1,10 +1,15 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "grenade.h"
 #include "collisions.h"
 #include "ui.h"
 #include "map.h"
 #include "draw3d.h"
-#include "debug.h"
 #include "party.h"
 
 int t1x = 0;
@@ -59,31 +64,17 @@ void Draw3DScene(void)
             // Render map model if needed
             if (inFov)
             {
-                // char Occlusion[20];
-                // sprintf(Occlusion, "Zone to show : %d", AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone);
-                // debugPrint(Occlusion);
-
-                // char visibleMapPart[20];
-                // sprintf(visibleMapPart, "visibleMapPart : %d", map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]);
-                // debugPrint(visibleMapPart);
-
-                // char shadowed[20];
-                // sprintf(shadowed, "shadowed : %d", map->models[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].shadowed);
-                // debugPrint(shadowed);
-
-                if (!map->models[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].shadowed)
+                if (!map->models[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].shadowed) // Set the model light like normal
                 {
                     GroundMaterial->diffuse = RGB15(0, 0, 0);
                     GroundMaterial->emission = RGB15(11, 11, 11);
                     GroundMaterial->specular = RGB15(7, 7, 7);
-                    // NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
                 }
-                else
+                else // Set the model light like shadowed
                 {
                     GroundMaterial->diffuse = RGB15(1, 1, 1);
                     GroundMaterial->emission = RGB15(3, 3, 3);
                     GroundMaterial->specular = RGB15(3, 3, 3);
-                    // NE_PolyFormat(31, 0, NE_LIGHT_1, NE_CULL_BACK, NE_MODULATION);
                 }
                 NE_ModelDraw(map->models[map->AllZones[AllPlayers[CurrentCameraPlayer].CurrentOcclusionZone].visibleMapPart[i]].Model);
             }
@@ -96,15 +87,24 @@ void Draw3DScene(void)
         {
             if (grenades[i] != NULL)
             {
-                // Draw grenade
+                //  Draw grenade
                 if (grenades[i]->isVisible)
                 {
                     // Grenade clipping
                     bool inFov = PointInTriangleInt(grenades[i]->Model->x, grenades[i]->Model->z, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z);
 
+                    // Draw grenade if in field of view
                     if (inFov)
+                    {
+                        NE_PolyFormat(30, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
                         NE_ModelDraw(grenades[i]->Model);
+                    }
                 }
+
+                // Alpha 0 is wireframe mode, put to 1 to see the grenade
+                if (grenades[i]->effectAlpha <= 0)
+                    grenades[i]->effectAlpha = 1;
+
                 // Set polygons alpha
                 NE_PolyFormat(grenades[i]->effectAlpha, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
                 // Draw effect if timer effect is on
@@ -126,10 +126,13 @@ void Draw3DScene(void)
             NE_ModelDraw(Model[7]);
 
         // Show wall bullet hit flash
-        if (ShowWallHitFlash > 0)
+        for (int i = 0; i < FLASH_MODELS_COUNT; i++)
         {
-            ShowWallHitFlash--;
-            NE_ModelDraw(Model[8]);
+            if (ShowWallHitFlash[i] != 0)
+            {
+                ShowWallHitFlash[i]--;
+                NE_ModelDraw(flashModels[i]);
+            }
         }
 
         // Draw bomb explosion
@@ -147,16 +150,10 @@ void Draw3DScene(void)
 
             // Draw explosion
             NE_ModelDraw(Model[10]);
-
-            // Reset polygons Alpha/Light/Effect
-            NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
         }
 
         DrawPlayers();
     }
-
-    // if (UpdateBottomScreenOneFrame != 0)
-    // return;
 
     // Draw UI
     drawTopScreenUI();
@@ -168,7 +165,7 @@ void Draw3DScene(void)
  */
 void DrawPlayers()
 {
-    if (UpdateBottomScreenOneFrame != 0)
+    if (UpdateBottomScreenFrameCount != 0)
         return;
 
     Map *map = &allMaps[currentMap];
@@ -176,6 +173,7 @@ void DrawPlayers()
     // for each players
     for (int playerIndex = 1; playerIndex < MaxPlayer; playerIndex++)
     {
+        Player *player = &AllPlayers[playerIndex];
         // Check if he is not dead, in game and if the camera is not on this player
         if (AllPlayers[playerIndex].Id != UNUSED && !AllPlayers[playerIndex].IsDead && CurrentCameraPlayer != playerIndex)
         {
@@ -184,17 +182,21 @@ void DrawPlayers()
                 // If the player is in a visible map part
                 if (checkZoneForOcclusion(&map->AllOcclusionZone[allMaps[currentMap].AllZones[AllPlayers[playerIndex].CurrentOcclusionZone].visibleMapPart[i3]], AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z))
                 {
-                    // If the player is in the field of view of the camera, draw ot
+                    // Get if the player is in the field of view of the camera
                     bool inFov = PointInTriangleInt(AllPlayers[playerIndex].PlayerModel->x, AllPlayers[playerIndex].PlayerModel->z, AllPlayers[CurrentCameraPlayer].PlayerModel->x, AllPlayers[CurrentCameraPlayer].PlayerModel->z, t1x, t1z, t2x, t2z);
 
                     if (inFov)
                     {
+                        NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
                         // Draw player's skin
                         NE_ModelDraw(AllPlayers[playerIndex].PlayerModel);
+
                         // Draw player's shadow
-                        NE_PolyFormat(15, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
-                        NE_ModelDraw(AllPlayers[playerIndex].PlayerShadow);
-                        NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+                        if (player->isAi || fabs(player->position.y - player->lerpDestination.y) < 0.05)
+                        {
+                            NE_PolyFormat(15, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+                            NE_ModelDraw(AllPlayers[playerIndex].PlayerShadow);
+                        }
                     }
                     break;
                 }
@@ -225,15 +227,29 @@ void Draw3DSceneNotInGame(void)
     }
     else if (currentMap == TUTORIAL)
     {
-        NE_ModelDraw(map->models[0].Model);
-        NE_ModelDraw(map->models[1].Model);
+        for (int i = 0; i < 2; i++)
+        {
+            // Set the model light like normal
+            if (!map->models[i].shadowed)
+            {
+                GroundMaterial->diffuse = RGB15(0, 0, 0);
+                GroundMaterial->emission = RGB15(11, 11, 11);
+                GroundMaterial->specular = RGB15(7, 7, 7);
+            }
+            else // Set the model light like shadowed
+            {
+                GroundMaterial->diffuse = RGB15(1, 1, 1);
+                GroundMaterial->emission = RGB15(3, 3, 3);
+                GroundMaterial->specular = RGB15(3, 3, 3);
+            }
+            NE_ModelDraw(map->models[i].Model);
+        }
     }
 
     NE_2DViewInit();
+    // Draw keyboard input screen if needed
     if (isShowingKeyBoard)
     {
-        drawNameChanging();
+        drawKeyboardInput();
     }
-
-    // drawTopScreenUI();
 }

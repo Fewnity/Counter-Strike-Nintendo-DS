@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #ifndef PLAYER_H_ /* Include guard */
 #define PLAYER_H_
 
@@ -16,5 +22,6 @@ void addPlayerMoney(int playerIndex, int Money);
 void setPlayerMoney(int playerIndex, int Money);
 void addMoneyToTeam(int Money, enum teamEnum Team);
 void setBombForARandomPlayer();
+void setShopZone(Player *player);
 
 #endif // PLAYER_H_

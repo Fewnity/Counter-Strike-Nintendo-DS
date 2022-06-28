@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include <float.h>
 #include "ai.h"
@@ -9,22 +15,27 @@
 #include "collisions.h"
 #include "grenade.h"
 
-// Bots names
+// Bots names list
 const char *botsNames[BOTS_NAMES_COUNT];
 
 // Avoid multiple bot with the same name
 bool botsNamesTaken[BOTS_NAMES_COUNT];
 
 // Matrices for path finding
-// PathLength AllMatricesLength[15];
 PathLength *AllMatricesLength;
 
+// Current matrices size for the current map (MatricesSize * MatricesSize)
 int MatricesSize = 0;
+// Waypoint count for the current map
 int waypointsSize = 0;
+// Matrices count for the current map
 int MatriceCount = 0;
 
+// Timer to check the player's distance between the bot and the player
+int checkPlayerDistanceFromAiTimer = 1;
+
 /**
- * @brief Set the Bots Names object
+ * @brief Set bots names list
  */
 void setBotsNames()
 {
@@ -88,27 +99,30 @@ void ResetTakenBotsNames()
     }
 }
 
-/*
- * @brief Copy one list to another list
+/**
+ * @brief Copy one matrix to another matrix array
  *
+ * @param size Size of the matrix
  * @param matrix Matrix to copy
  * @param index Index of the destination matrix
  */
 void copyArrayToAllMatricesLength(int size, int matrix[size][size], int index)
-// void copyArrayToAllMatricesLength(int *matrix, int index)
 {
+    // Alloc memory for the matrix (create a list of int*)
     AllMatricesLength[index].matrixOneLength = malloc(size * sizeof(int *));
     for (int i = 0; i < size; i++)
     {
+        // Alloc memory for the matrix (create a list of int)
         AllMatricesLength[index].matrixOneLength[i] = malloc(size * sizeof(int));
         memcpy(AllMatricesLength[index].matrixOneLength[i], matrix[i], sizeof(int) * size);
-        // for (int i2 = 0; i2 < size; i2++)
-        // {
-        //     AllMatricesLength[index].matrixOneLength[i][i2] = matrix[i][i2];
-        // }
     }
 }
 
+/**
+ * @brief Free all matrices from memory
+ *
+ * @param size Size of matrices
+ */
 void freeAllMatricesLength(int size)
 {
     for (int i = 0; i < MatriceCount; i++)
@@ -117,7 +131,6 @@ void freeAllMatricesLength(int size)
         {
             for (int i2 = 0; i2 < size; i2++)
             {
-                // if (AllMatricesLength[i].matrixOneLength[i2])
                 free(AllMatricesLength[i].matrixOneLength[i2]);
             }
             free(AllMatricesLength[i].matrixOneLength);
@@ -128,6 +141,11 @@ void freeAllMatricesLength(int size)
 /**
  * @brief Created with the Unity project, needed for path finding.
  * Why I'm dooing that? See https://en.wikipedia.org/wiki/Adjacency_matrix
+ * Every matrices are the same size and are filled with 0 or 1.
+ * 0 means that the two waypoints are not connected with a path of x length, 1 means that they are.
+ * Ex : matrix2 list all waypoints connected with a path of 2 length.
+ *
+ * @param mapToLoad Map index to load
  */
 void createLengthMatrices(int mapToLoad)
 {
@@ -1149,13 +1167,16 @@ void createLengthMatrices(int mapToLoad)
 }
 
 /**
- * @brief Created with the Unity project, neeeded for path finding
+ * @brief Created with the Unity project, needed for path finding
+ * Each waypoint is connected to some waypoints
+ *
+ * @param mapToLoad Map index to load
  */
 void CreateWaypoints(int mapToLoad)
 {
-    // return;
     if (waypointsSize != 0)
         freeWaypoint();
+
     if (mapToLoad == DUST2)
     {
         waypointsSize = 58;
@@ -1372,7 +1393,6 @@ int GetDistanceBewteenTwoPlayers(int player1Index, int player2Index)
  * @param edgeCount Waypoint's edge count
  * @param edge Edge list
  */
-// void CreateWaypoint(int id, float x, float y, float z, int edgeCount, int edge[edgeCount])
 void CreateWaypoint(int id, float x, float y, float z, int edgeCount, int *edge)
 {
     Waypoints[id].x = x;
@@ -1380,21 +1400,19 @@ void CreateWaypoint(int id, float x, float y, float z, int edgeCount, int *edge)
     Waypoints[id].z = z;
     Waypoints[id].edgeCount = edgeCount;
 
-    // Waypoints[id].edge = edge;
-
     Waypoints[id].edge = malloc(edgeCount * sizeof(int));
     memcpy(Waypoints[id].edge, edge, sizeof(int) * edgeCount);
-
-    // Waypoints[id].edge = malloc(edgeCount * sizeof(int));
-
-    // for (int i = 0; i < edgeCount; i++)
-    //     Waypoints[id].edge[i] = edge[i];
 }
 
+/**
+ * @brief Free the Waypoints' edges lists from memory
+ *
+ */
 void freeWaypoint()
 {
     for (int i = 0; i < waypointsSize; i++)
     {
+        // If the edge list is not null
         if (Waypoints[i].edge)
             free(Waypoints[i].edge);
     }
@@ -1509,7 +1527,7 @@ void AiCheckForAction()
 
         Player *playerToCheck = &AllPlayers[currentAiToCheck];
         // If current AI is in game, not dead, does not planting the bomb, and raycast cycle is finished
-        if (playerToCheck->isAi && playerToCheck->Id != UNUSED && !playerToCheck->IsDead && !playerToCheck->isPlantingBomb /* && playerToCheck->ScanFinished*/)
+        if (playerToCheck->isAi && playerToCheck->Id != UNUSED && !playerToCheck->IsDead && !playerToCheck->isPlantingBomb)
         {
             // Check current target distance with current ia
             int randomPlayerToCheck = playerToCheck->target;
@@ -1536,7 +1554,7 @@ void AiCheckForAction()
                     playerToCheck->allPlayerScanned[randomPlayerToCheck] = true;
 
                     // Check distance if current scanned player is not in spectator team and the same team of the current AI, and if the scanned player is in game
-                    if (AllPlayers[randomPlayerToCheck].Team == SPECTATOR || AllPlayers[randomPlayerToCheck].Team == playerToCheck->Team || AllPlayers[randomPlayerToCheck].IsDead || AllPlayers[randomPlayerToCheck].invisibilityTimer > 0 || AllPlayers[randomPlayerToCheck].Id == UNUSED)
+                    if (AllPlayers[randomPlayerToCheck].Team == SPECTATOR || AllPlayers[randomPlayerToCheck].Team == playerToCheck->Team || AllPlayers[randomPlayerToCheck].IsDead || AllPlayers[randomPlayerToCheck].invincibilityTimer > 0 || AllPlayers[randomPlayerToCheck].Id == UNUSED)
                     {
                         continue;
                     }
@@ -1569,8 +1587,8 @@ void AiCheckForAction()
                     inFov = true;
                 // Check if the target is visible
                 prepareAiRaycast(currentAiToCheck, randomPlayerToCheck, true);
-
-                if (Raycast(currentAiToCheck) != NO_PLAYER && inFov)
+                float hitDistance = 0;
+                if (Raycast(currentAiToCheck, 0, &hitDistance) != NO_PLAYER && inFov)
                 {
                     playerToCheck->target = randomPlayerToCheck;
                     playerToCheck->lastSeenTarget = randomPlayerToCheck;
@@ -1723,7 +1741,7 @@ void SetRandomDefuser()
 }
 
 /**
- * @brief Force a bot to be a defuser
+ * @brief Force a bot to be a defuser and check a path to the bomb
  *
  * @param defuserIndex player index
  */
@@ -1742,7 +1760,7 @@ void checkAiShoot()
     for (int i = 1; i < MaxPlayer; i++)
     {
         Player *player = &AllPlayers[i];
-        if (player->target != NO_PLAYER /*&& player->ScanFinished*/ && player->isAi && !player->IsDead)
+        if (player->target != NO_PLAYER && player->isAi && !player->IsDead)
         {
             Player *targetPlayer = &AllPlayers[player->target];
 
@@ -1757,37 +1775,28 @@ void checkAiShoot()
             {
                 if (((player->currentGunInInventory == 1 || player->currentGunInInventory == 2) && player->AllAmmoMagazine[player->currentGunInInventory - 1].AmmoCount > 0) || getPlayerCurrentGun(player).isKnife)
                 {
-                    // TODO knife sound missing?
                     if (!getPlayerCurrentGun(player).isKnife)
                     {
                         player->AllAmmoMagazine[player->currentGunInInventory - 1].AmmoCount--;
                         // Gun sound
                         int Panning, Volume;
                         GetPanning(player->Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, getPlayerCurrentGun(player).MaxSoundDistance);
-                        Play3DSound(getPlayerCurrentGun(player).gunSound, Volume, Panning);
+                        Play3DSound(getPlayerCurrentGun(player).gunSound, Volume, Panning, player);
                     }
 
                     // Animations
-                    if (getPlayerCurrentGun(player).isDualGun)
-                        player->isRightGun = !player->isRightGun;
-                    else
-                        player->isRightGun = true;
-
                     setGunRecoil(player);
 
-                    // If the localplayer is watching the AI camera, add muzzle flash animation and rumble
-                    if (CurrentCameraPlayer == i)
+                    for (int shootIndex = 0; shootIndex < getPlayerCurrentGun(player).bulletCountPerShoot; shootIndex++)
                     {
-                        ShowMuzzle = 3;
-                        rumble(1);
-                    }
-
-                    // Make a racast to shoot the target
-                    prepareAiRaycast(i, player->target, false);
-                    player->GunWaitCount = 0;
-                    if (Raycast(i) != NO_PLAYER) // If shoot hit the target, apply damage
-                    {
-                        makeHit(i, player->target);
+                        // Make a racast to shoot the target
+                        prepareAiRaycast(i, player->target, false);
+                        player->GunWaitCount = 0;
+                        float hitDistance = 0;
+                        if (Raycast(i, shootIndex, &hitDistance) != NO_PLAYER) // If shoot hit the target, apply damage
+                        {
+                            makeHit(i, player->target, hitDistance, shootIndex);
+                        }
                     }
                 }
                 else

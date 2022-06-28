@@ -1,22 +1,34 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "ai.h"
 #include "ui.h"
 #include "party.h"
 #include "movements.h"
 #include "input.h"
+#include "sounds.h"
+#include "network.h"
 #include <math.h>
 
-// Player *AllPlayersRefForMovements;
 int xSpeedAdded = 0;
 int zSpeedAdded = 0;
+int fovCheckAngle = 80;
 
-void SetPlayersForMovements()
-{
-    // AllPlayersRefForMovements = GetPlayers();
-}
-
+/**
+ * @brief Move player according to his speed and direction
+ *
+ * @param CurrentSpeed Speed
+ * @param xWithoutY X direction
+ * @param zWithoutY Z direction
+ * @param NeedBobbing Need to bobbing
+ */
 void MovePlayer(int CurrentSpeed, float xWithoutY, float zWithoutY, bool *NeedBobbing)
 {
+    // Move forward/backward
     if (isKey(UP_BUTTON))
     {
         localPlayer->PlayerPhysic->xspeed += CurrentSpeed * xWithoutY * 2;
@@ -30,6 +42,7 @@ void MovePlayer(int CurrentSpeed, float xWithoutY, float zWithoutY, bool *NeedBo
         *NeedBobbing = true;
     }
 
+    // Move left/right
     if (isKey(RIGHT_BUTTON))
     {
         localPlayer->PlayerPhysic->xspeed += CurrentSpeed * -zWithoutY * 2;
@@ -43,22 +56,31 @@ void MovePlayer(int CurrentSpeed, float xWithoutY, float zWithoutY, bool *NeedBo
         *NeedBobbing = true;
     }
 
+    // Total of speed
     xSpeedAdded = abs(localPlayer->PlayerPhysic->xspeed);
     zSpeedAdded = abs(localPlayer->PlayerPhysic->zspeed);
 }
 
+/**
+ * @brief Add angle to local player
+ *
+ * @param xAngleToAdd X angle to add
+ * @param yAngleToAdd Y angle to add
+ */
 void AddAnglesToPlayer(float xAngleToAdd, float yAngleToAdd)
 {
     float AngleSpeed = 1;
-    // if (GetCurrentScopeLevel())
+
+    // If the player is scoping, the angle speed is lower
     if (GetCurrentScopeLevel() == 1)
         AngleSpeed = 0.5;
     else if (GetCurrentScopeLevel() == 2)
         AngleSpeed = 0.25;
 
+    // Muliply with the sensitivity for the angle speed
     AngleSpeed *= sensitivity;
-    // AngleSpeed /= 4;
 
+    // Add angle to the player
     if (xAngleToAdd != 0)
     {
         localPlayer->Angle += AngleSpeed * xAngleToAdd;
@@ -66,6 +88,7 @@ void AddAnglesToPlayer(float xAngleToAdd, float yAngleToAdd)
         SetSendPosition(true);
     }
 
+    // Add angle to the camera
     if (yAngleToAdd != 0)
     {
         float NewyAngle = GetCameraAngleY() + AngleSpeed * yAngleToAdd;
@@ -73,15 +96,28 @@ void AddAnglesToPlayer(float xAngleToAdd, float yAngleToAdd)
         {
             SetCameraAngleY(NewyAngle);
             SetNeedUpdateViewRotation(true);
+            SetSendPosition(true);
         }
     }
 }
 
-void RotatePlayer(bool *NeedUpdateViewRotation, bool *SendPosition, float *CameraAngleY, int CurrentScopeLevel)
+/**
+ * @brief Rotate player with physicals key
+ *
+ * @param NeedUpdateViewRotation
+ * @param SendPosition
+ * @param CameraAngleY
+ * @param CurrentScopeLevel
+ */
+void RotatePlayer(bool *NeedUpdateViewRotation, bool *SendPosition, float *CameraAngleY)
 {
-    int AngleSpeed = 2;
-    if (CurrentScopeLevel)
-        AngleSpeed = 1;
+    float AngleSpeed = 2;
+
+    // If the player is scoping, the angle speed is lower
+    if (GetCurrentScopeLevel() == 1)
+        AngleSpeed *= 0.5;
+    else if (GetCurrentScopeLevel() == 2)
+        AngleSpeed *= 0.25;
 
     // Change player rotation
     if (isKey(LOOK_RIGHT_BUTTON))
@@ -112,12 +148,65 @@ void RotatePlayer(bool *NeedUpdateViewRotation, bool *SendPosition, float *Camer
 
 int updateRate = 0;
 
+/**
+ * @brief Force to update the view rotation
+ *
+ * @param CameraAngleY Camera angle
+ */
 void ForceUpdateLookRotation(float CameraAngleY)
 {
     updateRate = 0;
     UpdateLookRotation(CameraAngleY);
 }
 
+void stepSound(int playerIndex)
+{
+    Player *player = &AllPlayers[playerIndex];
+
+    if (playerIndex == 0) // do a 2d sound
+    {
+        DoStepSound(110, 128, 0);
+    }
+    else // Do a 3d sound
+    {
+        int Panning, Volume;
+        GetPanning(player->Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.11);
+        DoStepSound(Volume, Panning, playerIndex);
+    }
+}
+
+/**
+ * @brief Apply animation when the player is moving
+ *
+ * @param playerIndex Player index
+ */
+void ApplyGunWalkAnimation(int playerIndex)
+{
+    Player *player = &AllPlayers[playerIndex];
+
+    player->BobbingOffset += BobbingSpeed;
+
+    // Do sound every half bobbing cycle
+    if (!player->HasBobbed && player->BobbingOffset >= M_PI)
+    {
+        stepSound(playerIndex);
+
+        player->HasBobbed = true;
+    }
+    else if (player->BobbingOffset >= M_TWOPI)
+    {
+        player->BobbingOffset = 0;
+        stepSound(playerIndex);
+
+        player->HasBobbed = false;
+    }
+}
+
+/**
+ * @brief Update look values for local player
+ *
+ * @param CameraAngleY Camera angle
+ */
 void UpdateLookRotation(float CameraAngleY)
 {
     // Math formula to get a point position on sphere from the middle of the sphere with 2 angle
@@ -135,6 +224,7 @@ void UpdateLookRotation(float CameraAngleY)
     xWithoutY = -SinTempS;
     zWithoutY = -cosTempS;
 
+    // Values for map
     if (isShowingMap)
     {
         float TempSForMap = (AllPlayers[GetCurrentCameraPlayer()].Angle) / 512.0 * M_TWOPI;
@@ -142,10 +232,12 @@ void UpdateLookRotation(float CameraAngleY)
         zWithoutYForMap = -cos(TempSForMap);
     }
 
+    // Values for audio and occlusions
     if (updateRate == 0)
     {
         float TempSside1 = (AllPlayers[GetCurrentCameraPlayer()].Angle - 80) / 512.0 * M_TWOPI;
         float TempSside2 = (AllPlayers[GetCurrentCameraPlayer()].Angle + 80) / 512.0 * M_TWOPI;
+
         float TempSForAudio = (AllPlayers[GetCurrentCameraPlayer()].Angle - 128) / 512.0 * M_TWOPI;
 
         xWithoutYForAudio = -sin(TempSForAudio);
@@ -153,7 +245,6 @@ void UpdateLookRotation(float CameraAngleY)
 
         xWithoutYForOcclusionSide1 = -sin(TempSside1);
         zWithoutYForOcclusionSide1 = -cos(TempSside1);
-
         xWithoutYForOcclusionSide2 = -sin(TempSside2);
         zWithoutYForOcclusionSide2 = -cos(TempSside2);
 
@@ -162,7 +253,15 @@ void UpdateLookRotation(float CameraAngleY)
     updateRate--;
 }
 
-// void UpdateLookRotationAI(float CameraAngleY, int playerId, float *x, float *y, float *z)
+/**
+ * @brief  Update look values for non local player
+ *
+ * @param CameraAngleY Camera angle
+ * @param angle Angle of the player
+ * @param x out x value
+ * @param y out y value
+ * @param z out z value
+ */
 void UpdateLookRotationAI(float CameraAngleY, float angle, float *x, float *y, float *z)
 {
     // Math formula to get a point position on sphere from the middle of the sphere with 2 angle
@@ -178,6 +277,16 @@ void UpdateLookRotationAI(float CameraAngleY, float angle, float *x, float *y, f
     *z = cosTempS * cosTempT;
 }
 
+/**
+ * @brief Update look values FOR culling for non local player
+ *
+ * @param playerIndex Player index
+ * @param angle Angle of the player
+ * @param xSide1 out x value for side 1
+ * @param zSide1 out z value for side 1
+ * @param xSide2 out x value for side 2
+ * @param zSide2 out z value for side 2
+ */
 void GetRotationForCullingAI(int playerIndex, float angle, float *xSide1, float *zSide1, float *xSide2, float *zSide2)
 {
     float TempSside1 = (AllPlayers[playerIndex].Angle - 100) / 512.0 * M_TWOPI;
@@ -191,6 +300,11 @@ void GetRotationForCullingAI(int playerIndex, float angle, float *xSide1, float 
 }
 
 float Speed = 0.05;
+/**
+ * @brief Normalize vector3
+ *
+ * @param p Vector3
+ */
 void normalize(Vector3 *p)
 {
     float w = sqrtf(p->x * p->x + p->y * p->y + p->z * p->z);
@@ -199,6 +313,11 @@ void normalize(Vector3 *p)
     p->z /= w;
 }
 
+/**
+ * @brief Normalize vector2 2D
+ *
+ * @param p Vector2
+ */
 void normalize2D(Vector2 *p)
 {
     float w = sqrtf(p->x * p->x + p->y * p->y);
@@ -206,12 +325,21 @@ void normalize2D(Vector2 *p)
     p->y /= w;
 }
 
+/**
+ * @brief Normalize vector2 1D
+ *
+ * @param p Vector2
+ */
 void normalize1D(Vector2 *p)
 {
     float w = sqrtf(p->x * p->x);
     p->x /= w;
 }
 
+/**
+ * @brief Set non local player position
+ *
+ */
 void SetOnlinelPlayersPositions()
 {
     // Loop using "AllPlayers" array for updating non local player position smoothly
@@ -251,10 +379,8 @@ void SetOnlinelPlayersPositions()
                     player->Angle = player->Angle + AngleAddAmout;
                 }
 
-                /*if (AllPlayersRefForMovements[i].Angle < AllPlayersRefForMovements[i].AngleDestination)
-                    AllPlayersRefForMovements[i].Angle += 2;
-                else if (AllPlayersRefForMovements[i].Angle > AllPlayersRefForMovements[i].AngleDestination)
-                    AllPlayersRefForMovements[i].Angle -= 2;*/
+                if (Dis > 0.05)
+                    ApplyGunWalkAnimation(i);
             }
             else
             {
@@ -301,27 +427,24 @@ void SetOnlinelPlayersPositions()
             else
                 Ok++;
 
-            if (Ok == 2)
+            if (Ok == 2) // if the player reach the waypoint
             {
                 if (CurPath < player->PathCount - 1)
                 {
+                    // Go to next waypoint
                     player->CurrentPath++;
                 }
                 else
                 {
+                    // if the player is at the end of the path
                     if (applyRules)
                     {
                         player->LastWayPoint = player->Path[CurPath];
+                        // Plant/defuse the bomb if needed
                         if (player->haveBomb || (player->Team == COUNTERTERRORISTS && BombPlanted && !BombDefused && bombPlantedAt == player->LastWayPoint))
                         {
-                            iprintf("\nLastPath: %d", player->LastWayPoint);
                             if (player->LastWayPoint == 14 || player->LastWayPoint == 29) // TOTO Replace 14 and 29 by bomb point define
                             {
-                                if (player->Team == COUNTERTERRORISTS)
-                                    printf("(%d)DEFUSING\n", i);
-                                else
-                                    printf("(%d)PLANTING\n", i);
-
                                 player->isPlantingBomb = true;
                                 if (!BombDefused && BombPlanted) // Set timer
                                     player->bombTimer = bombDefuseTime;
@@ -333,20 +456,19 @@ void SetOnlinelPlayersPositions()
                     player->PathCount = 0;
                 }
             }
+            else
+            {
+                // Move player
+                ApplyGunWalkAnimation(i);
+                NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
+                NE_ModelSetCoord(player->PlayerShadow, player->position.x, player->position.y - 0.845, player->position.z);
 
-            NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
-            NE_ModelSetCoord(player->PlayerShadow, player->position.x, player->position.y - 0.845, player->position.z);
-
-            float FinalAngle = atan2f(Direction2D.x, Direction2D.y) * 512.0 / (M_TWOPI) + 256.0;
-            /*if (AllPlayersRefForMovements[i].Angle + 2 < FinalAngle)
-                AllPlayersRefForMovements[i].Angle += 2;
-            else if (AllPlayersRefForMovements[i].Angle - 2 > FinalAngle)
-                AllPlayersRefForMovements[i].Angle -= 2;*/
-            player->Angle = FinalAngle;
-            // player->Angle = player->AngleDestination;
-            player->PlayerModel->ry = player->Angle;
+                float FinalAngle = atan2f(Direction2D.x, Direction2D.y) * 512.0 / (M_TWOPI) + 256.0;
+                player->Angle = FinalAngle;
+                player->PlayerModel->ry = player->Angle;
+            }
         }
-        else // if (player->isAi)
+        else //?
         {
             Vector3 positionToGo;
 
@@ -369,9 +491,7 @@ void SetOnlinelPlayersPositions()
                 player->PlayerModel->ry = player->AngleDestination;
                 continue;
             }
-            // playerToCheck->searchForDroppedBomb
-            // if (player->tooFar)
-            //{
+
             float Speed = 0.087;
             int Ok = 0;
 
@@ -398,8 +518,7 @@ void SetOnlinelPlayersPositions()
 
             NE_ModelSetCoord(player->PlayerModel, player->position.x, player->position.y, player->position.z);
             NE_ModelSetCoord(player->PlayerShadow, player->position.x, player->position.y - 0.845, player->position.z);
-            // player->PlayerModel->ry = player->Angle;
-            // }
+
             player->Angle = player->AngleDestination;
             player->PlayerModel->ry = player->AngleDestination;
         }

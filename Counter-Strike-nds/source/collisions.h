@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #ifndef COLLISION_H_ /* Include guard */
 #define COLLISION_H_
 #include "main.h"
@@ -20,6 +26,7 @@ void loadMapModels(int mapToLoad);
 void UnLoadMap(int mapToUnload);
 
 void CheckZones(CollisionBox2D bombDefuseZone, bool *CanPutBomb, bool *canDefuseBomb);
+void getValuesForRaycast(Vector3Int StartPosition, Vector3Int EndPosition, float *x, float *y, float *z);
 int checkBombZoneWaypoint();
 void setRaycastValues(Player *shooterPlayer, float xRot, float yRot, float zRot);
 void checkPlayerOcclusionZone(int playerIndex);
@@ -29,7 +36,8 @@ void CreateWall(float xPos, float yPos, float zPos, float xSize, float ySize, fl
 void SetPlayerForCollisions();
 bool CheckStairsForGrenades(PhysicalGrenade *grenade);
 void CalculateAllTriggerColBoxs(int mapToLoad);
-int Raycast(int playerId);
+// int Raycast(int playerId);
+int Raycast(int playerIndex, int currentShootIndex, float *distance);
 void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibility);
 bool PointInTriangle(float px, float py, float p1x, float p1y, float p2x, float p2y, float p3x, float p3y);
 float sign(float p1x, float p1y, float p2x, float p2y, float p3x, float p3y);

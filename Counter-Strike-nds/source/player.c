@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "player.h"
 #include "party.h"
@@ -7,14 +13,10 @@
 #include "collisions.h"
 #include "sounds.h"
 
-void playerUpdate()
-{
-}
-
-void jump()
-{
-}
-
+/**
+ * @brief Create shadow for each players
+ *
+ */
 void createPlayerShadow()
 {
     // Player shadow
@@ -28,6 +30,12 @@ void createPlayerShadow()
     }
 }
 
+/**
+ * @brief Set player health
+ *
+ * @param playerIndex Player index
+ * @param health New health
+ */
 void setPlayerHealth(int playerIndex, int health)
 {
     Player *player = &AllPlayers[playerIndex];
@@ -36,6 +44,7 @@ void setPlayerHealth(int playerIndex, int health)
 
     player->Health = health;
 
+    // if the player is dead
     if (player->Health <= 0)
     {
         if (!applyRules)
@@ -46,19 +55,22 @@ void setPlayerHealth(int playerIndex, int health)
         if (playerIndex == 0)
         {
             DisableAim();
+            // Do death sound
             PlayBasicSound(SFX_DEATH);
             // Hide crosshair
             NE_SpriteVisible(TopScreenSprites[0], false);
         }
         else
         {
+            // Do death sound
             int Panning, Volume;
             GetPanning(player->Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
-            Play3DSound(SFX_DEATH, Volume, Panning);
+            Play3DSound(SFX_DEATH, Volume, Panning, player);
         }
     }
     else if (player->Health == 100)
     {
+        // Re enable crosshair
         if (playerIndex == 0)
         {
             NE_SpriteVisible(TopScreenSprites[0], true);
@@ -67,14 +79,16 @@ void setPlayerHealth(int playerIndex, int health)
             redHealthTextCounter = 0;
         }
 
-        iprintf("\nRespawn");
         player->IsDead = FALSE;
     }
 }
 
+/**
+ * @brief Delete all players
+ *
+ */
 void removeAllPlayers()
 {
-    // return;
     PlayerCount = 0;
     for (int i = 0; i < MaxPlayer; i++)
     {
@@ -82,11 +96,12 @@ void removeAllPlayers()
         player->Id = UNUSED;
         player->Team = SPECTATOR;
 
+        // Delete model
         if (player->PlayerModel != NULL)
         {
             NE_ModelDelete(player->PlayerModel);
         }
-
+        // Delete physics component
         if (player->PlayerPhysic != NULL)
         {
             NE_PhysicsDelete(player->PlayerPhysic);
@@ -94,6 +109,10 @@ void removeAllPlayers()
     }
 }
 
+/**
+ * @brief Set players position to their spawn points
+ *
+ */
 void setPlayersPositionAtSpawns()
 {
     int currentCounter = 0;
@@ -105,6 +124,7 @@ void setPlayersPositionAtSpawns()
         Map *map = &allMaps[currentMap];
         if (player->Team == TERRORISTS)
         {
+            // Set player position to a terrorists spawn
             player->PlayerModel->x = map->allTerroristsSpawns[currentTerrorist].x * 4096.0;
             player->PlayerModel->y = map->allTerroristsSpawns[currentTerrorist].y * 4096.0;
             player->PlayerModel->z = map->allTerroristsSpawns[currentTerrorist].z * 4096.0;
@@ -120,6 +140,7 @@ void setPlayersPositionAtSpawns()
         }
         else if (player->Team == COUNTERTERRORISTS)
         {
+            // Set player position to a counter terrorists spawn
             player->PlayerModel->x = map->allCounterTerroristsSpawns[currentCounter].x * 4096.0;
             player->PlayerModel->y = map->allCounterTerroristsSpawns[currentCounter].y * 4096.0;
             player->PlayerModel->z = map->allCounterTerroristsSpawns[currentCounter].z * 4096.0;
@@ -136,18 +157,34 @@ void setPlayersPositionAtSpawns()
         CalculatePlayerPosition(i);
         if (i == 0)
         {
-            SetCollisionBox(player->position.x, player->position.y, player->position.z, 4, 3, 4, &shopZone);
+            setShopZone(player);
         }
     }
     NeedUpdateViewRotation = true;
 }
 
+/**
+ * @brief Set shop zone for a player
+ *
+ * @param player Player pointer
+ */
+void setShopZone(Player *player)
+{
+    SetCollisionBox(player->position.x, player->position.y, player->position.z, 4, 3, 4, &shopZone);
+}
+
+/**
+ * @brief Set a player position to his spawn point
+ *
+ * @param playerIndex Player index
+ */
 void setPlayerPositionAtSpawns(int playerIndex)
 {
     Player *player = &AllPlayers[playerIndex];
     Map *map = &allMaps[currentMap];
     if (player->Team == TERRORISTS)
     {
+        // Set player position to a terrorists spawn
         player->PlayerModel->x = map->allTerroristsSpawns[player->spawnAt].x * 4096.0;
         player->PlayerModel->y = map->allTerroristsSpawns[player->spawnAt].y * 4096.0;
         player->PlayerModel->z = map->allTerroristsSpawns[player->spawnAt].z * 4096.0;
@@ -161,6 +198,7 @@ void setPlayerPositionAtSpawns(int playerIndex)
     }
     else if (player->Team == COUNTERTERRORISTS)
     {
+        // Set player position to a counter terrorists spawn
         player->PlayerModel->x = map->allCounterTerroristsSpawns[player->spawnAt].x * 4096.0;
         player->PlayerModel->y = map->allCounterTerroristsSpawns[player->spawnAt].y * 4096.0;
         player->PlayerModel->z = map->allCounterTerroristsSpawns[player->spawnAt].z * 4096.0;
@@ -175,22 +213,32 @@ void setPlayerPositionAtSpawns(int playerIndex)
     CalculatePlayerPosition(playerIndex);
     if (playerIndex == 0)
     {
-        SetCollisionBox(player->position.x, player->position.y, player->position.z, 4, 3, 4, &shopZone);
+        setShopZone(player);
     }
     NeedUpdateViewRotation = true;
 }
 
-// Change player skin texture
+/**
+ * @brief Change player skin texture
+ *
+ * @param playerIndex Player index
+ */
 void UpdatePlayerTexture(int playerIndex)
 {
     Player *player = &AllPlayers[playerIndex];
     if (player->Team == COUNTERTERRORISTS)
-        NE_ModelSetMaterial(player->PlayerModel, PlayerMaterial);
+        NE_ModelSetMaterial(player->PlayerModel, PlayerMaterial); // Set counter terrorists texture
     else if (player->Team == TERRORISTS)
-        NE_ModelSetMaterial(player->PlayerModel, PlayerMaterialTerrorist);
+        NE_ModelSetMaterial(player->PlayerModel, PlayerMaterialTerrorist); // Set terrorists texture
 }
 
-// Add new player to party
+/**
+ * @brief Add new player to party
+ *
+ * @param NewId Id of the player
+ * @param IsLocalPlayer Is a local player?
+ * @param isAI Is an AI?
+ */
 void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
 {
     for (int i = 1; i < MaxPlayer; i++)
@@ -203,9 +251,7 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
         // Check for an empty player slot
         if (player->Id == UNUSED)
         {
-            iprintf("\nCreating player Id: %d", NewId);
             // Create player (3d model, physics, animations)
-            // NE_ModelAnimSetFrame(AllPlayers[i].PlayerModel, 2);
 
             // Set player collision size
             player->xSize = 0.35;
@@ -231,8 +277,6 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
 
             if (IsLocalPlayer)
             {
-                // strcpy(player->name, "LocalPlayer");
-                // Load();
                 player->PlayerModel = NE_ModelCreate(NE_Static);
                 player->PlayerPhysic = NE_PhysicsCreate(NE_BoundingBox);
                 NE_PhysicsSetModel(player->PlayerPhysic, (void *)player->PlayerModel); // Physics object and Model assigned to it
@@ -246,9 +290,9 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
             }
             else
             {
-                // player->PlayerModel = NE_ModelCreate(NE_Animated);
+                // player->PlayerModel = NE_ModelCreate(NE_Animated); // ANIMATED VERSION
                 player->PlayerModel = NE_ModelCreate(NE_Static);
-                // NE_ModelLoadNEA(player->PlayerModel, (u32 *)playerAnimNea_bin);
+                // NE_ModelLoadNEA(player->PlayerModel, (u32 *)playerAnimNea_bin); // ANIMATED VERSION
 
                 if (i == 1)
                     NE_ModelLoadStaticMesh(player->PlayerModel, (u32 *)GIGNNew_bin);
@@ -279,12 +323,17 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
                 }
                 else
                 {
-                    // strcpy(player->name, "Player%d", NewId);
                     strcpy(player->name, "Player");
                 }
             }
 
-            NE_ModelSetCoord(player->PlayerModel, 0, 0 /* + i * 5*/, -2);
+            NE_ModelSetCoord(player->PlayerModel, 0, -100, -2);
+            player->lerpDestination.x = 0;
+            player->lerpDestination.y = -100;
+            player->lerpDestination.z = -2;
+            player->position.x = 0;
+            player->position.y = -100;
+            player->position.z = -2;
 
             player->Id = NewId;
 
@@ -292,23 +341,18 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
             player->isAi = isAI;
 
             // Init raycasting values
-            player->StopAt = 30;
-            // player->ScanFinished = true;
+            player->ScanForGrenade = EMPTY;
             player->target = NO_PLAYER;
             player->lastSeenTarget = NO_PLAYER;
             player->justCheking = false;
-            player->canShootEnemy = false;
-            player->Money = allPartyModes[currentPartyMode].startMoney; //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// TODO
-            // player->Money = 8000;
 
-            setPlayerMoney(i, 8000);
+            setPlayerMoney(i, allPartyModes[currentPartyMode].startMoney);
 
             player->KillCount = 0;
             player->DeathCount = 0;
             player->GunWaitCount = 0;
             player->GunReloadWaitCount = 0;
             player->isReloading = false;
-            // player->IsDead = false;
             player->haveDefuseKit = false;
             player->haveBomb = false;
             player->isPlantingBomb = false;
@@ -326,6 +370,7 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
             player->lightCoef = 1;
             player->currentShadowCollBox = 0;
             player->inShadow = false;
+            player->mapVisivilityTimer = 0;
 
             if (allPartyModes[currentPartyMode].spawnWithArmor)
             {
@@ -344,30 +389,39 @@ void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
     }
 
     // If code running here, this is not normal lol XD
-    printf("No player slot available");
+    // No player slot available
 }
 
+/**
+ * @brief Set the bomb to a random terrorist
+ *
+ */
 void setBombForARandomPlayer()
 {
     int TerroristCount = 0;
 
+    // Remove the bomb of all terrorists
     for (int i = 0; i < MaxPlayer; i++)
     {
         SetGunInInventoryForNonLocalPlayer(i, EMPTY, 8);
         AllPlayers[i].haveBomb = false;
+        // Get the number of terrorists in game
         if (AllPlayers[i].Id != UNUSED && AllPlayers[i].Team == TERRORISTS)
         {
             TerroristCount++;
         }
     }
 
+    // If the local player is a terrorists
     if (localPlayer->Team == TERRORISTS)
     {
+        // Give the bomb to the local player
         localPlayer->haveBomb = true;
         SetGunInInventory(28, 8);
         return;
     }
 
+    // Or give the bomb to a random terrorist
     int giveBombTo = rand() % TerroristCount;
     TerroristCount = 0;
 
@@ -387,51 +441,100 @@ void setBombForARandomPlayer()
     }
 }
 
+void onMoneyUpdated(int playerIndex)
+{
+    // Refresh the screen if needed
+    if (playerIndex == 0)
+    {
+        if (currentMenu == SHOP || currentMenu == SHOPCATEGORIES)
+            UpdateBottomScreenFrameCount += 8;
+    }
+}
+
+/**
+ * @brief Give money to a team
+ *
+ * @param Money Money to give (if negative, the function will do nothing)
+ * @param Team Team see teamEnum
+ */
 void addMoneyToTeam(int Money, enum teamEnum Team)
 {
+    if (Money <= 0)
+        return;
+
     for (int i = 0; i < MaxPlayer; i++)
     {
         Player *player = &AllPlayers[i];
         if (player->Team == Team)
         {
-            player->Money += Money;
-            if (player->Money > allPartyModes[currentPartyMode].maxMoney)
-                player->Money = allPartyModes[currentPartyMode].maxMoney;
+            addPlayerMoney(i, Money);
         }
     }
 }
 
+/**
+ * @brief Set player money
+ *
+ * @param playerIndex Player index
+ * @param Money Money (if negative, money will be 0)
+ */
 void setPlayerMoney(int playerIndex, int Money)
 {
+    if (Money < 0)
+        Money = 0;
+
     Player *player = &AllPlayers[playerIndex];
     player->Money = Money;
 
-    if (currentMenu == SHOP || currentMenu == SHOPCATEGORIES)
-        UpdateBottomScreenOneFrame += 8;
+    if (player->Money > allPartyModes[currentPartyMode].maxMoney)
+        player->Money = allPartyModes[currentPartyMode].maxMoney;
+
+    onMoneyUpdated(playerIndex);
 }
 
+/**
+ * @brief Give money to a player
+ *
+ * @param playerIndex Player index
+ * @param Money Money to give (if negative, the function will do nothing)
+ */
 void addPlayerMoney(int playerIndex, int Money)
 {
+    if (Money <= 0)
+        return;
+
     Player *player = &AllPlayers[playerIndex];
     player->Money += Money;
     if (player->Money > allPartyModes[currentPartyMode].maxMoney)
         player->Money = allPartyModes[currentPartyMode].maxMoney;
 
-    if (currentMenu == SHOP || currentMenu == SHOPCATEGORIES)
-        UpdateBottomScreenOneFrame += 8;
+    onMoneyUpdated(playerIndex);
 }
 
+/**
+ * @brief Reduce player money
+ *
+ * @param playerIndex Player index
+ * @param Money Money to reduce (if negative, the function will do nothing)
+ */
 void reducePlayerMoney(int playerIndex, int Money)
 {
+    if (Money <= 0)
+        return;
+
     Player *player = &AllPlayers[playerIndex];
     player->Money -= Money;
     if (player->Money < 0)
         player->Money = 0;
 
-    if (currentMenu == SHOP || currentMenu == SHOPCATEGORIES)
-        UpdateBottomScreenOneFrame += 8;
+    onMoneyUpdated(playerIndex);
 }
 
+/**
+ * @brief Reset a player (Reset inventory, ammo, health, armor)
+ *
+ * @param index Player index
+ */
 void resetPlayer(int index)
 {
     Player *player = &AllPlayers[index];
@@ -469,17 +572,17 @@ void resetPlayer(int index)
 
     if (roundState == TRAINING)
     {
-        player->invisibilityTimer = 60 * 5; // 5 seconds
+        player->invincibilityTimer = 60 * 5; // 5 seconds
         player->currentGunInInventory = 1;
     }
-    // player->haveBomb = false;
+    player->isPlantingBomb = false; //
+    player->bombTimer = 0;
+
     ResetGunsAmmo(index);
     if (index == 0)
     {
-        CurrentCameraPlayer = 0;
-        UpdateGunTexture();
+        SetCurrentCameraPlayer(0);
         frameCountDuringAir = 0;
-        // SetCollisionBox(player->position.x, player->position.y, player->position.z, 4, 3, 4, &shopZone);
     }
     else
     {

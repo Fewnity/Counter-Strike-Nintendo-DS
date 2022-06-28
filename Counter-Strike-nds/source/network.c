@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "sounds.h"
 #include "movements.h"
@@ -8,57 +14,82 @@
 #include "network.h"
 #include "party.h"
 #include "player.h"
+#include "security.h"
 
 #include <dswifi9.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 
+// Unused, the server list is not used anymore
 char **allIps;
 int ipCount = 0;
 int TotalIpCount = 0;
 
-int ping;
+// Current ping of the nintendo ds
+int ping = 0;
 
 // Socket
-int my_socket;
+int my_socket = 0;
 
-// Write part
-bool SendPosition;
+// Retain if the game needs to send a packet
+bool SendPosition = false;
 int SendPositionData = 3;
-bool SendStepSound;
-bool SendShoot;
-bool SendGrenade;
-bool SendBombPlacing;
-bool SendBombPlace;
-bool SendBombDefused;
-bool SendPing;
-bool SendTeam;
-bool WaitForTeamResponse;
-bool SendBuyWeapon;
-bool SendWallHit;
-bool SendSelectedGun;
+bool SendShoot = false;
+bool SendLeave = false;
+bool SendGrenade = false;
+bool SendBombPlacing = false;
+bool SendBombPlace = false;
+bool SendBombDefused = false;
+bool SendPing = false;
+bool SendTeam = false;
+bool WaitForTeamResponse = false;
+bool SendBuyWeapon = false;
+bool SendWallHit = false;
+bool SendSelectedGun = false;
+bool SendPlayerName = false;
+bool SendVoteStartNow = false;
+bool SendKeyResponse = false;
+bool SendGetDroppedBomb = false;
+bool SendReloaded = false;
 
-// Connect the game to a server, with an url.
-// LocalMode is used to connect on a localserver on an android phone
-// toGameServer is true when this is a gameserver. False for others, to get the list of the game server for example
-void connectToServer(char *url, bool LocalMode, int my_socket, bool toGameServer)
+// Retain if the player is just connected
+bool firstConnection = true;
+
+// For security, we need to retain the number of frame showed
+int frameCount = 0;
+// Timeout timer for the connection
+int timeOut = 0;
+
+// Join type to send to the server
+enum JoinType partyOption = JOIN_RANDOM_PARTY;
+
+// Party code to send to the server or to receive from the server
+char partyCode[PARTY_CODE_LENGTH];
+
+// Is the party private?
+bool isPrivate = false;
+
+/**
+ * @brief Connect the game to a server, with an url.
+ *
+ *
+ * @param url Url of the server
+ * @param LocalMode Used to connect on a localserver on an android phone
+ * @param my_socket socket
+ * @param toGameServer (true when this is a gameserver. False to get the list of the game server, but not used here, always trye)
+ * @param option (JOIN_RANDOM_PARTY, JOIN_PARTY_CODE, JOIN_PRIVATE_PARTY)
+ */
+void connectToServer(char *url, bool LocalMode, int my_socket, bool toGameServer, enum JoinType option)
 {
+    partyOption = option;
     // Prepare a request to send to the server
     char request_text[65] = "";
 
-    // Request for a game server
-    if (toGameServer)
+    // Request
+    if (!toGameServer) // Request to get the list of game servers IPs
     {
-        // Get mac adress
-        u8 macAddress[6];
-        Wifi_GetData(WIFIGETDATA_MACADDRESS, 6, macAddress);
-        sprintf(request_text, "{-4;MAC;%X%X%X%X%X%X}", macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5]);
-        sprintf(request_text + strlen(request_text), "{-4;LOADED;}");
-    }
-    else // Request to get the list of game server ips
-    {
-        sprintf(request_text + strlen(request_text), "GET /addServer.php HTTP/1.1\r\nHost: fewnity.000webhostapp.com\r\n\r\n");
+        sprintf(request_text + strlen(request_text), "GET /server.php HTTP/1.1\r\nHost: fewnity.000webhostapp.com\r\n\r\n");
     }
 
     struct hostent *myhost;
@@ -72,23 +103,15 @@ void connectToServer(char *url, bool LocalMode, int my_socket, bool toGameServer
         char GatewayChar[22] = "";
         sprintf(GatewayChar, "%s", inet_ntoa(gateway));
         myhost = gethostbyname(GatewayChar);
-        // printf("Gateway      : %s\n", inet_ntoa(gateway));
     }
     else // Find the IP address of the server, with gethostbyname
         myhost = gethostbyname(url);
-
-    // printf("Found IP Address!\n");
-
-    // Create a TCP socket
-    // my_socket = socket(AF_INET, SOCK_STREAM, 0);
-
-    // printf("Created Socket!\n");
 
     // Tell the socket to connect to the IP address we found, on port 80 (HTTP) or 1080 for android phone
     struct sockaddr_in sain;
     sain.sin_family = AF_INET;
     if (!LocalMode)
-        sain.sin_port = htons(80);
+        sain.sin_port = htons(6003);
     else
         sain.sin_port = htons(1080);
     sain.sin_addr.s_addr = *((unsigned long *)(myhost->h_addr_list[0]));
@@ -100,10 +123,10 @@ void connectToServer(char *url, bool LocalMode, int my_socket, bool toGameServer
     int blockmode = 1;
     ioctl(my_socket, FIONBIO, &blockmode);
 
-    printf("Connected to server!\n");
+    resetNetworkVariables();
 
     // send our request
-    send(my_socket, request_text, strlen(request_text), 0);
+    // send(my_socket, request_text, strlen(request_text), 0);
     // Launch the read data service
     if (toGameServer)
         ReadServerData();
@@ -111,7 +134,35 @@ void connectToServer(char *url, bool LocalMode, int my_socket, bool toGameServer
         ReadServerListData();
 }
 
-// Read incoming data from the server
+/**
+ * @brief Reset network send values variables (call before connecting to a new server)
+ *
+ */
+void resetNetworkVariables()
+{
+    SendShoot = false;
+    SendLeave = false;
+    SendGrenade = false;
+    SendBombPlacing = false;
+    SendBombPlace = false;
+    SendBombDefused = false;
+    SendPing = false;
+    SendTeam = false;
+    WaitForTeamResponse = false;
+    SendBuyWeapon = false;
+    SendWallHit = false;
+    SendSelectedGun = false;
+    SendPlayerName = false;
+    SendVoteStartNow = false;
+    SendKeyResponse = false;
+    SendGetDroppedBomb = false;
+    SendReloaded = false;
+}
+
+/**
+ * @brief Read incoming data from the server (UNUSED, MAY NOT WORK)
+ *
+ */
 void ReadServerListData()
 {
     // All temp variable for incoming data
@@ -141,9 +192,6 @@ void ReadServerListData()
             {
                 char currentPacket[128] = "";
                 strncpy(currentPacket, Values + StartPosition, EndPosition - StartPosition);
-                printf("\nNEW PACKET : ");
-                printf(currentPacket);
-                printf(" END");
 
                 // Start spliting incoming data
                 char *ptr = strtok(currentPacket, ";");
@@ -179,26 +227,11 @@ void ReadServerListData()
                     // If where are getting the last ip, close the socket
                     if (ipCount == TotalIpCount)
                     {
-                        /*for (int i2 = 0; i2 < TotalIpCount; i2++)
-                        {
-                            printf("\n");
-                            printf("IP : ");
-                            printf(allIps[i2]);
-                        }*/
-
                         // Close the socket
                         shutdown(my_socket, 0);
                         closesocket(my_socket);
                         return;
                     }
-
-                    /*shutdown(my_socket, 0); // good practice to shutdown the socket.
-                    closesocket(my_socket); // remove the socket
-                    my_socket = socket(AF_INET, SOCK_STREAM, 0);
-                    //connectToServer(arr[1], false, my_socket, true); //Mère
-                    connectToServer("88.127.205.17", false, my_socket, true); //Mère*/
-
-                    // return;
                 }
                 else if (strcmp(arr[0], "COUNT") == 0) // Get the server count
                 {
@@ -230,14 +263,22 @@ void ReadServerListData()
     }
 }
 
-// Connect the game to a game server from the ip list
+/**
+ * @brief Connect the game to a game server from the ip list (UNUSED, MAY NOT WORK)
+ *
+ * @param unused
+ */
 void connectFromServerList(int unused)
 {
     closesocket(my_socket); // remove the socket
     my_socket = socket(AF_INET, SOCK_STREAM, 0);
-    connectToServer(allIps[selectedServer], false, my_socket, true);
+    connectToServer(allIps[selectedServer], false, my_socket, true, 0);
 }
 
+/**
+ * @brief Read data from the game server
+ *
+ */
 void ReadServerData()
 {
     // All temp variable for incoming data
@@ -248,13 +289,12 @@ void ReadServerData()
     char TempValues[256] = "";
 
     // Read a maximum of 64 char in one loop
-    while ((recvd_len = recv(my_socket, incoming_buffer, 63, 0)) != 0)
+    while ((recvd_len = recv(my_socket, incoming_buffer, 63, 0)) != 0) // if recv returns 0, the socket has been closed. (Sometimes yes, sometimes not, lol)
     {
-        // if recv returns 0, the socket has been closed.
         if (recvd_len > 0)
         {
+            timeOut = 0;
             incoming_buffer[recvd_len] = 0; // null-terminate
-            // printf("\n{%d %s}\n", recvd_len, incoming_buffer);
 
             // add incoming_buffer to Values
             strncat(Values, incoming_buffer, recvd_len);
@@ -265,9 +305,6 @@ void ReadServerData()
             {
                 char currentPacket[128] = "";
                 strncpy(currentPacket, Values + StartPosition, EndPosition - StartPosition);
-                printf("NEW PACKET : \n");
-                printf(currentPacket);
-                printf("\n");
 
                 // Start spliting incoming data
                 char *ptr = strtok(currentPacket, ";");
@@ -280,40 +317,58 @@ void ReadServerData()
                      "",
                      "",
                      "",
+                     "",
+                     "",
                      ""};
 
                 // Split data
                 while (ptr != NULL)
                 {
                     strcpy(arr[countI], ptr);
-                    // printf(arr[countI]);
-                    // printf("\n");
-
                     countI++;
                     ptr = strtok(NULL, ";");
                 }
 
                 // Check packet info
 
-                if (strcmp(arr[1], "SETID") == 0 || strcmp(arr[1], "ADDID") == 0) // Add player
+                if (strcmp(arr[REQUEST_NAME_INDEX], "SETID") == 0) // Add player
                 {
                     int ParsedId = -1;
-                    sscanf(arr[2], "%d", &ParsedId);
+                    sscanf(arr[1], "%d", &ParsedId);
 
                     // Spawn player
-                    AddNewPlayer(ParsedId, strstr(arr[1], "SETID"), false);
+                    AddNewPlayer(ParsedId, true, false);
                 }
-                else if (strcmp(arr[1], "TimerA") == 0) // Timer changes
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "TimerA") == 0) // Timer changes
                 {
                     // Parse seconds and minutes texts to int
-                    sscanf(arr[2], "%d", &PartyMinutes);
-                    sscanf(arr[3], "%d", &PartySeconds);
+                    sscanf(arr[1], "%d", &PartyMinutes);
+                    sscanf(arr[2], "%d", &PartySeconds);
+                    if (firstConnection)
+                    {
+                        BombSeconds = PartySeconds;
+                    }
                 }
-                else if (strcmp(arr[1], "TEAM") == 0) // Change team
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETMAP") == 0) // Timer changes
+                {
+                    int newMapId = -1;
+                    // Parse seconds and minutes texts to int
+                    sscanf(arr[1], "%d", &newMapId);
+
+                    UnLoadMap(currentMap);
+                    currentMap = newMapId;
+                    LoadMap(currentMap);
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETMODE") == 0) // Timer changes
+                {
+                    // Parse seconds and minutes texts to int
+                    sscanf(arr[1], "%d", &currentPartyMode);
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "TEAM") == 0) // Change team
                 {
                     // Get player id
                     int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
 
                     // Get Team value
                     int ParsedIsCounter = -1;
@@ -324,60 +379,60 @@ void ReadServerData()
                         if (AllPlayers[i].Id == ParsedPlayerId)
                         {
                             AllPlayers[i].Team = ParsedIsCounter;
+
                             UpdatePlayerTexture(i);
                             break;
                         }
 
-                    // if (currentMenu == 2 && UpdateBottomScreenOneFrame == 0) //Score button (Main menu)
-                    // UpdateBottomScreenOneFrame = 4;
-                    // UpdateBottomScreenOneFrame = 8;
-
                     // Update screen if team screen is opened
-                    if (currentMenu == 2)
-                        UpdateBottomScreenOneFrame += 8;
+                    if (currentMenu == SCORE_BOARD)
+                    {
+                        UpdateBottomScreenFrameCount += 8;
+                    }
+                    else if (currentMenu == GAME)
+                    {
+                        initGameMenu();
+                    }
 
                     // TODO check this
                     if (localPlayer->Id == ParsedPlayerId)
                     {
+                        if (roundState != TRAINING)
+                            changeCameraPlayerView(false);
+
                         if (ParsedIsCounter != -1)
                         {
                             AllButtons[0].isHidden = false;
-                            AllButtons[1].isHidden = false;
-                            AllButtons[2].isHidden = false;
-
-                            WaitForTeamResponse = false;
                         }
-                        else
-                        {
-                            AllButtons[1].isHidden = false;
-                            AllButtons[2].isHidden = false;
-
-                            WaitForTeamResponse = false;
-                        }
+                        AllButtons[1].isHidden = false;
+                        AllButtons[2].isHidden = false;
+                        WaitForTeamResponse = false;
                     }
                 }
-                else if (strcmp(arr[1], "PING") == 0) // Get ping request from server
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "PING") == 0) // Get ping request from server
                 {
                     // Parse ping text to int
-                    sscanf(arr[2], "%d", &ping);
+                    sscanf(arr[1], "%d", &ping);
                     SendPing = true;
                 }
-                else if (strcmp(arr[1], "POS") == 0) // Player position update
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "POS") == 0) // Player position update
                 {
                     // Get target player id
                     int PlayerIdInt = -1;
-                    sscanf(arr[0], "%d", &PlayerIdInt);
+                    sscanf(arr[1], "%d", &PlayerIdInt);
 
                     float XFloat;
                     float YFloat;
                     float ZFloat;
                     int AngleInt = -1;
+                    int CameraAngleInt = -1;
 
                     // Convert chars into floats
                     sscanf(arr[2], "%f", &XFloat);
                     sscanf(arr[3], "%f", &YFloat);
                     sscanf(arr[4], "%f", &ZFloat);
                     sscanf(arr[5], "%d", &AngleInt);
+                    sscanf(arr[6], "%d", &CameraAngleInt);
 
                     // Change scale
                     XFloat /= 4096.0;
@@ -419,46 +474,62 @@ void ReadServerData()
                                 AllPlayers[i].lerpDestination.z = ZFloat;
 
                                 AllPlayers[i].AngleDestination = AngleInt;
+
+                                if (CurrentCameraPlayer == i)
+                                    CameraAngleY = CameraAngleInt;
+
                                 break;
                             }
                     }
-                    // iprintf("\nPlayer pos update");
                 }
-                else if (strcmp(arr[1], "WALLHIT") == 0) // Wall hit position update for hit flash at wall animation
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "WALLHIT") == 0) // Wall hit position update for hit flash at wall animation
                 {
+                    int flashIndex = 0;
+                    for (int i = 0; i < FLASH_MODELS_COUNT; i++)
+                    {
+                        if (ShowWallHitFlash[i] == 0)
+                        {
+                            flashIndex = i;
+                            break;
+                        }
+                    }
+
+                    // Set animation timer
+                    ShowWallHitFlash[flashIndex] = 3;
+
                     float XFloat;
                     float YFloat;
                     float ZFloat;
 
                     // Convert chars into floats
-                    sscanf(arr[2], "%f", &XFloat);
-                    sscanf(arr[3], "%f", &YFloat);
-                    sscanf(arr[4], "%f", &ZFloat);
+                    sscanf(arr[1], "%f", &XFloat);
+                    sscanf(arr[2], "%f", &YFloat);
+                    sscanf(arr[3], "%f", &ZFloat);
 
                     // Change scale
-                    XFloat /= 8192.0;
-                    YFloat /= 8192.0;
-                    ZFloat /= 8192.0;
+                    XFloat /= 4096.0;
+                    YFloat /= 4096.0;
+                    ZFloat /= 4096.0;
 
                     // Set effect position
-                    NE_ModelSetCoord(Model[8], XFloat, YFloat, ZFloat);
+                    NE_ModelSetCoord(flashModels[flashIndex], XFloat, YFloat, ZFloat);
 
                     // Get wall hit flash direction
                     Vector2 Direction1D;
-                    Direction1D.y = YFloat - localPlayer->position.y - CameraOffsetY + y;
+                    Direction1D.y = YFloat - AllPlayers[CurrentCameraPlayer].position.y - CameraOffsetY + y;
                     Direction1D.x = 1;
                     normalize2D(&Direction1D);
 
                     Vector3 Direction;
-                    Direction.x = XFloat - localPlayer->position.x;
-                    Direction.y = YFloat - localPlayer->position.y;
-                    Direction.z = ZFloat - localPlayer->position.z;
+                    Direction.x = XFloat - AllPlayers[CurrentCameraPlayer].position.x;
+                    Direction.y = YFloat - AllPlayers[CurrentCameraPlayer].position.y;
+                    Direction.z = ZFloat - AllPlayers[CurrentCameraPlayer].position.z;
                     normalize(&Direction);
 
                     // Set wall hit angle
                     int FinalAngleY = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 384;
                     int FinalAngleZ = atan2f(Direction1D.y, 1) * 512.0 / (M_TWOPI) + 128;
-                    NE_ModelSetRot(Model[8], 0, FinalAngleY, FinalAngleZ);
+                    NE_ModelSetRot(flashModels[flashIndex], 0, FinalAngleY, FinalAngleZ);
 
                     // Make 3D sound
                     int Panning, Volume;
@@ -467,43 +538,72 @@ void ReadServerData()
                     SoundPos.y = YFloat;
                     SoundPos.z = ZFloat;
                     GetPanningByPosition(&Panning, &Volume, SoundPos, xWithoutYForAudio, zWithoutYForAudio, 0.15);
-                    Play3DSound(SFX_RIC, Volume, Panning);
-
-                    // Set animation timer
-                    ShowWallHitFlash = 3;
-                    // iprintf("\nPlayer pos update");
+                    Play3DSound(SFX_RIC, Volume, Panning, NULL);
                 }
-                else if (strcmp(arr[1], "BOMBPLACE") == 0) // Bomb place update
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "BOMBPLACE") == 0) // Bomb place update
                 {
                     // Temp variables
                     int XInt = -1;
                     int YInt = -1;
                     int ZInt = -1;
                     int AngleInt = -1;
+                    int dropped = -1;
 
                     // Convert chars into ints
-                    sscanf(arr[2], "%d", &XInt);
-                    sscanf(arr[3], "%d", &YInt);
-                    sscanf(arr[4], "%d", &ZInt);
-                    sscanf(arr[5], "%d", &AngleInt);
+                    sscanf(arr[1], "%d", &XInt);
+                    sscanf(arr[2], "%d", &YInt);
+                    sscanf(arr[3], "%d", &ZInt);
+                    sscanf(arr[4], "%d", &AngleInt);
+                    sscanf(arr[5], "%d", &dropped);
 
-                    // Change values scale and set bomb position and angle value
-                    BombPosition.x = XInt / 4096.0;
-                    BombPosition.y = YInt / 4096.0;
-                    BombPosition.z = ZInt / 4096.0;
-                    BombPosition.r = AngleInt;
+                    if (dropped == 1)
+                    {
+                        // Change values scale and set bomb position and angle value
+                        droppedBombPositionAndRotation.x = XInt / 4096.0;
+                        droppedBombPositionAndRotation.y = YInt / 4096.0;
+                        droppedBombPositionAndRotation.z = ZInt / 4096.0;
+                        droppedBombPositionAndRotation.r = AngleInt;
 
-                    // Set bomb 3D model position and angle value
-                    NE_ModelSetCoord(Model[7], BombPosition.x, BombPosition.y, BombPosition.z);
-                    NE_ModelSetCoord(Model[10], BombPosition.x, BombPosition.y, BombPosition.z);
-                    Model[7]->rz = BombPosition.r;
+                        // Set bomb 3D model position and angle value
+                        NE_ModelSetCoord(Model[7], droppedBombPositionAndRotation.x, droppedBombPositionAndRotation.y, droppedBombPositionAndRotation.z);
+                        // NE_ModelSetCoord(Model[10], droppedBombPositionAndRotation.x, droppedBombPositionAndRotation.y, droppedBombPositionAndRotation.z);
+                        Model[7]->rz = droppedBombPositionAndRotation.r;
 
-                    bombBipTimer = 120;
-                    BombPlanted = true;
-                    SetBombDefuseZone(BombPosition.x, BombPosition.z, &bombDefuseZone);
-                    iprintf("\nBOMB UPDATE");
+                        SetBombTakingZone(droppedBombPositionAndRotation.x, droppedBombPositionAndRotation.z, &bombDefuseZone); // Set zone for taking the bomb
+                        bombDropped = true;
+                    }
+                    else
+                    {
+                        // Change values scale and set bomb position and angle value
+                        BombPosition.x = XInt / 4096.0;
+                        BombPosition.y = YInt / 4096.0;
+                        BombPosition.z = ZInt / 4096.0;
+                        BombPosition.r = AngleInt;
+
+                        // Set bomb 3D model position and angle value
+                        NE_ModelSetCoord(Model[7], BombPosition.x, BombPosition.y, BombPosition.z);
+                        NE_ModelSetCoord(Model[10], BombPosition.x, BombPosition.y, BombPosition.z);
+                        Model[7]->rz = BombPosition.r;
+
+                        BombSeconds = allPartyModes[currentPartyMode].bombWaitingSecondsDuration;
+
+                        bombBipTimer = 120;
+                        BombPlanted = true;
+                        SetBombDefuseZone(BombPosition.x, BombPosition.z, &bombDefuseZone);
+                    }
                 }
-                else if (strcmp(arr[1], "CONFIRM") == 0) // Confirm shop gun buy, or set player gun from server command
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "VOTERESULT") == 0) // Confirm shop gun buy, or set player gun from server command
+                {
+                    int VoteTypeInt = -1;
+                    sscanf(arr[1], "%d", &VoteTypeInt);
+                    if (VoteTypeInt == 0)
+                    {
+                        // int ResultInt = -1;
+                        sscanf(arr[2], "%d", &playerWantToStart);
+                        sscanf(arr[3], "%d", &playerWantToStartLimite);
+                    }
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "CONFIRM") == 0) // Confirm shop gun buy, or set player gun from server command
                 {
                     int ConfirmTypeInt = -1;
                     int ConfirmArgumentInt = -1;
@@ -511,46 +611,49 @@ void ReadServerData()
                     int ConfirmResultInt = -1; // 0 Error, 1 Okay
 
                     // Convert chars into ints
-                    sscanf(arr[2], "%d", &ConfirmTypeInt);
-                    sscanf(arr[3], "%d", &ConfirmArgumentInt);
-                    sscanf(arr[4], "%d", &ConfirmInventoryIndexInt);
-                    sscanf(arr[5], "%d", &ConfirmResultInt);
+                    sscanf(arr[1], "%d", &ConfirmTypeInt);
+                    sscanf(arr[2], "%d", &ConfirmArgumentInt);
+                    sscanf(arr[3], "%d", &ConfirmInventoryIndexInt);
+                    sscanf(arr[4], "%d", &ConfirmResultInt);
 
                     if (ConfirmTypeInt == 0) // Set gun in inventory
                     {
-                        if (ConfirmResultInt == 1)
+                        if (ConfirmResultInt == 0) // Error
+                        {
+                        }
+                        else if (ConfirmResultInt == 1) // Okay
                         {
                             CurrentScopeLevel = 0;
                             SetGunInInventory(ConfirmArgumentInt, ConfirmInventoryIndexInt);
+                            setSelectedGunInInventory(0, ConfirmInventoryIndexInt);
+                        }
+                        else if (ConfirmResultInt == 2) // Not an error
+                        {
                         }
                     }
-                    iprintf("\nCONFIRM UPDATE");
                 }
-                else if (strcmp(arr[1], "SETMONEY") == 0) // Set player money
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETMONEY") == 0) // Set player money
                 {
                     // Parse money text to int
                     int ParsedMoney = -1;
-                    sscanf(arr[2], "%d", &ParsedMoney);
+                    sscanf(arr[1], "%d", &ParsedMoney);
                     setPlayerMoney(0, ParsedMoney);
                 }
-                else if (strcmp(arr[1], "SCORE") == 0) // Party score changes
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SCORE") == 0) // Party score changes
                 {
                     // Parse scores texts to int
-                    sscanf(arr[2], "%d", &CounterScore);
-                    sscanf(arr[3], "%d", &TerroristsScore);
-
-                    // if (currentMenu == 2 && UpdateBottomScreenOneFrame == 0)
-                    // UpdateBottomScreenOneFrame = 8;
+                    sscanf(arr[1], "%d", &CounterScore);
+                    sscanf(arr[2], "%d", &TerroristsScore);
 
                     // Update screen if team screen is opened
-                    if (currentMenu == 2)
-                        UpdateBottomScreenOneFrame += 8;
+                    if (currentMenu == SCORE_BOARD)
+                        UpdateBottomScreenFrameCount += 8;
                 }
-                else if (strcmp(arr[1], "SCRBOARD") == 0) // Score board score changes
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SCRBOARD") == 0) // Score board score changes
                 {
                     // Get player id
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
 
                     // Find player with unique ID to update his informations
                     for (int i = 0; i < MaxPlayer; i++)
@@ -561,33 +664,34 @@ void ReadServerData()
                             break;
                         }
 
-                    // if (currentMenu == 2 && UpdateBottomScreenOneFrame == 0) //Score button (Main menu)
-                    // UpdateBottomScreenOneFrame = 4;
-                    // UpdateBottomScreenOneFrame = 8;
-
                     // Update screen if team screen is opened
-                    if (currentMenu == 2)
-                        UpdateBottomScreenOneFrame += 8;
+                    if (currentMenu == SCORE_BOARD)
+                        UpdateBottomScreenFrameCount += 8;
                 }
-                else if (strcmp(arr[1], "PartyRound") == 0) // Round state changes
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETSHOPZONE") == 0) // Round state changes
+                {
+                    shopDisableTimer = SHOP_DISABLE_TIMER;
+                    setShopZone(localPlayer);
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "PartyRound") == 0) // Round state changes
                 {
                     // Parse text to int
                     int tempRoundState = -1;
-                    sscanf(arr[2], "%d", &tempRoundState);
+                    sscanf(arr[1], "%d", &tempRoundState);
                     roundState = tempRoundState;
 
                     // Reset some values on new round
                     if (roundState == WAIT_START)
                     {
+                        onNewRoundStart();
                         NE_SpriteVisible(TopScreenSprites[0], true);
-                        BombDefused = false;
-                        BombPlanted = false;
-                        BombWillExplose = false;
-                        IsExplode = false;
-                        BombExplosionScale = 0;
-                        ResetGunsAmmo(0);
 
-                        iprintf("\nRespawn");
+                        StopReloading(0);
+                        ResetGunsAmmo(0);
+                        if (CurrentCameraPlayer != 0)
+                        {
+                            SetCurrentCameraPlayer(0);
+                        }
                         for (int i = 0; i < MaxPlayer; i++)
                             AllPlayers[i].IsDead = FALSE;
 
@@ -596,32 +700,45 @@ void ReadServerData()
                         redHealthTextCounter = 0;
                     }
                 }
-                else if (strcmp(arr[1], "LEAVE") == 0) // When a player leave
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "LEAVE") == 0) // When a player leave
                 {
                     // Get player id
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
 
                     // Find player
                     for (int i = 0; i < MaxPlayer; i++)
                         if (AllPlayers[i].Id == ParsedPlayerId)
                         {
-                            AllPlayers[i].Id = -1;
+                            AllPlayers[i].Id = UNUSED;
+                            PlayerCount--;
                             NE_ModelDelete(AllPlayers[i].PlayerModel);
                             if (i == 0) ////////////////////////////////////////////////////////////TODO KICK SYSTEM
                             {
                                 NE_PhysicsDelete(AllPlayers[i].PlayerPhysic);
                             }
+                            else
+                            {
+                                showDisconnectedText(i);
+                            }
                             AllPlayers[i].KillCount = 0;
+                            AllPlayers[i].Team = SPECTATOR;
                             AllPlayers[i].DeathCount = 0;
-                            PlayerCount--;
+                            if (currentMenu == SCORE_BOARD)
+                                initScoreMenu();
+
+                            if (CurrentCameraPlayer == i)
+                            {
+                                SetCurrentCameraPlayer(0);
+                            }
+
                             break;
                         }
                 }
-                else if (strcmp(arr[1], "SETHEALTH") == 0) // Set player health
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETHEALTH") == 0) // Set player health
                 {
-                    int PlayerIdInt = -1;
-                    sscanf(arr[2], "%d", &PlayerIdInt);
+                    int PlayerIdInt = UNUSED;
+                    sscanf(arr[1], "%d", &PlayerIdInt);
 
                     // Find player to set health
                     for (int i = 0; i < MaxPlayer; i++)
@@ -629,16 +746,21 @@ void ReadServerData()
                         if (AllPlayers[i].Id == PlayerIdInt)
                         {
                             int newHealth = 0;
-                            sscanf(arr[3], "%d", &newHealth);
+                            sscanf(arr[2], "%d", &newHealth);
                             setPlayerHealth(i, newHealth);
+                            sscanf(arr[3], "%d", &AllPlayers[i].armor);
+
+                            int haveHeadset = 0;
+                            sscanf(arr[4], "%d", &haveHeadset);
+                            AllPlayers[i].haveHeadset = haveHeadset == 1 ? true : false;
                             break;
                         }
                     }
                 }
-                else if (strcmp(arr[1], "CURGUN") == 0) // Set current gun in inventory
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "CURGUN") == 0) // Set current gun in inventory
                 {
-                    int PlayerIdInt = -1;
-                    sscanf(arr[0], "%d", &PlayerIdInt);
+                    int PlayerIdInt = UNUSED;
+                    sscanf(arr[1], "%d", &PlayerIdInt);
 
                     // Find player to set health
                     for (int i = 0; i < MaxPlayer; i++)
@@ -650,36 +772,54 @@ void ReadServerData()
                             AllPlayers[i].currentGunInInventory = newGun;
                             if (i == CurrentCameraPlayer)
                                 UpdateGunTexture();
-                            // setPlayerHealth(i, newHealth);
+
                             break;
                         }
                     }
                 }
-                else if (strcmp(arr[1], "SHOOT") == 0) // Shoot from a player
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SHOOT") == 0) // Shoot from a player
                 {
                     // Get player id
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
 
                     // Get gun id
-                    int ParsedGunId = -1;
+                    int ParsedGunId = EMPTY;
                     sscanf(arr[2], "%d", &ParsedGunId);
 
                     // Make a sound
                     int Panning, Volume;
                     GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, AllGuns[ParsedGunId].MaxSoundDistance);
-                    if (ParsedGunId < GunCount)
-                        Play3DSound(AllGuns[ParsedGunId].gunSound, Volume, Panning);
-                    // else if(ParsedGunId < GunCount + grenadeCount)
-                    // Play3DSound(AllGrenades[ParsedGunId]., Volume, Panning);
-                    // else if(ParsedGunId < GunCount + grenadeCount + equipementCount)
-                    // Play3DSound(AllEquipements[ParsedGunId]., Volume, Panning);
+                    Player *player = NULL;
+                    int index = UNUSED;
+                    for (int i = 0; i < MaxPlayer; i++)
+                    {
+                        if (AllPlayers[i].Id == ParsedPlayerId)
+                        {
+                            player = &AllPlayers[i];
+                            index = i;
+                            break;
+                        }
+                    }
+                    if (player != NULL)
+                    {
+                        if (CurrentCameraPlayer == index)
+                        {
+                            if (player->currentGunInInventory == 1 || player->currentGunInInventory == 2)
+                                player->AllAmmoMagazine[player->currentGunInInventory - 1].AmmoCount--;
+
+                            setGunRecoil(player);
+                        }
+
+                        if (ParsedGunId < GunCount)
+                            Play3DSound(AllGuns[ParsedGunId].gunSound, Volume, Panning, player);
+                    }
                 }
-                else if (strcmp(arr[1], "SETBOMB") == 0) // Shoot from a player
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETBOMB") == 0) // Shoot from a player
                 {
                     // Get player id
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
 
                     // Get gun id
                     int haveBomb = -1;
@@ -687,32 +827,75 @@ void ReadServerData()
 
                     for (int i = 0; i < MaxPlayer; i++)
                     {
-                        if (AllPlayers[i].Id != -1)
+                        if (AllPlayers[i].Id == ParsedPlayerId && haveBomb == 1)
                         {
-                            if (AllPlayers[i].Id == ParsedPlayerId)
-                            {
-                                if (haveBomb == 1)
-                                {
-                                    AllPlayers[i].haveBomb = true;
-                                    if (i == 0)
-                                        SetGunInInventory(28, 8);
-                                }
-                                else
-                                {
-                                    AllPlayers[i].haveBomb = false;
-                                    if (i == 0)
-                                        SetGunInInventory(EMPTY, 8);
-                                }
-                            }
+                            AllPlayers[i].haveBomb = true;
+                            bombDropped = false;
+                            SetGunInInventoryForNonLocalPlayer(i, 28, 8);
+                        }
+                        else
+                        {
+                            AllPlayers[i].haveBomb = false;
+                            SetGunInInventoryForNonLocalPlayer(i, EMPTY, 8);
                         }
                     }
                 }
-                else if (strcmp(arr[1], "HITSOUND") == 0) // Party score changes
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "RELOADED") == 0) // Get a player name
+                {
+                    // Get player id
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
+
+                    int Reset = 0;
+                    sscanf(arr[2], "%d", &Reset);
+
+                    if (Reset == 0)
+                    {
+                        ReloadGun(ParsedPlayerId);
+                    }
+                    else if (Reset == 1)
+                    {
+                        ResetGunsAmmo(ParsedPlayerId);
+                    }
+                    else if (Reset == 2)
+                    {
+                        int GunId = 0;
+                        sscanf(arr[4], "%d", &GunId);
+                        ResetGunAmmo(ParsedPlayerId, GunId);
+                    }
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETNAME") == 0) // Get a player name
+                {
+                    // Get player id
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
+
+                    for (int i = 0; i < MaxPlayer; i++)
+                    {
+                        if (AllPlayers[i].Id == ParsedPlayerId)
+                        {
+                            strcpy(AllPlayers[i].name, arr[2]);
+                            if (i != 0 && !firstConnection)
+                                showConnectedText(i);
+                            break;
+                        }
+                    }
+
+                    // Update screen if team screen is opened
+                    if (currentMenu == 2)
+                        UpdateBottomScreenFrameCount += 8;
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETCODE") == 0) // Get a player name
+                {
+                    strcpy(partyCode, arr[1]);
+                    isPrivate = true;
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "HITSOUND") == 0) // Party score changes
                 {
                     int PlayerId, HitType;
 
-                    sscanf(arr[2], "%d", &PlayerId);
-                    sscanf(arr[3], "%d", &HitType);
+                    sscanf(arr[1], "%d", &PlayerId);
+                    sscanf(arr[2], "%d", &HitType);
 
                     int Panning, Volume;
                     if (PlayerId != localPlayer->Id)
@@ -733,113 +916,152 @@ void ReadServerData()
                         redHealthTextCounter = 62;
                     }
 
+                    Player *player = NULL;
+                    for (int i = 0; i < MaxPlayer; i++)
+                    {
+                        if (AllPlayers[i].Id == PlayerId)
+                        {
+                            player = &AllPlayers[i];
+                            break;
+                        }
+                    }
+
                     if (HitType == 0)
-                        Play3DSound(SFX_FLESH_IMPACT, Volume, Panning); // Check with kevlar
+                        Play3DSound(SFX_FLESH_IMPACT, Volume, Panning, player); // Check with kevlar
                     else if (HitType == 1)
-                        Play3DSound(SFX_HEADSHOT1, Volume, Panning);
+                        Play3DSound(SFX_HEADSHOT1, Volume, Panning, player);
                     else if (HitType == 2)
-                        Play3DSound(SFX_FLESH_IMPACT, Volume, Panning);
+                        Play3DSound(SFX_FLESH_IMPACT, Volume, Panning, player);
                     else
-                        Play3DSound(SFX_KNIFE_HIT_PLAYER, Volume, Panning);
+                        Play3DSound(SFX_KNIFE_HIT_PLAYER, Volume, Panning, player);
                 }
-                else if (strcmp(arr[1], "TEXT") == 0) // Show text from server
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "ERROR") == 0) // Show text from server
                 {
-                    int ParsedTextId = -1;
-                    sscanf(arr[2], "%d", &ParsedTextId);
+                    int errorId = EMPTY;
+                    sscanf(arr[1], "%d", &errorId);
+                    if (errorId == Ban)
+                    {
+                        strncpy(errorText, "You are banned!", ERROR_TEXT_LENGTH);
+                    }
+                    else if (errorId == WrongVersion)
+                    {
+                        strncpy(errorText, "You are using an old version of the game, please update your game.", ERROR_TEXT_LENGTH);
+                    }
+                    else if (errorId == MacAddressMissing)
+                    {
+                        strncpy(errorText, "Your Nintendo DS doesn't have a MAC address.", ERROR_TEXT_LENGTH);
+                    }
+                    else if (errorId == WrongSecurityKey)
+                    {
+                        strncpy(errorText, "You are using a modified game.", ERROR_TEXT_LENGTH);
+                    }
+                    else if (errorId == ServerFull)
+                    {
+                        strncpy(errorText, "The server is currently full, please try again later.", ERROR_TEXT_LENGTH);
+                    }
+                    else if (errorId == ServerStopped)
+                    {
+                        strncpy(errorText, "The server is currently under maintenance.", ERROR_TEXT_LENGTH);
+                    }
+                    else if (errorId == SaveCorrupted)
+                    {
+                        strncpy(errorText, "Your save is corrupted.", ERROR_TEXT_LENGTH);
+                    }
+                    else if (errorId == IncorrectCode)
+                    {
+                        strncpy(errorText, "The code is incorrect.", ERROR_TEXT_LENGTH);
+                    }
+                    else if (errorId == KickTeamKill)
+                    {
+                        strncpy(errorText, "You have been kicked (Team kill).", ERROR_TEXT_LENGTH);
+                    }
+                    else
+                    {
+                        strncpy(errorText, "An error has occurred!", ERROR_TEXT_LENGTH);
+                    }
 
-                    /*if (ParsedTextId == 0)
-                    {
-                        strncpy(textToShow, "Terrorists win", 30);
-                        PlayBasicSound(SFX_TERRORISTSWIN);
-                    }
-                    else if (ParsedTextId == 1)
-                    {
-                        strncpy(textToShow, "Counter Terrorist win", 30);
-                        PlayBasicSound(SFX_COUNTERTERRORISTWIN);
-                    }
-                    else if (ParsedTextId == 2)
-                    {
-                        strncpy(textToShow, "Bomb has been planted", 30);
-                        PlayBasicSound(SFX_BOMBHASBEENPLANTED);
-                    }
-                    else if (ParsedTextId == 3)
-                    {
-                        strncpy(textToShow, "Bomb has been defused", 30);
-                        PlayBasicSound(SFX_BOMBHASBEENDEFUSED);
-                    }
+                    initOnlineErrorMenu();
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "TEXT") == 0) // Show text from server
+                {
+                    int ParsedTextId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedTextId);
 
-                    textToShowTimer = 400;*/
                     showPartyEventText(ParsedTextId);
                 }
-                else if (strcmp(arr[1], "TEXTPLAYER") == 0) // Show text about a player from server
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "TEXTPLAYER") == 0) // Show text about a player from server
                 {
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
+                    int ParsedPlayerId = NO_PLAYER;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
 
-                    int KillerIdInt = -1;
-                    int TextIdInt = -1;
+                    int KillerIdInt = NO_PLAYER;
+                    int TextIdInt = NO_PLAYER;
 
                     sscanf(arr[2], "%d", &KillerIdInt);
                     sscanf(arr[3], "%d", &TextIdInt);
 
+                    int killerPlayerIndex = NO_PLAYER;
+                    int killedPlayerIndex = NO_PLAYER;
+
                     // Find player with unique ID to update his informations
                     for (int i = 0; i < MaxPlayer; i++)
+                    {
                         if (AllPlayers[i].Id == KillerIdInt)
                         {
-                            sprintf(killText, "%d", AllPlayers[i].Id); // GET PLAYER NAME
+                            killerPlayerIndex = i;
                             break;
                         }
-
-                    sprintf(killText + strlen(killText), " killed ");
+                    }
 
                     for (int i = 0; i < MaxPlayer; i++)
+                    {
                         if (AllPlayers[i].Id == ParsedPlayerId)
                         {
-                            sprintf(killText + strlen(killText), "%d", AllPlayers[i].Id); // GET PLAYER NAME
+                            killedPlayerIndex = i;
                             break;
                         }
+                    }
 
-                    KillTextShowTimer = 240;
+                    if (killerPlayerIndex != NO_PLAYER && killerPlayerIndex != NO_PLAYER)
+                        showKillText(killerPlayerIndex, killedPlayerIndex);
                 }
-                else if (strcmp(arr[1], "STEP") == 0) // Step sound
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "BOMBPLACING") == 0) // Bomb placing sound
                 {
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
 
                     int Panning, Volume;
                     GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
 
-                    DoStepSound(Volume, Panning, 0);
+                    Play3DSound(SFX_BOMBPLANTING, Volume, Panning, GetPlayer(ParsedPlayerId));
                 }
-                else if (strcmp(arr[1], "BOMBPLACING") == 0) // Bomb placing sound
-                {
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
-
-                    int Panning, Volume;
-                    GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
-
-                    Play3DSound(SFX_BOMBPLANTING, Volume, Panning);
-                }
-                else if (strcmp(arr[1], "BOMBDEFUSE") == 0) // Bomb defuse sound
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "BOMBDEFUSE") == 0) // Bomb defuse sound
                 {
                     BombDefused = true;
                 }
-                else if (strcmp(arr[1], "ADDRANGE") == 0) // Add multiples non local players
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "ADDRANGE") == 0) // Add multiples non local players
                 {
-                    for (int i = 2; i < countI; i++)
+                    for (int i = 1; i < countI; i++)
                     {
                         int FoundId = -1;
                         sscanf(arr[i], "%d", &FoundId);
                         AddNewPlayer(FoundId, false, false);
                     }
-                    printf("countI %d", countI);
                 }
-                else if (strcmp(arr[1], "INVTORY") == 0) // Add multiples non local players
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "ENDGAME") == 0) // Add multiples non local players
                 {
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[0], "%d", &ParsedPlayerId);
-                    int FoundPlayer = -1;
+                    partyFinished = true;
+                    initFinalScoreMenu();
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "ENDUPDATE") == 0) // Add multiples non local players
+                {
+                    firstConnection = false;
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "INVTORY") == 0) // Add multiples non local players
+                {
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
+                    int FoundPlayer = UNUSED;
                     for (int i = 0; i < MaxPlayer; i++)
                     {
                         if (AllPlayers[i].Id == ParsedPlayerId)
@@ -847,10 +1069,8 @@ void ReadServerData()
                             FoundPlayer = i;
                             for (int i2 = 2; i2 < countI; i2++)
                             {
-                                int FoundGunId = -1;
+                                int FoundGunId = EMPTY;
                                 sscanf(arr[i2], "%d", &FoundGunId);
-                                // AllPlayers[i].AllGunsInInventory[i2 - 2] = FoundGunId;
-
                                 SetGunInInventoryForNonLocalPlayer(i, FoundGunId, i2 - 2);
                             }
                             break;
@@ -861,7 +1081,36 @@ void ReadServerData()
                         UpdateGunTexture();
                     }
                 }
-                else if (strcmp(arr[1], "GRENADE") == 0) // Bomb place update
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "AMMO") == 0) // Add multiples non local players
+                {
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
+                    int FoundPlayer = UNUSED;
+                    for (int playerIndex = 0; playerIndex < MaxPlayer; playerIndex++)
+                    {
+                        if (AllPlayers[playerIndex].Id == ParsedPlayerId)
+                        {
+                            FoundPlayer = playerIndex;
+                            for (int i2 = 0; i2 < 2; i2++)
+                            {
+                                int AmmoCountInt = 0;
+                                sscanf(arr[2 + i2 * 2], "%d", &AmmoCountInt);
+                                int TotalAmmoCountInt = 0;
+                                sscanf(arr[2 + i2 * 2 + 1], "%d", &TotalAmmoCountInt);
+
+                                AllPlayers[FoundPlayer].AllAmmoMagazine[i2].AmmoCount = AmmoCountInt;
+                                AllPlayers[FoundPlayer].AllAmmoMagazine[i2].TotalAmmoCount = TotalAmmoCountInt;
+                            }
+                            break;
+                        }
+                    }
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "KEY") == 0) // Bomb place update
+                {
+                    SendKeyResponse = true;
+                    sscanf(arr[1], "%d", &serverKey);
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "GRENADE") == 0) // Bomb place update
                 {
                     // Temp variables
                     float XDirection = -1;
@@ -873,19 +1122,21 @@ void ReadServerData()
                     int GrenadeType = -1;
 
                     // Convert chars into ints
-                    // sscanf(arr[2], "%d", &GrenadeType);
-                    sscanf(arr[2], "%f", &XDirection);
-                    sscanf(arr[3], "%f", &YDirection);
-                    sscanf(arr[4], "%f", &ZDirection);
+                    sscanf(arr[1], "%f", &XDirection);
+                    sscanf(arr[2], "%f", &YDirection);
+                    sscanf(arr[3], "%f", &ZDirection);
 
-                    sscanf(arr[5], "%d", &XInt);
-                    sscanf(arr[6], "%d", &YInt);
-                    sscanf(arr[7], "%d", &ZInt);
-                    sscanf(arr[8], "%d", &GrenadeType);
+                    sscanf(arr[4], "%d", &XInt);
+                    sscanf(arr[5], "%d", &YInt);
+                    sscanf(arr[6], "%d", &ZInt);
+                    sscanf(arr[7], "%d", &GrenadeType);
 
-                    // TODO add id replace 0
+                    // TODO add player id replace to 0
                     PhysicalGrenade *newGrenade = CreateGrenade(GrenadeType, 0);
-                    lanchGrenade(newGrenade, XDirection, YDirection, ZDirection, XInt, YInt, ZInt);
+                    if (newGrenade != NULL)
+                    {
+                        lanchGrenade(newGrenade, XDirection, YDirection, ZDirection, XInt, YInt, ZInt);
+                    }
                 }
 
                 // Clear "TempValues"
@@ -896,23 +1147,25 @@ void ReadServerData()
                 strcat(TempValues, Values + EndPosition + 1);
                 // Copy "TempValues" to "Values"
                 strcpy(Values, TempValues);
-
-                // iprintf("\nCall type : ");
-                // iprintf(Type);
+            }
+        }
+        else if (recvd_len == -1)
+        {
+            // If the recv() returns -1 for too long, the socket has been closed.
+            timeOut++;
+            if (timeOut == 400)
+            {
+                break;
             }
         }
 
-        if (localPlayer->Id != -1)
+        if (localPlayer->Id != UNUSED)
         {
             // Play game code
             GameLoop();
-            UpdateEngine();
         }
-        else
-        {
-            UpdateEngine();
-            continue;
-        }
+
+        UpdateEngine();
 
         // Check if position need to be updated for other player
         if (localPlayer->position.x != OldxPos || localPlayer->position.y != OldyPos || localPlayer->position.z != OldzPos)
@@ -925,53 +1178,11 @@ void ReadServerData()
 
         char InfoToSend[1024] = "";
 
-        // Send hit data
-        if (Hit != -1 && localPlayer->ScanFinished)
-        {
-            printf("APPLY DAMAGE");
-            int hitType = 0;
-
-            if (localPlayer->IsHeadShot)
-            {
-                hitType = 1;
-            }
-            else if (localPlayer->IsLegShot)
-            {
-                hitType = 2;
-            }
-
-            if (localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory] < GunCount && AllGuns[localPlayer->AllGunsInInventory[localPlayer->currentGunInInventory]].isKnife)
-                hitType = 3;
-
-            sprintf(InfoToSend /*+ strlen(InfoToSend)*/, "{-4;HIT;%d;%d}", AllPlayers[Hit].Id, hitType);
-
-            int Panning, Volume;
-            GetPanning(AllPlayers[Hit].Id, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
-
-            // TODO MERGE With MakeHit function
-            if (hitType == 0)
-                Play3DSound(SFX_FLESH_IMPACT, Volume, Panning); // Check with kevlar
-            else if (hitType == 1)
-                Play3DSound(SFX_HEADSHOT1, Volume, Panning);
-            else if (hitType == 2)
-                Play3DSound(SFX_FLESH_IMPACT, Volume, Panning);
-            else
-                Play3DSound(SFX_KNIFE_HIT_PLAYER, Volume, Panning);
-
-            Hit = -1;
-        }
-
         // Send shoot data for sound/animation for clients
-        if (SendShoot)
+        if (SendLeave)
         {
-            sprintf(InfoToSend + strlen(InfoToSend), "{-4;SHOOT}");
-            SendShoot = false;
-        }
-
-        if (SendGrenade)
-        {
-            sprintf(InfoToSend + strlen(InfoToSend), "{-4;GRENADE;%f;%f;%f;%d;%d;%d}", x, y, z, localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z); // With grenade id a finir, look rotation, position
-            SendGrenade = false;
+            sprintf(InfoToSend + strlen(InfoToSend), "{LEAVE}");
+            SendLeave = false;
         }
 
         // Send position one in two
@@ -982,45 +1193,45 @@ void ReadServerData()
         // If local player need to be updated for other player (59 bytes)
         if (localPlayer->Id != -1 && SendPosition && SendPositionData == 0)
         {
-            sprintf(InfoToSend + strlen(InfoToSend), "{-4;POS;%d;%d;%d;%d}", localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z, (int)localPlayer->Angle);
+            sprintf(InfoToSend + strlen(InfoToSend), "{POS;%d;%d;%d;%d;%0.0f}", localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z, (int)localPlayer->Angle, CameraAngleY);
+
             SendPosition = false;
             SendPositionData = 4;
         }
 
-        // Send step data
-        if (SendStepSound)
+        // Send grenade launch
+        if (SendGrenade)
         {
-            SendStepSound = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{-2;STEP}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{GRENADE;%f;%f;%f}", x, y, z);
+            SendGrenade = false;
         }
 
         // Send bomb placement data
         if (SendBombPlace)
         {
             SendBombPlace = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{-1;BOMBPLACE;%d;%d;%d;%d}", (int)(BombPosition.x * 4096.0), (int)(BombPosition.y * 4096.0), (int)(BombPosition.z * 4096.0), BombPosition.r);
+            sprintf(InfoToSend + strlen(InfoToSend), "{BOMBPLACE;%d;%d;%d;%d}", (int)(BombPosition.x * 4096.0), (int)(BombPosition.y * 4096.0), (int)(BombPosition.z * 4096.0), BombPosition.r);
         }
 
         // Send bomb defuse data
         if (SendBombDefused)
         {
             SendBombDefused = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{-1;BOMBDEFUSE}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{BOMBDEFUSE}");
         }
 
         // Send bomb planting data
         if (SendBombPlacing)
         {
             SendBombPlacing = false;
-            // sprintf(InfoToSend + strlen(InfoToSend), "{-2;BOMBPLACING;%d}", localPlayer->Id);
-            sprintf(InfoToSend + strlen(InfoToSend), "{-2;BOMBPLACING}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{BOMBPLACING}");
         }
 
         // Send team data
         if (SendTeam)
         {
             SendTeam = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{-4;TEAM;%d}", tempTeam);
+            sprintf(InfoToSend + strlen(InfoToSend), "{TEAM;%d}", tempTeam);
             tempTeam = -1;
         }
 
@@ -1028,41 +1239,172 @@ void ReadServerData()
         if (SendPing)
         {
             SendPing = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{-4;PING}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{PING}");
         }
 
         // Send buy weapon request data
         if (SendBuyWeapon)
         {
             SendBuyWeapon = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{-4;BUY;%d}", GetSelectedGunShop());
+            sprintf(InfoToSend + strlen(InfoToSend), "{BUY;%d}", GetSelectedGunShop());
         }
 
+        // Send gun reloaded data
+        if (SendReloaded)
+        {
+            SendReloaded = false;
+            sprintf(InfoToSend + strlen(InfoToSend), "{RELOADED}");
+        }
+
+        // Send selected gun
         if (SendSelectedGun)
         {
             SendSelectedGun = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{-4;CURGUN;%d}", localPlayer->currentGunInInventory);
+            sprintf(InfoToSend + strlen(InfoToSend), "{CURGUN;%d}", localPlayer->currentGunInInventory);
+        }
+
+        // Send shoot data for sound/animation for clients
+        if (SendShoot)
+        {
+            sprintf(InfoToSend + strlen(InfoToSend), "{SHOOT}");
+            SendShoot = false;
+        }
+
+        // Check if the game needs to send hitted clients
+        bool sendHitClient = false;
+        for (int i = 0; i < FLASH_MODELS_COUNT; i++)
+        {
+            if (hittedClient[i] != NO_PLAYER)
+            {
+                sendHitClient = true;
+                break;
+            }
+        }
+
+        // Send hit data
+        if (sendHitClient)
+        {
+            sprintf(InfoToSend + strlen(InfoToSend), "{HIT");
+            for (int i = 0; i < FLASH_MODELS_COUNT; i++)
+            {
+                if (hittedClient[i] != -1)
+                {
+                    sprintf(InfoToSend + strlen(InfoToSend), ";%d;%d;%d;%f", AllPlayers[hittedClient[i]].Id, localPlayer->IsHeadShot[i], localPlayer->IsLegShot[i], hitDistance[i]);
+                    hittedClient[i] = NO_PLAYER;
+                }
+            }
+            sprintf(InfoToSend + strlen(InfoToSend), "}");
+        }
+
+        // Send vote
+        if (SendVoteStartNow)
+        {
+            SendVoteStartNow = false;
+            sprintf(InfoToSend + strlen(InfoToSend), "{VOTE;0}");
         }
 
         // Send wall hit data
         if (SendWallHit)
         {
             SendWallHit = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{-2;WALLHIT;%d;%d;%d}", WallHitXPos, WallHitYPos, WallHitZPos);
+            for (int i = 0; i < getPlayerCurrentGun(localPlayer).bulletCountPerShoot; i++)
+            {
+                sprintf(InfoToSend + strlen(InfoToSend), "{WALLHIT;%d;%d;%d}", WallHitXPos[i], WallHitYPos[i], WallHitZPos[i]);
+            }
 
-            int Panning, Volume;
+            // sprintf(InfoToSend + strlen(InfoToSend), "{WALLHIT;%d;%d;%d}", WallHitXPos, WallHitYPos, WallHitZPos);
+
+            /*int Panning, Volume;
             Vector4 SoundPos;
             SoundPos.x = WallHitXPos /= 8192.0;
             SoundPos.y = WallHitYPos /= 8192.0;
             SoundPos.z = WallHitZPos /= 8192.0;
             GetPanningByPosition(&Panning, &Volume, SoundPos, xWithoutYForAudio, zWithoutYForAudio, 0.15);
-            Play3DSound(SFX_RIC, Volume, Panning);
+            Play3DSound(SFX_RIC, Volume, Panning, NULL);*/
+        }
+
+        // Send local player name
+        if (SendPlayerName)
+        {
+            SendPlayerName = false;
+            sprintf(InfoToSend + strlen(InfoToSend), "{SETNAME;%s}", localPlayer->name);
+        }
+
+        // Send security key response
+        if (SendKeyResponse)
+        {
+            SendKeyResponse = false;
+
+            u8 macAddress[6];
+            Wifi_GetData(WIFIGETDATA_MACADDRESS, 6, macAddress);
+
+            sprintf(InfoToSend + strlen(InfoToSend), "{KEY;%d;%X%X%X%X%X%X;%s;%s}", getKeyResponse(serverKey), macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5], localPlayer->name, GAME_VERSION);
+
+            if (partyOption == JOIN_PRIVATE_PARTY)
+                sprintf(InfoToSend + strlen(InfoToSend), "{PARTY;%d;%s}", partyOption, partyCode);
+            else
+                sprintf(InfoToSend + strlen(InfoToSend), "{PARTY;%d}", partyOption);
+        }
+
+        // Send get bomb dropped event
+        if (SendGetDroppedBomb)
+        {
+            SendGetDroppedBomb = false;
+
+            sprintf(InfoToSend + strlen(InfoToSend), "{GETBOMB}");
         }
 
         // Get string data length
         int InfoLentgh = strlen(InfoToSend);
         if (InfoLentgh != 0)
+        {
+            // Send the current frame
+            char tmp[20];
+            sprintf(tmp, "{FRAME;%d}", frameCount);
+            send(my_socket, tmp, strlen(tmp), 0); // Send data to server
+
             send(my_socket, InfoToSend, InfoLentgh, 0); // Send data to server
-                                                        // sendto(my_socket, InfoToSend, InfoLentgh, 0, (struct sockaddr *)&sain, sizeof(sain));
+        }
+        // sendto(my_socket, InfoToSend, InfoLentgh, 0, (struct sockaddr *)&sain, sizeof(sain)); //UDP
     }
+    shutdown(my_socket, 0); // good practice to shutdown the socket.
+    closesocket(my_socket);
+    Connection = UNSELECTED;
+    if (!partyFinished && currentMenu != ONLINE_ERROR)
+    {
+        initMainMenu();
+    }
+    partyFinished = false;
+    isPrivate = false;
+    firstConnection = true;
+    OnPartyQuit();
+}
+
+/**
+ * @brief Parse a string to an int
+ *
+ * @param charToParse
+ * @return int
+ */
+int IntParse(char *charToParse)
+{
+    int result = EMPTY;
+    sscanf(charToParse, "%d", &result);
+    return result;
+}
+
+/**
+ * @brief Get player from id
+ *
+ * @param id
+ * @return Player*
+ */
+Player *GetPlayer(int id)
+{
+    for (int i = 0; i < MaxPlayer; i++)
+    {
+        if (AllPlayers[i].Id == id)
+            return &AllPlayers[i];
+    }
+    return NULL;
 }

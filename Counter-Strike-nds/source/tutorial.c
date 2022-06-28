@@ -1,76 +1,87 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "tutorial.h"
 #include "input.h"
 #include "party.h"
+#include "map.h"
 #include "movements.h"
 
-int tutorialStep = -1;
+// Current tutorial step
+enum TutorialTextEnum tutorialStep = -1;
+// Is the player in the tutorial ?
 bool isInTutorial = false;
+// Is the player done the tutorial ?
 bool tutorialDone = false;
-int tutorialTimer;
-float tutorialAddedValue;
+// Timer to wait before the next tutorial step
+int tutorialTimer = 0;
+// Value to increment to pass to the next tutorial step
+float tutorialAddedValue = 0;
+// Tutorial text
+char tutorialText[100] = "";
 
-char tutorialText[100];
-
+/**
+ * @brief Get the tutorial text and put the text in the tutorialText variable
+ *
+ */
 void getTutorialText()
 {
     switch (tutorialStep)
     {
-    case 0:
+    case TextWelcome:
         sprintf(tutorialText, "Welcome in Counter Strike");
         return;
 
-    case 1:
+    case TextLookAround:
         sprintf(tutorialText, "Look around you with the stylus");
         return;
 
-    case 2:
-        sprintf(tutorialText, "Move your player with ");
-        sprintf(tutorialText + strlen(tutorialText), inputsNames[inputs[UP_BUTTON].nameIndex]);
-        sprintf(tutorialText + strlen(tutorialText), " ");
-        sprintf(tutorialText + strlen(tutorialText), inputsNames[inputs[DOWN_BUTTON].nameIndex]);
-        sprintf(tutorialText + strlen(tutorialText), " ");
-        sprintf(tutorialText + strlen(tutorialText), inputsNames[inputs[LEFT_BUTTON].nameIndex]);
-        sprintf(tutorialText + strlen(tutorialText), " ");
-        sprintf(tutorialText + strlen(tutorialText), inputsNames[inputs[RIGHT_BUTTON].nameIndex]);
+    case TextMovePlayer:
+        sprintf(tutorialText, "Move your player with %s %s %s %s", inputsNames[inputs[UP_BUTTON].nameIndex], inputsNames[inputs[DOWN_BUTTON].nameIndex], inputsNames[inputs[LEFT_BUTTON].nameIndex], inputsNames[inputs[RIGHT_BUTTON].nameIndex]);
         return;
 
-    case 3:
-        sprintf(tutorialText, "Jump with ");
-        sprintf(tutorialText + strlen(tutorialText), inputsNames[inputs[JUMP_BUTTON].nameIndex]);
+    case TextJump:
+        sprintf(tutorialText, "Jump with %s", inputsNames[inputs[JUMP_BUTTON].nameIndex]);
         return;
 
-    case 4:
-        sprintf(tutorialText, "Shoot with ");
-        sprintf(tutorialText + strlen(tutorialText), inputsNames[inputs[FIRE_BUTTON].nameIndex]);
+    case TextShoot:
+        sprintf(tutorialText, "Shoot with %s", inputsNames[inputs[FIRE_BUTTON].nameIndex]);
         return;
 
-    case 5:
+    case TextReload:
         sprintf(tutorialText, "Reload with the reload button in the gamepad");
         return;
 
-    case 6:
+    case TextChangeGun:
         sprintf(tutorialText, "Change gun with left/right arrow in the gamepad");
         return;
 
-    case 7:
-        sprintf(tutorialText, "Plant the bomb with ");
-        sprintf(tutorialText + strlen(tutorialText), inputsNames[inputs[FIRE_BUTTON].nameIndex]);
-        sprintf(tutorialText + strlen(tutorialText), " on the red cross");
+    case TextPlantBomb:
+        sprintf(tutorialText, "Plant the bomb with %s on the red cross", inputsNames[inputs[FIRE_BUTTON].nameIndex]);
         return;
 
-    case 8:
-        sprintf(tutorialText, "Defuse the bomb with ");
-        sprintf(tutorialText + strlen(tutorialText), inputsNames[inputs[DEFUSE_BUTTON].nameIndex]);
+    case TextDefuseBomb:
+        sprintf(tutorialText, "Defuse the bomb with %s", inputsNames[inputs[DEFUSE_BUTTON].nameIndex]);
         return;
 
-    case 9:
+    case TextEnd:
         sprintf(tutorialText, "Tutorial finished!");
+        return;
+
+    case TextEmpty:
         return;
     }
     strcpy(tutorialText, "");
 }
 
+/**
+ * @brief Check if a step is done and if so, go to the next step or end the tutorial
+ *
+ */
 void checkTutorial()
 {
     if (tutorialTimer > 0)
@@ -78,7 +89,7 @@ void checkTutorial()
 
     switch (tutorialStep)
     {
-    case -1:
+    case TextEmpty:
         nextStep();
         roundState = PLAYING;
         canChangeGun = false;
@@ -87,14 +98,14 @@ void checkTutorial()
         tutorialTimer = 280;
         break;
 
-    case 0:
+    case TextWelcome:
         if (tutorialTimer == 0)
         {
             nextStep();
         }
         break;
 
-    case 1:
+    case TextLookAround:
         tutorialAddedValue += xAngleAdded + yAngleAdded;
         if (tutorialAddedValue >= 800)
         {
@@ -102,7 +113,7 @@ void checkTutorial()
         }
         break;
 
-    case 2:
+    case TextMovePlayer:
         tutorialAddedValue += xSpeedAdded + zSpeedAdded;
         if (tutorialAddedValue >= 110000)
         {
@@ -110,7 +121,7 @@ void checkTutorial()
         }
         break;
 
-    case 3:
+    case TextJump:
         if ((isKeyDown(JUMP_BUTTON) || NeedJump))
         {
             nextStep();
@@ -118,14 +129,14 @@ void checkTutorial()
         }
         break;
 
-    case 4:
+    case TextShoot:
         if ((isKeyDown(FIRE_BUTTON)))
         {
             nextStep();
         }
         break;
 
-    case 5:
+    case TextReload:
         if (localPlayer->AllAmmoMagazine[0].AmmoCount != 0)
         {
             nextStep();
@@ -138,7 +149,7 @@ void checkTutorial()
         }
         break;
 
-    case 6:
+    case TextChangeGun:
         if (localPlayer->currentGunInInventory == 1)
         {
             nextStep();
@@ -148,7 +159,7 @@ void checkTutorial()
         }
         break;
 
-    case 7:
+    case TextPlantBomb:
         if (BombPlanted)
         {
             nextStep();
@@ -156,7 +167,7 @@ void checkTutorial()
         }
         break;
 
-    case 8:
+    case TextDefuseBomb:
         if (BombDefused)
         {
             nextStep();
@@ -164,7 +175,7 @@ void checkTutorial()
         }
         break;
 
-    case 9:
+    case TextEnd:
         if (tutorialTimer == 0)
         {
             nextStep();
@@ -174,6 +185,10 @@ void checkTutorial()
     }
 }
 
+/**
+ * @brief Go to next step of the tutorial
+ *
+ */
 void nextStep()
 {
     tutorialStep++;
@@ -181,12 +196,20 @@ void nextStep()
     tutorialAddedValue = 0;
 }
 
+/**
+ * @brief Show/update the tutorial dialog text
+ *
+ */
 void updateTutorialDialogText()
 {
     getTutorialText();
     setDialogText(tutorialText);
 }
 
+/**
+ * @brief Finish the tutorial
+ *
+ */
 void endTutorial()
 {
     tutorialStep = -1;
@@ -195,5 +218,5 @@ void endTutorial()
     canShoot = true;
     tutorialDone = true;
     isInTutorial = false;
-    currentSelectionMap = 0;
+    currentSelectionMap = DUST2;
 }

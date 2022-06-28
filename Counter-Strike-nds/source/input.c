@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (c) 2021-2022, Fewnity - Grégory Machefer
+//
+// This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
+
 #include "main.h"
 #include "input.h"
 #include "ui.h"
@@ -6,22 +12,37 @@
 #include "gun.h"
 #include "tutorial.h"
 
+// Last position of the style / finger
 Vector2 LastTouch;
-uint32 keys;
-uint32 keysdown;
-uint32 keysup;
+// Held keys
+uint32 keys = 0;
+// Pressed keys
+uint32 keysdown = 0;
+// Released keys
+uint32 keysup = 0;
+// Position of the style / finger
 touchPosition touch;
 
+// Game pad areas
 int gamepadTouchAreaX1 = GAMEPAD_TOUCH_AREA_X1_RIGHT_HANDLED;
 int gamepadTouchAreaX2 = GAMEPAD_TOUCH_AREA_X2_RIGHT_HANDLED;
 int gamepadTouchAreaY1 = 30;
 int gamepadTouchAreaY2 = 194;
+
+// Game pad sensitivity
 float sensitivity = DEFAULT_SENSITIVITY;
+
+// Current used slider index
 int currentSlider = -1;
 
+// Angles added to the player/camera when the stylus is moved
 int xAngleAdded = 0;
 int yAngleAdded = 0;
 
+/**
+ * @brief Read keys, touch screen and keyboard
+ *
+ */
 void readKeys()
 {
     scanKeys();
@@ -33,18 +54,28 @@ void readKeys()
     readKeyboard();
 }
 
-void ReadTouchScreen(touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUpdateBottomScreen, int *ButtonToShow, int *UpdateBottomScreenOneFrame, bool *SendTeam, bool forceCheck)
+/**
+ * @brief Read the touch screen
+ *
+ * @param touch
+ * @param NeedChangeScreen
+ * @param AlwaysUpdateBottomScreen
+ * @param ButtonToShow
+ * @param UpdateBottomScreenFrameCount
+ * @param SendTeam
+ * @param forceCheck
+ */
+void ReadTouchScreen(touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUpdateBottomScreen, int *ButtonToShow, int *UpdateBottomScreenFrameCount, bool *SendTeam, bool forceCheck)
 {
-    if ((*UpdateBottomScreenOneFrame == 0 && uiTimer == 0) || forceCheck)
+    if ((*UpdateBottomScreenFrameCount == 0 && uiTimer == 0) || forceCheck)
     {
         for (int i = 0; i < checkBoxToShow; i++)
         {
-            // Check checkbox
+            // Check checkboxs
             if ((keysdown & KEY_TOUCH && touch.px >= AllCheckBoxs[i].xPos && touch.px <= AllCheckBoxs[i].xPos + AllCheckBoxs[i].xSize && touch.py >= AllCheckBoxs[i].yPos && touch.py <= AllCheckBoxs[i].yPos + AllCheckBoxs[i].ySize))
             {
-                // AllCheckBoxs[i].value = !AllCheckBoxs[i].value;
                 *AllCheckBoxs[i].value = !*AllCheckBoxs[i].value;
-                *UpdateBottomScreenOneFrame += 8;
+                *UpdateBottomScreenFrameCount += 8;
                 if (currentMenu == CONTROLSSETTINGS) // Update screen button (map menu)
                 {
                     if (i == 0)
@@ -60,6 +91,7 @@ void ReadTouchScreen(touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUp
         {
             if (keysdown & KEY_TOUCH && currentSlider == -1)
             {
+                // Check if the player is just touching a slider
                 for (int i = 0; i < sliderToShow; i++)
                 {
                     if ((touch.px >= AllSliders[i].xPos && touch.px <= AllSliders[i].xPos + AllSliders[i].xSize && touch.py >= AllSliders[i].yPos - 10 && touch.py <= AllSliders[i].yPos + 10))
@@ -69,8 +101,9 @@ void ReadTouchScreen(touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUp
                     }
                 }
             }
-            else if (currentSlider != -1)
+            if (currentSlider != -1)
             {
+                // Check used slider value
                 if ((touch.px >= AllSliders[currentSlider].xPos && touch.px <= AllSliders[currentSlider].xPos + AllSliders[currentSlider].xSize && touch.py >= AllSliders[currentSlider].yPos - 10 && touch.py <= AllSliders[currentSlider].yPos + 10))
                 {
                     *AllSliders[currentSlider].value = map(touch.px, AllSliders[currentSlider].xPos, AllSliders[currentSlider].xPos + AllSliders[currentSlider].xSize, AllSliders[currentSlider].min, AllSliders[currentSlider].max);
@@ -105,8 +138,9 @@ void ReadTouchScreen(touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUp
             return;
         }
 
-        if (currentMenu == CONTROLLER && keys & KEY_TOUCH && touch.px >= gamepadTouchAreaX1 && touch.px <= gamepadTouchAreaX2 && touch.py >= gamepadTouchAreaY1 && touch.py <= gamepadTouchAreaY2)
+        if (!localPlayer->IsDead && currentMenu == CONTROLLER && keys & KEY_TOUCH && touch.px >= gamepadTouchAreaX1 && touch.px <= gamepadTouchAreaX2 && touch.py >= gamepadTouchAreaY1 && touch.py <= gamepadTouchAreaY2)
         {
+            // Check if the player want to enable scope
             if (keysdown & KEY_TOUCH)
             {
                 if (GetDoubleTapTimer() > 0)
@@ -116,6 +150,8 @@ void ReadTouchScreen(touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUp
             }
             else if (LastTouch.x != -1)
             {
+                // Move the camera with the stylus
+
                 int xAngleToAdd = 0;
                 int yAngleToAdd = 0;
 
@@ -128,6 +164,7 @@ void ReadTouchScreen(touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUp
                 xAngleToAdd = fmin(xAngleToAdd, 50);
                 yAngleToAdd = fmin(yAngleToAdd, 50);
 
+                // Total of angle added / removed to the camera
                 xAngleAdded = abs(xAngleToAdd);
                 yAngleAdded = abs(yAngleToAdd);
 
@@ -146,6 +183,10 @@ void ReadTouchScreen(touchPosition touch, bool *NeedChangeScreen, bool *AlwaysUp
     }
 }
 
+/**
+ * @brief Update gamepad area
+ *
+ */
 void UpdateGamepadArea()
 {
     if (isLeftControls)
@@ -160,15 +201,21 @@ void UpdateGamepadArea()
     }
 }
 
+/**
+ * @brief Scan of input (for input settings)
+ *
+ */
 void ScanForInput()
 {
     if (scanForInput)
     {
-        for (int i = 0; i < INPUT_COUNT; i++)
+        for (int i = 0; i < 12; i++)
         {
             if (keysdown & BIT(i))
             {
                 bool canChange = true;
+
+                // Check if input is already used
                 for (int j = 0; j < INPUT_COUNT; j++)
                 {
                     if (inputs[j].value == BIT(i))
@@ -178,17 +225,20 @@ void ScanForInput()
                     }
                 }
 
+                // If the input is available, change it
                 if (canChange)
                 {
                     inputs[currentInputScanned].value = BIT(i);
                     inputs[currentInputScanned].nameIndex = i;
                 }
-                else
+                else // If the input is already used, change the input text to already used
                 {
-                    inputs[currentInputScanned].value = 0;
+                    inputs[currentInputScanned].value = -1;
                     inputs[currentInputScanned].nameIndex = 14;
                 }
-                if (isInTutorial && inputs[currentInputScanned].value != 0)
+
+                // Is the player is in the tutorial, update the text
+                if (isInTutorial && inputs[currentInputScanned].value != -1)
                 {
                     updateTutorialDialogText();
                 }
@@ -199,17 +249,38 @@ void ScanForInput()
     }
 }
 
+/**
+ * @brief Check if the input is pressed
+ *
+ * @param buttonName
+ * @return true
+ * @return false
+ */
 bool isKeyDown(enum inputButtons buttonName)
 {
-    return keysdown & inputs[buttonName].value;
+    return keysdown & inputs[buttonName].value && inputs[buttonName].value != -1;
 }
 
+/**
+ * @brief Check if the input is released
+ *
+ * @param buttonName
+ * @return true
+ * @return false
+ */
 bool isKeyUp(enum inputButtons buttonName)
 {
-    return keysup & inputs[buttonName].value;
+    return keysup & inputs[buttonName].value && inputs[buttonName].value != -1;
 }
 
+/**
+ * @brief Check if the input is held
+ *
+ * @param buttonName
+ * @return true
+ * @return false
+ */
 bool isKey(enum inputButtons buttonName)
 {
-    return keys & inputs[buttonName].value;
+    return keys & inputs[buttonName].value && inputs[buttonName].value != -1;
 }
