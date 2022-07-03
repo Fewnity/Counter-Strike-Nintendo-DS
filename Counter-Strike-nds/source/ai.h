@@ -31,6 +31,7 @@ extern bool botsNamesTaken[BOTS_NAMES_COUNT];
 extern PathLength *AllMatricesLength;
 
 void StartChecking(int playerIndex, int FinalWaypoint);
+void GetRandomPoint(int currentAiToCheck);
 void CreateWaypoints(int mapToLoad);
 void CreateWaypoint(int id, float x, float y, float z, int edgeCount, int *edge);
 void CheckPathWaypoint(int playerIndex, int StartWaypoint, int FinalWaypoint);

@@ -74,11 +74,6 @@ void LoadGrenades(Grenade *grenades)
             cheapestGrenadeCost = grenades[i].Price;
         }
     }
-
-    // for (int i = 0; i < shopGrenadeCount; i++)
-    // {
-    //     grenades[i].team = -1; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    // }
 }
 
 /**
@@ -308,12 +303,12 @@ void UpdateGrenades()
                 grenade->effectAlpha = grenade->EffectTimer;
 
                 // At the beginning of the explosion
-                if (grenade->EffectTimer == 30)
+                if (grenade->EffectTimer == 30 && Connection == OFFLINE)
                 {
                     for (int playerIndex = 0; playerIndex < MaxPlayer; playerIndex++)
                     {
                         Player *player = &AllPlayers[playerIndex];
-                        if (player->IsDead || player->Id == NO_PLAYER)
+                        if (player->IsDead || player->Id == NO_PLAYER || player->Team == BOTH)
                             continue;
 
                         // Get the distance between the grenade and the player
@@ -341,10 +336,11 @@ void UpdateGrenades()
                 int alpha = 31;
                 if (coef <= 90)
                     alpha = coef / 3.0;
-                coef = 1040;
+                if (coef < 1040)
+                    coef = 1040;
 
-                if (coef >= 1040)
-                    Scale = 5 * (1080 - coef);
+                // if (coef >= 1040)
+                Scale = 5 * (1080 - coef);
 
                 // Set effect alpha and scale
                 grenade->effectAlpha = alpha;

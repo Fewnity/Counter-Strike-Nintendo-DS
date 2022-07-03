@@ -16,7 +16,7 @@ void LoadAllStairs(int mapToLoad);     /**/
 void CalculatePlayerColBox(int PlayerId);
 void CalculateTriggerColBox(float xPos, float zPos, float xSize, float zSize, int TriggerId);
 void CalculateShadowColBox(float xPos, float yPos, float zPos, float xSize, float ySize, float zSize, int collisionBoxIndex);
-void SetBombZone(float xPos, float zPos, float xSize, float zSize, int TriggerId, int waypoint);
+void SetBombZone(float xPos, float zPos, float xSize, float zSize, int TriggerId, int waypoint, int nearWaypointCount, int nearWaypoint[nearWaypointCount]);
 void SetBombDefuseZone(float xPos, float zPos, CollisionBox2D *DefuseZoneCollisions);
 void SetBombTakingZone(float xPos, float zPos, CollisionBox2D *DefuseZoneCollisions);
 void checkTakingBombZone(CollisionBox2D bombDefuseZone);

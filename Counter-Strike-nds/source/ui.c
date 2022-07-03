@@ -448,7 +448,7 @@ void ChangeShopElement(int Left)
     else
     {
         // Go to the next element of the same category and team
-        for (int i = GunCount + equipementCount + shopGrenadeCount; i > -1; i--)
+        for (int i = GunCount + equipementCount + shopGrenadeCount - 1; i > -1; i--)
         {
             if ((ShopCategory < EQUIPMENT && i < GunCount && (AllGuns[i].gunCategory == ShopCategory && (AllPlayers[0].Team == AllGuns[i].team || AllGuns[i].team == -1))) || (ShopCategory == GRENADES && i >= GunCount && i < GunCount + shopGrenadeCount && (AllPlayers[0].Team == GetAllGrenades()[i - GunCount].team || GetAllGrenades()[i - GunCount].team == -1)) || (ShopCategory == EQUIPMENT && i >= GunCount + shopGrenadeCount && !allEquipments[i - GunCount - shopGrenadeCount].isHided && (AllPlayers[0].Team == allEquipments[i - GunCount - shopGrenadeCount].team || allEquipments[i - GunCount - shopGrenadeCount].team == -1)))
             {
@@ -484,6 +484,18 @@ void ChangeShopElement(int Left)
 
     // Refresh the screen
     SetUpdateBottomScreenOneFrame(4);
+}
+
+void AskGameMode()
+{
+    if (allMaps[currentSelectionMap].forcePartyMode == -1)
+    {
+        initPartyModeSelectionMenu();
+    }
+    else
+    {
+        StartSinglePlayer(allMaps[currentSelectionMap].forcePartyMode);
+    }
 }
 
 /**
@@ -649,20 +661,14 @@ void showDisconnectedText(int disconnectedPlayerIndex)
  */
 void startScanForInput(int inputIndex)
 {
-    for (int i = 0; i < INPUT_COUNT; i++)
-    {
-        if (inputs[i].nameIndex == 14)
-        {
-            inputs[i].nameIndex = 12;
-        }
-    }
+    stopScanForInput();
 
-    if (inputs[inputIndex].value != -1)
+    if (inputs[inputIndex].value != -1) // Unassign input
     {
         inputs[inputIndex].value = -1;
         inputs[inputIndex].nameIndex = 12;
     }
-    else
+    else if (inputs[inputIndex].nameIndex != 13) // if the input to scan is not in scan mode, start scan for it
     {
         scanForInput = true;
         currentInputScanned = inputIndex;
@@ -676,13 +682,10 @@ void startScanForInput(int inputIndex)
  */
 void stopScanForInput()
 {
-    // Mark active scanning input to unset
-    for (int i = 0; i < INPUT_COUNT; i++)
+    // Disable current scanning input
+    if (inputs[currentInputScanned].nameIndex == 14 || inputs[currentInputScanned].nameIndex == 13)
     {
-        if (inputs[i].nameIndex == 13)
-        {
-            inputs[i].nameIndex = 12;
-        }
+        inputs[currentInputScanned].nameIndex = 12;
     }
 
     scanForInput = false;
@@ -847,7 +850,7 @@ void drawTopScreenUI()
             char CPU[40];
 
             sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
-            // sprintf(CPU, "%0.3f %0.3f %0.3f", debugValue1, debugValue2, debugValue3);
+            //  sprintf(CPU, "%0.3f %0.3f %0.3f", debugValue1, debugValue2, debugValue3);
 
             NE_TextPrint(0,        // Font slot
                          1, 1,     // Coordinates x(column), y(row)
@@ -857,7 +860,8 @@ void drawTopScreenUI()
             char CPU2[120] = "";
             for (int i = 0; i < MaxPlayer; i++)
             {
-                sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].Health, AllPlayers[i].haveBomb);
+                // sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].Health, AllPlayers[i].haveBomb);
+                sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].target, AllPlayers[i].lastSeenTarget);
             }
 
             NE_TextPrint(0,        // Font slot
@@ -1180,7 +1184,7 @@ void drawTopScreenUI()
                 if (!selectPlayer->IsDead)
                 {
                     // Set new gun position with head bobbing
-                    if (selectPlayer->currentGunInInventory >= GunCount || !AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isKnife) // TODO Remove first condition?
+                    if (selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory] >= GunCount || !AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isKnife) // TODO Remove first condition?
                     {
                         rightGunX = GunPositionX + selectPlayer->rightGunXRecoil + sinf(selectPlayer->BobbingOffset) * 4;
                         rightGunY = GunPositionY + 4 + selectPlayer->rightGunYRecoil + cosf(selectPlayer->BobbingOffset * 2) * 6;
@@ -1193,7 +1197,7 @@ void drawTopScreenUI()
                         rightGunY = GunPositionY + 4 - selectPlayer->rightGunYRecoil + GunMaxRecoil * 1.4 + cosf(selectPlayer->BobbingOffset * 2) * 6;
                     }
 
-                    if (selectPlayer->isReloading)
+                    if (selectPlayer->isReloading && selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory] < GunCount)
                     {
                         float valueToAdd = sinf((float)selectPlayer->GunReloadWaitCount / (float)AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].ReloadTime * M_PI) * 70;
                         rightGunY += valueToAdd;
@@ -1202,12 +1206,12 @@ void drawTopScreenUI()
                     int lightCoef = 31 * selectPlayer->lightCoef;
                     // NE_2DDrawTexturedQuad(rightGunX, rightGunY, rightGunX + 96, rightGunY + 96, 1, TopScreenSpritesMaterials[1]); // Gun
                     NE_2DDrawTexturedQuadColor(rightGunX, rightGunY, rightGunX + 96, rightGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef));
-                    if (AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isDualGun)
+                    if (selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory] < GunCount && AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isDualGun)
                         NE_2DDrawTexturedQuadColor(leftGunX + 96, leftGunY, leftGunX, leftGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef)); // Gun
                 }
 
                 // Draw gun muzzle flash
-                if (selectPlayer->currentGunInInventory < GunCount && ShowMuzzle > 0 && !AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isKnife)
+                if (selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory] < GunCount && ShowMuzzle > 0 && !AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isKnife)
                 {
                     NE_PolyFormat(10 * ShowMuzzle, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
                     if (selectPlayer->isRightGun)
@@ -1895,8 +1899,9 @@ void initMainMenu()
     AllButtons[0].yPos = 40;
     AllButtons[0].xSize = ScreenWidth - 80;
     AllButtons[0].ySize = 24;
-    // AllButtons[0].OnClick = &StartSinglePlayer;
+
     AllButtons[0].OnClick = &initSelectionMapImageMenu;
+    // AllButtons[0].OnClick = &initPartyModeSelectionMenu;
     AllButtons[0].parameter = 0;
     AllButtons[0].xTextPos = 10;
     AllButtons[0].yTextPos = 6;
@@ -2230,7 +2235,7 @@ void initSelectionMapImageMenu()
     AllButtons[1].xSize = 40;
     AllButtons[1].ySize = 32;
     AllButtons[1].OnClick = &ChangeMap;
-    AllButtons[0].parameter = 1;
+    AllButtons[1].parameter = 1;
     AllButtons[1].xTextPos = 24;
     AllButtons[1].yTextPos = 22;
     AllButtons[1].text = "->";
@@ -2239,7 +2244,8 @@ void initSelectionMapImageMenu()
     AllButtons[2].yPos = 164;
     AllButtons[2].xSize = 80;
     AllButtons[2].ySize = 32;
-    AllButtons[2].OnClick = &StartSinglePlayer;
+    // AllButtons[2].OnClick = &StartSinglePlayer;
+    AllButtons[2].OnClick = &AskGameMode;
     AllButtons[2].xTextPos = 14;
     AllButtons[2].yTextPos = 22;
     AllButtons[2].text = "Start";
@@ -2283,6 +2289,46 @@ void initSelectionMapListMenu()
     AllButtons[1].text = "->";
 
     SetButtonToShow(2);
+}
+
+/**
+ * @brief Init online error menu
+ *
+ */
+void initPartyModeSelectionMenu()
+{
+    SetTwoScreenMode(false);
+
+    startChangeMenu(PARTY_MODE_SELECTION_LIST);
+
+    renderFunction = &drawPartyModeSelectionMenu;
+    lastOpenedMenu = &initSelectionMapImageMenu;
+
+    // Single player button
+    AllButtons[0].xPos = 40;
+    AllButtons[0].yPos = 56;
+    AllButtons[0].xSize = ScreenWidth - 80;
+    AllButtons[0].ySize = 24;
+    AllButtons[0].OnClick = &StartSinglePlayer;
+    AllButtons[0].parameter = 1;
+    AllButtons[0].xTextPos = 13;
+    AllButtons[0].yTextPos = 8;
+    AllButtons[0].text = "Casual";
+
+    // Multiplayer button
+    AllButtons[1].xPos = 40;
+    AllButtons[1].yPos = 119;
+    AllButtons[1].xSize = ScreenWidth - 80;
+    AllButtons[1].ySize = 24;
+    AllButtons[1].OnClick = &StartSinglePlayer;
+    AllButtons[1].parameter = 0;
+    AllButtons[1].isHidden = false;
+    AllButtons[1].xTextPos = 11;
+    AllButtons[1].yTextPos = 16;
+    AllButtons[1].text = "Competitive";
+
+    SetButtonToShow(2);
+    setQuitButton(true);
 }
 
 /**
@@ -3064,6 +3110,18 @@ void drawSelectionMapListMenu()
                  11, 1,    // Coordinates x(column), y(row)
                  NE_White, // Color
                  "Select map");
+}
+
+/**
+ * @brief Draw online error menu
+ *
+ */
+void drawPartyModeSelectionMenu()
+{
+    NE_TextPrint(0,        // Font slot
+                 7, 1,     // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Select a game mode");
 }
 
 /**

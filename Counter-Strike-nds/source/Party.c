@@ -423,6 +423,7 @@ void CheckAfterRound()
                 player->Team = TERRORISTS;
             }
 
+            UpdatePlayerTexture(i);
             player->Money = allPartyModes[currentPartyMode].startMoney;
         }
         // Reset lose count money bonus

@@ -669,8 +669,10 @@ void LoadAllBombZones(int mapToLoad)
         allMaps[mapToLoad].BombsTriggersCollisionsCount = 2;
         allMaps[mapToLoad].AllBombsTriggersCollisions = malloc(allMaps[mapToLoad].BombsTriggersCollisionsCount * sizeof(Site));
 
-        SetBombZone(40.8, -20.8, 5, 5, 0, 14);                 // A
-        SetBombZone(-28.03, -27.07, 4.46785, 4.578236, 1, 29); // B
+        int nearWaypoints0[12] = {2, 3, 9, 10, 11, 12, 13, 14, 15, 16, 17, 57};
+        SetBombZone(40.8, -20.8, 5, 5, 0, 14, 12, nearWaypoints0); // A
+        int nearWaypoints1[10] = {21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
+        SetBombZone(-28.03, -27.07, 4.46785, 4.578236, 1, 29, 10, nearWaypoints1); // B
     }
     else if (mapToLoad == TUTORIAL)
     {
@@ -678,7 +680,8 @@ void LoadAllBombZones(int mapToLoad)
         allMaps[mapToLoad].BombsTriggersCollisionsCount = 1;
         allMaps[mapToLoad].AllBombsTriggersCollisions = malloc(allMaps[mapToLoad].BombsTriggersCollisionsCount * sizeof(Site));
 
-        SetBombZone(-8.21, -1.59, 4, 4, 0, 0);
+        int nearWaypoints0[14] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+        SetBombZone(-8.21, -1.59, 4, 4, 0, 0, 14, nearWaypoints0); // A
     }
 }
 /**
@@ -838,7 +841,7 @@ void CalculateShadowColBox(float xPos, float yPos, float zPos, float xSize, floa
  * @param triggerId Trigger Id
  * @param waypoint
  */
-void SetBombZone(float xPos, float zPos, float xSize, float zSize, int triggerId, int waypoint)
+void SetBombZone(float xPos, float zPos, float xSize, float zSize, int triggerId, int waypoint, int nearWaypointCount, int nearWaypoint[nearWaypointCount])
 {
     Site *site = &allMaps[mapToSet].AllBombsTriggersCollisions[triggerId];
     site->collisionBox.BoxXRangeA = xPos + xSize / 2.0;
@@ -846,6 +849,14 @@ void SetBombZone(float xPos, float zPos, float xSize, float zSize, int triggerId
     site->collisionBox.BoxZRangeA = zPos + zSize / 2.0;
     site->collisionBox.BoxZRangeB = zPos - zSize / 2.0;
     site->waypoint = waypoint;
+
+    allMaps[mapToSet].AllBombsTriggersCollisions[triggerId].nearWaypoints = (int *)malloc(nearWaypointCount * sizeof(int));
+    allMaps[mapToSet].AllBombsTriggersCollisions[triggerId].nearWaypointCount = nearWaypointCount;
+
+    for (int i = 0; i < nearWaypointCount; i++)
+    {
+        allMaps[mapToSet].AllBombsTriggersCollisions[triggerId].nearWaypoints[i] = nearWaypoint[i];
+    }
 }
 
 /**
@@ -1266,8 +1277,8 @@ void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibili
     // Is the gun is a shotgun, reduce accuracy
     if (getPlayerCurrentGun(shooterPlayer).bulletCountPerShoot != 1 && !checkVisibility)
     {
-        float xOffset = ((rand() % 100) - 50) / 3.0;
-        float yOffset2 = ((rand() % 100) - 50) / 3.0;
+        float xOffset = ((rand() % 100) - 50) / 3.0 * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
+        float yOffset2 = ((rand() % 100) - 50) / 3.0 * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
         UpdateLookRotationAI(CameraAngleToGrenadeDirection + yOffset2, tempAngle + xOffset, &x2, &y2, &z2);
     }
     else

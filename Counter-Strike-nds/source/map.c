@@ -43,6 +43,11 @@ void UnLoadMap(int mapToUnload)
     if (allMaps[mapToUnload].AllStairs != NULL)
         free(allMaps[mapToUnload].AllStairs);
 
+    for (int i = 0; i < allMaps[mapToUnload].BombsTriggersCollisionsCount; i++)
+    {
+        free(allMaps[mapToUnload].AllBombsTriggersCollisions[i].nearWaypoints);
+    }
+
     if (allMaps[mapToUnload].AllBombsTriggersCollisions != NULL)
         free(allMaps[mapToUnload].AllBombsTriggersCollisions);
 

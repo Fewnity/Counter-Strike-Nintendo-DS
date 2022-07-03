@@ -885,17 +885,17 @@ void ReadServerData()
                     if (currentMenu == 2)
                         UpdateBottomScreenFrameCount += 8;
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETCODE") == 0) // Get a player name
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETCODE") == 0) // Get the party code
                 {
                     strcpy(partyCode, arr[1]);
                     isPrivate = true;
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "HITSOUND") == 0) // Party score changes
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "HITSOUND") == 0) // Make a hit sound
                 {
                     int PlayerId, HitType;
 
-                    sscanf(arr[1], "%d", &PlayerId);
-                    sscanf(arr[2], "%d", &HitType);
+                    sscanf(arr[2], "%d", &PlayerId);
+                    sscanf(arr[3], "%d", &HitType);
 
                     int Panning, Volume;
                     if (PlayerId != localPlayer->Id)
@@ -1003,22 +1003,28 @@ void ReadServerData()
                     int killerPlayerIndex = NO_PLAYER;
                     int killedPlayerIndex = NO_PLAYER;
 
-                    // Find player with unique ID to update his informations
-                    for (int i = 0; i < MaxPlayer; i++)
+                    if (KillerIdInt != NO_PLAYER)
                     {
-                        if (AllPlayers[i].Id == KillerIdInt)
+                        // Find player with unique ID to update his informations
+                        for (int i = 0; i < MaxPlayer; i++)
                         {
-                            killerPlayerIndex = i;
-                            break;
+                            if (AllPlayers[i].Id == KillerIdInt)
+                            {
+                                killerPlayerIndex = i;
+                                break;
+                            }
                         }
                     }
 
-                    for (int i = 0; i < MaxPlayer; i++)
+                    if (ParsedPlayerId != NO_PLAYER)
                     {
-                        if (AllPlayers[i].Id == ParsedPlayerId)
+                        for (int i = 0; i < MaxPlayer; i++)
                         {
-                            killedPlayerIndex = i;
-                            break;
+                            if (AllPlayers[i].Id == ParsedPlayerId)
+                            {
+                                killedPlayerIndex = i;
+                                break;
+                            }
                         }
                     }
 
@@ -1181,7 +1187,8 @@ void ReadServerData()
         // Send shoot data for sound/animation for clients
         if (SendLeave)
         {
-            sprintf(InfoToSend + strlen(InfoToSend), "{LEAVE}");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{LEAVE}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d}", LEAVE);
             SendLeave = false;
         }
 
@@ -1193,7 +1200,8 @@ void ReadServerData()
         // If local player need to be updated for other player (59 bytes)
         if (localPlayer->Id != -1 && SendPosition && SendPositionData == 0)
         {
-            sprintf(InfoToSend + strlen(InfoToSend), "{POS;%d;%d;%d;%d;%0.0f}", localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z, (int)localPlayer->Angle, CameraAngleY);
+            // sprintf(InfoToSend + strlen(InfoToSend), "{POS;%d;%d;%d;%d;%0.0f}", localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z, (int)localPlayer->Angle, CameraAngleY);
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%d;%d;%d;%0.0f}", POS, localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z, (int)localPlayer->Angle, CameraAngleY);
 
             SendPosition = false;
             SendPositionData = 4;
@@ -1202,7 +1210,8 @@ void ReadServerData()
         // Send grenade launch
         if (SendGrenade)
         {
-            sprintf(InfoToSend + strlen(InfoToSend), "{GRENADE;%f;%f;%f}", x, y, z);
+            // sprintf(InfoToSend + strlen(InfoToSend), "{GRENADE;%f;%f;%f}", x, y, z);
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%f;%f;%f}", GRENADE, x, y, z);
             SendGrenade = false;
         }
 
@@ -1210,28 +1219,32 @@ void ReadServerData()
         if (SendBombPlace)
         {
             SendBombPlace = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{BOMBPLACE;%d;%d;%d;%d}", (int)(BombPosition.x * 4096.0), (int)(BombPosition.y * 4096.0), (int)(BombPosition.z * 4096.0), BombPosition.r);
+            // sprintf(InfoToSend + strlen(InfoToSend), "{BOMBPLACE;%d;%d;%d;%d}", (int)(BombPosition.x * 4096.0), (int)(BombPosition.y * 4096.0), (int)(BombPosition.z * 4096.0), BombPosition.r);
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%d;%d;%d}", BOMBPLACE, (int)(BombPosition.x * 4096.0), (int)(BombPosition.y * 4096.0), (int)(BombPosition.z * 4096.0), BombPosition.r);
         }
 
         // Send bomb defuse data
         if (SendBombDefused)
         {
             SendBombDefused = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{BOMBDEFUSE}");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{BOMBDEFUSE}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d}", BOMBDEFUSE);
         }
 
         // Send bomb planting data
         if (SendBombPlacing)
         {
             SendBombPlacing = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{BOMBPLACING}");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{BOMBPLACING}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d}", BOMBPLACING);
         }
 
         // Send team data
         if (SendTeam)
         {
             SendTeam = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{TEAM;%d}", tempTeam);
+            // sprintf(InfoToSend + strlen(InfoToSend), "{TEAM;%d}", tempTeam);
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d}", TEAM, tempTeam);
             tempTeam = -1;
         }
 
@@ -1239,34 +1252,39 @@ void ReadServerData()
         if (SendPing)
         {
             SendPing = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{PING}");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{PING}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d}", PING);
         }
 
         // Send buy weapon request data
         if (SendBuyWeapon)
         {
             SendBuyWeapon = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{BUY;%d}", GetSelectedGunShop());
+            // sprintf(InfoToSend + strlen(InfoToSend), "{BUY;%d}", GetSelectedGunShop());
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d}", BUY, GetSelectedGunShop());
         }
 
         // Send gun reloaded data
         if (SendReloaded)
         {
             SendReloaded = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{RELOADED}");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{RELOADED}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d}", RELOADED);
         }
 
         // Send selected gun
         if (SendSelectedGun)
         {
             SendSelectedGun = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{CURGUN;%d}", localPlayer->currentGunInInventory);
+            // sprintf(InfoToSend + strlen(InfoToSend), "{CURGUN;%d}", localPlayer->currentGunInInventory);
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d}", CURGUN, localPlayer->currentGunInInventory);
         }
 
         // Send shoot data for sound/animation for clients
         if (SendShoot)
         {
-            sprintf(InfoToSend + strlen(InfoToSend), "{SHOOT}");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{SHOOT}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d}", SHOOT);
             SendShoot = false;
         }
 
@@ -1284,7 +1302,8 @@ void ReadServerData()
         // Send hit data
         if (sendHitClient)
         {
-            sprintf(InfoToSend + strlen(InfoToSend), "{HIT");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{HIT");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d", HIT);
             for (int i = 0; i < FLASH_MODELS_COUNT; i++)
             {
                 if (hittedClient[i] != -1)
@@ -1300,7 +1319,8 @@ void ReadServerData()
         if (SendVoteStartNow)
         {
             SendVoteStartNow = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{VOTE;0}");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{VOTE;0}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;0}", VOTE);
         }
 
         // Send wall hit data
@@ -1309,25 +1329,17 @@ void ReadServerData()
             SendWallHit = false;
             for (int i = 0; i < getPlayerCurrentGun(localPlayer).bulletCountPerShoot; i++)
             {
-                sprintf(InfoToSend + strlen(InfoToSend), "{WALLHIT;%d;%d;%d}", WallHitXPos[i], WallHitYPos[i], WallHitZPos[i]);
+                // sprintf(InfoToSend + strlen(InfoToSend), "{WALLHIT;%d;%d;%d}", WallHitXPos[i], WallHitYPos[i], WallHitZPos[i]);
+                sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%d;%d}", WALLHIT, WallHitXPos[i], WallHitYPos[i], WallHitZPos[i]);
             }
-
-            // sprintf(InfoToSend + strlen(InfoToSend), "{WALLHIT;%d;%d;%d}", WallHitXPos, WallHitYPos, WallHitZPos);
-
-            /*int Panning, Volume;
-            Vector4 SoundPos;
-            SoundPos.x = WallHitXPos /= 8192.0;
-            SoundPos.y = WallHitYPos /= 8192.0;
-            SoundPos.z = WallHitZPos /= 8192.0;
-            GetPanningByPosition(&Panning, &Volume, SoundPos, xWithoutYForAudio, zWithoutYForAudio, 0.15);
-            Play3DSound(SFX_RIC, Volume, Panning, NULL);*/
         }
 
         // Send local player name
         if (SendPlayerName)
         {
             SendPlayerName = false;
-            sprintf(InfoToSend + strlen(InfoToSend), "{SETNAME;%s}", localPlayer->name);
+            // sprintf(InfoToSend + strlen(InfoToSend), "{SETNAME;%s}", localPlayer->name);
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%s}", SETNAME, localPlayer->name);
         }
 
         // Send security key response
@@ -1338,12 +1350,15 @@ void ReadServerData()
             u8 macAddress[6];
             Wifi_GetData(WIFIGETDATA_MACADDRESS, 6, macAddress);
 
-            sprintf(InfoToSend + strlen(InfoToSend), "{KEY;%d;%X%X%X%X%X%X;%s;%s}", getKeyResponse(serverKey), macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5], localPlayer->name, GAME_VERSION);
+            // sprintf(InfoToSend + strlen(InfoToSend), "{KEY;%d;%X%X%X%X%X%X;%s;%s}", getKeyResponse(serverKey), macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5], localPlayer->name, GAME_VERSION);
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%X%X%X%X%X%X;%s;%s}", KEY, getKeyResponse(serverKey), macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5], localPlayer->name, GAME_VERSION);
 
             if (partyOption == JOIN_PRIVATE_PARTY)
-                sprintf(InfoToSend + strlen(InfoToSend), "{PARTY;%d;%s}", partyOption, partyCode);
+                // sprintf(InfoToSend + strlen(InfoToSend), "{PARTY;%d;%s}", partyOption, partyCode);
+                sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%s}", PARTY, partyOption, partyCode);
             else
-                sprintf(InfoToSend + strlen(InfoToSend), "{PARTY;%d}", partyOption);
+                // sprintf(InfoToSend + strlen(InfoToSend), "{PARTY;%d}", partyOption);
+                sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d}", PARTY, partyOption);
         }
 
         // Send get bomb dropped event
@@ -1351,7 +1366,8 @@ void ReadServerData()
         {
             SendGetDroppedBomb = false;
 
-            sprintf(InfoToSend + strlen(InfoToSend), "{GETBOMB}");
+            // sprintf(InfoToSend + strlen(InfoToSend), "{GETBOMB}");
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d}", GETBOMB);
         }
 
         // Get string data length
@@ -1360,7 +1376,8 @@ void ReadServerData()
         {
             // Send the current frame
             char tmp[20];
-            sprintf(tmp, "{FRAME;%d}", frameCount);
+            // sprintf(tmp, "{FRAME;%d}", frameCount);
+            sprintf(tmp, "{%d;%d}", FRAME, frameCount);
             send(my_socket, tmp, strlen(tmp), 0); // Send data to server
 
             send(my_socket, InfoToSend, InfoLentgh, 0); // Send data to server

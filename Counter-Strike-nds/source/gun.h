@@ -35,6 +35,8 @@ typedef struct //
     bool isBigGun;
     bool isDualGun;
     int bulletCountPerShoot;
+    int maxBotShootDisance;
+    float inaccuracyReductionForBot; //[0;1]
 } Gun;
 
 extern int cheapestGunsCostCounter[4];

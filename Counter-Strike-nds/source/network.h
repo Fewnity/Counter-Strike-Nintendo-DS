@@ -72,6 +72,10 @@ enum RequestType
     ENDGAME = 37,
     ENDUPDATE = 38,
     INVTORY = 39,
+    GETBOMB = 40,
+    FRAME = 41,
+    RELOADED = 42,
+    STATUS = 43,
 };
 
 #define REQUEST_NAME_INDEX 0

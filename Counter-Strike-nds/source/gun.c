@@ -57,6 +57,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.07;
     AllGuns[gunIndex].penetration = 85;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 3;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "Knife";
     gunIndex++;
 
@@ -81,6 +83,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 75;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "Desert Eagle";
     gunIndex++;
 
@@ -106,6 +110,8 @@ void AddGuns()
     AllGuns[gunIndex].penetration = 52;
     AllGuns[gunIndex].isDualGun = true;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "Dual Berettas";
     gunIndex++;
 
@@ -130,6 +136,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 75;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "Five SeveN";
     gunIndex++;
 
@@ -154,6 +162,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 52;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "Glock-18";
     gunIndex++;
 
@@ -178,6 +188,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 62.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "P228";
     gunIndex++;
 
@@ -202,6 +214,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "USP";
     gunIndex++;
 
@@ -226,6 +240,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
     AllGuns[gunIndex].bulletCountPerShoot = 6;
+    AllGuns[gunIndex].maxBotShootDisance = 14;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "M3";
     gunIndex++;
 
@@ -250,6 +266,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
     AllGuns[gunIndex].bulletCountPerShoot = 6;
+    AllGuns[gunIndex].maxBotShootDisance = 14;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "XM1014";
     gunIndex++;
 
@@ -274,6 +292,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 75;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "M249";
     gunIndex++;
 
@@ -298,6 +318,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 47.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 17;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "MAC-10";
     gunIndex++;
 
@@ -322,6 +344,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 17;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "MP5";
     gunIndex++;
 
@@ -346,6 +370,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 75;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 17;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "P90";
     gunIndex++;
 
@@ -370,6 +396,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 17;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "TMP";
     gunIndex++;
 
@@ -394,6 +422,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 50;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 17;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "UMP-45";
     gunIndex++;
 
@@ -418,6 +448,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 77.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 23;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "AK-47";
     gunIndex++;
 
@@ -442,6 +474,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 23;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.5;
     AllGuns[gunIndex].name = "AUG";
     gunIndex++;
 
@@ -466,6 +500,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 23;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "FAMAS";
     gunIndex++;
 
@@ -490,6 +526,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 77;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 23;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "Galil";
     gunIndex++;
 
@@ -514,6 +552,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 23;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "M4A1";
     gunIndex++;
 
@@ -538,6 +578,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 26;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "SG 552";
     gunIndex++;
 
@@ -562,6 +604,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 72.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 26;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "SG 550";
     gunIndex++;
 
@@ -586,6 +630,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 85;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 26;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "Scout";
     gunIndex++;
 
@@ -610,6 +656,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 82.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 26;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "G3SG1";
     gunIndex++;
 
@@ -634,6 +682,8 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 97.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 30;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.7;
     AllGuns[gunIndex].name = "AWP";
     gunIndex++;
 

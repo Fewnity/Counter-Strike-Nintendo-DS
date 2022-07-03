@@ -1521,7 +1521,6 @@ void AiCheckForAction()
     if (checkPlayerDistanceFromAiTimer % 5 == 0)
     {
         int currentAiToCheck = checkPlayerDistanceFromAiTimer / 5;
-
         if (checkPlayerDistanceFromAiTimer == 0)
             checkPlayerDistanceFromAiTimer = 25 + 1;
 
@@ -1536,6 +1535,11 @@ void AiCheckForAction()
             if (randomPlayerToCheck != NO_PLAYER)
                 distancePlayers = GetDistanceBewteenTwoPlayers(randomPlayerToCheck, currentAiToCheck);
 
+            int shootDistance = 20;
+            if (playerToCheck->AllGunsInInventory[playerToCheck->currentGunInInventory] < GunCount)
+            {
+                shootDistance = AllGuns[playerToCheck->AllGunsInInventory[playerToCheck->currentGunInInventory]].maxBotShootDisance;
+            }
             // If current AI has no target
             if (playerToCheck->lastSeenTarget == NO_PLAYER && randomPlayerToCheck == NO_PLAYER)
             {
@@ -1561,7 +1565,7 @@ void AiCheckForAction()
                     else
                     {
                         distancePlayers = GetDistanceBewteenTwoPlayers(randomPlayerToCheck, currentAiToCheck);
-                        if (distancePlayers < 20)
+                        if (distancePlayers < shootDistance)
                             break;
                     }
                 }
@@ -1572,7 +1576,7 @@ void AiCheckForAction()
                 }
             }
 
-            if (distancePlayers < 20) // Is a player is near, set this player as target
+            if (distancePlayers < shootDistance) // Is a player is near, set this player as target
             {
                 float xSide1, zSide1, xSide2, zSide2;
                 GetRotationForCullingAI(currentAiToCheck, playerToCheck->Angle, &xSide1, &zSide1, &xSide2, &zSide2);
@@ -1597,8 +1601,8 @@ void AiCheckForAction()
                 {
                     playerToCheck->justCheking = false;
                     playerToCheck->target = NO_PLAYER;
-                    int randomWait = 50 + rand() % 10;
-                    // playerToCheck->GunWaitCount = -60;
+                    int randomWait = 40 + rand() % 20;
+
                     playerToCheck->GunWaitCount = -randomWait;
 
                     // If bot finished his path, get a new one if no player is found
@@ -1630,7 +1634,8 @@ void AiCheckForAction()
                         }
                         else
                         {
-                            StartChecking(currentAiToCheck, random() % maxPoint);
+                            // StartChecking(currentAiToCheck, random() % maxPoint);
+                            GetRandomPoint(currentAiToCheck);
                             if (playerToCheck->Team == COUNTERTERRORISTS && BombPlanted && currentDefuserIndex == NO_PLAYER)
                             {
                                 SetDefuser(currentAiToCheck);
@@ -1696,10 +1701,32 @@ void AiCheckForAction()
                 else
                 {
                     // TODO move to a random waypoint or stay some seconds
-                    StartChecking(currentAiToCheck, random() % maxPoint);
+                    // StartChecking(currentAiToCheck, random() % maxPoint);
+                    GetRandomPoint(currentAiToCheck);
                 }
             }
         }
+    }
+}
+
+void GetRandomPoint(int currentAiToCheck)
+{
+    if (IsExplode || (BombSeconds <= 5 && AllPlayers[currentAiToCheck].Team == TERRORISTS) || (BombSeconds <= 3 && AllPlayers[currentAiToCheck].Team == COUNTERTERRORISTS)) // Run away from the bomb
+    {
+        StartChecking(currentAiToCheck, random() % maxPoint);
+    }
+    else
+    {
+        int site = random() % 2;
+
+        if (bombPlantedAt == 14)
+            site = 0;
+        else if (bombPlantedAt == 29)
+            site = 1;
+
+        Site siteRef = allMaps[currentMap].AllBombsTriggersCollisions[site];
+
+        StartChecking(currentAiToCheck, siteRef.nearWaypoints[random() % siteRef.nearWaypointCount]);
     }
 }
 

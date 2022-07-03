@@ -147,7 +147,20 @@ void Load()
                     {
                         inputs[inputCount].nameIndex = 12;
                     }
+                    else
+                    {
+                        for (int i = 0; i < 12; i++)
+                        {
+                            if (tmpInput == BIT(i))
+                            {
+                                inputs[inputCount].nameIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                    printf("%d %d %s\n", inputCount, tmpInput, inputsNames[inputs[inputCount].nameIndex]);
                 }
+                // printf("%s\n", inputIndex);
                 inputCount++;
             }
         }

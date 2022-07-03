@@ -307,6 +307,8 @@ typedef struct // 2D area (box) values for trigger
 typedef struct // Physics values for raycasting
 {
 	int waypoint;
+	int *nearWaypoints;
+	int nearWaypointCount;
 	CollisionBox2D collisionBox;
 } Site;
 
@@ -623,7 +625,7 @@ int GetUpdateBottomScreenOneFrame();
 void SetUpdateBottomScreenOneFrame(int value);
 int GetButtonToShow();
 void SetButtonToShow(int value);
-void StartSinglePlayer();
+void StartSinglePlayer(int partyMode);
 void SetWaitForTeamResponse(bool value);
 void setCameraMapPosition();
 void checkMusicSteaming();

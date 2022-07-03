@@ -601,7 +601,7 @@ int main(void)
 		loadSounds();
 		isInTutorial = true;
 		currentSelectionMap = TUTORIAL;
-		StartSinglePlayer();
+		StartSinglePlayer(2);
 	}
 	else
 	{
@@ -635,9 +635,10 @@ void setCameraMapPosition()
  * @brief Start a single player party
  *
  */
-void StartSinglePlayer()
+void StartSinglePlayer(int partyMode)
 {
 	Connection = OFFLINE;
+	currentPartyMode = partyMode;
 }
 
 /**
@@ -700,11 +701,6 @@ void checkStartGameLoop()
 			currentMap = currentSelectionMap;
 			LoadMap(currentMap);
 		}
-
-		currentPartyMode = allMaps[currentMap].forcePartyMode;
-
-		if (currentPartyMode == -1)
-			currentPartyMode = 1; // If there is no party mode, force it to 1 TODO : make a party mode selection
 
 		partyFinished = false;
 		initScoreMenu();
@@ -2582,6 +2578,7 @@ void makeHit(int hitBy, int playerHit, float distance, int shootIndex)
 	if (!hittedPlayer->IsDead && hittedPlayer->target == NO_PLAYER && hittedPlayer != localPlayer)
 	{
 		hittedPlayer->target = hitBy;
+		hittedPlayer->lastSeenTarget = hitBy;
 		if (hittedPlayer->GunWaitCount >= 0)
 			hittedPlayer->GunWaitCount = -60;
 	}
