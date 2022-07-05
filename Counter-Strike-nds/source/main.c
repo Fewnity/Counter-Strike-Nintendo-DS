@@ -23,6 +23,7 @@
 #include "input.h"
 #include "player.h"
 #include "tutorial.h"
+#include "stats.h"
 
 //
 //////Level
@@ -46,8 +47,6 @@ float OldxPos, OldyPos, OldzPos = 0;
 int CanJump = 0;
 // CanJumpRealTimer is used wait a little bit of time before the player can jump
 int CanJumpRealTimer = 2;
-// Is the player aiming?
-bool Aiming = false;
 
 // Number of frame when the player is in the air
 int frameCountDuringAir = 0;
@@ -674,6 +673,7 @@ void prepareParty(bool multiplayerMode)
 	BombDefused = false;
 	BombPlanted = false;
 	PartyStarted = multiplayerMode;
+	bombPlantedAt = -1;
 
 	SetCurrentCameraPlayer(0);
 	DisableAim();
@@ -878,6 +878,8 @@ void OnPartyQuit()
 {
 	setCameraMapPosition();
 	DisableAim();
+	uiTimer = 8;
+	actionOfUiTimer = SAVE;
 }
 
 // Getters / setters
@@ -2058,6 +2060,24 @@ void UpdateEngineNotInGame()
 	NE_WaitForVBL(NE_CAN_SKIP_VBL);
 }
 
+void statsTimer()
+{
+	if (frameCount % 60 == 0 && Connection != UNSELECTED)
+	{
+		totalPlayedSeconds++;
+		if (totalPlayedSeconds == 60)
+		{
+			totalPlayedSeconds = 0;
+			totalPlayedMinutes++;
+		}
+		if (totalPlayedMinutes == 60)
+		{
+			totalPlayedMinutes = 0;
+			totalPlayedHours++;
+		}
+	}
+}
+
 /**
  * @brief Increase the frame count (used for the server to know the speed of actions)
  *
@@ -2065,10 +2085,11 @@ void UpdateEngineNotInGame()
 void increaseFrameCount()
 {
 	frameCount++;
-	if (frameCount == 2000000000)
+	if (frameCount == 2013265920)
 	{
 		frameCount = 0;
 	}
+	statsTimer();
 }
 
 /**
@@ -2337,6 +2358,10 @@ void killPlayer(Player *player)
 	{
 		initGameMenu();
 	}
+	if (player == localPlayer)
+	{
+		totalDeathCount++;
+	}
 }
 
 /**
@@ -2378,6 +2403,18 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
 	{
 		//  Set client has dead
 		killPlayer(HittedClient);
+
+		if (killerClient == localPlayer)
+		{
+			if (applyRules)
+			{
+				totalBotsKillCount++;
+			}
+			else
+			{
+				totalOnlinePlayersKillCount++;
+			}
+		}
 
 		// Reset raycast values on death
 		if (hittedPlayerIndex == 0)
@@ -2580,7 +2617,12 @@ void makeHit(int hitBy, int playerHit, float distance, int shootIndex)
 		hittedPlayer->target = hitBy;
 		hittedPlayer->lastSeenTarget = hitBy;
 		if (hittedPlayer->GunWaitCount >= 0)
-			hittedPlayer->GunWaitCount = -60;
+		{
+			int randomWait = 40 + rand() % 20;
+
+			hittedPlayer->GunWaitCount = -randomWait;
+		}
+		// hittedPlayer->GunWaitCount = -60;
 	}
 
 	// Get sound volume and panning

@@ -375,7 +375,7 @@ void LoadAllCollisions(int mapToLoad)
     if (mapToLoad == DUST2)
     {
         mapToSet = DUST2;
-        allMaps[mapToLoad].CollisionsCount = 210;
+        allMaps[mapToLoad].CollisionsCount = 211;
         allMaps[mapToLoad].AllWallsCollisions = malloc(allMaps[mapToLoad].CollisionsCount * sizeof(Wall));
         CreateWall(9.38846, -1.4, -8.007592, 35.77919, 1, 33.08558, 3, 0);
         CreateWall(3.991, 0.285, 4.786, 2.423, 2.423, 2.423, 3, 1);
@@ -438,8 +438,8 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(18.91403, 1.488101, -23.54818, 11.28471, 4.849592, 1, 3, 58);
         CreateWall(9.246572, 1.488101, -20.25092, 8.058916, 4.849592, 5.70549, 3, 59);
         CreateWall(24.96741, 1.488101, -20.2333, 0.8, 4.849592, 5.66225, 3, 60);
-        CreateWall(26.58551, 0.4672852, -18.64375, 2.418206, 2.457632, 2.488899, 3, 61);
-        CreateWall(29.00651, 1.064285, -18.64375, 2.418206, 2.457632, 2.488899, 3, 62);
+        CreateWall(26.58551, 0.4672852, -18.67, 2.418206, 2.457632, 2.39, 3, 61);
+        CreateWall(29.00651, 1.064285, -18.67, 2.418206, 2.457632, 2.39, 3, 62);
         CreateWall(26.98624, 2.499154, -19.01415, 1.618732, 1.627894, 1.629699, 3, 63);
         CreateWall(31.60709, 2.795956, -20.02006, 12.55215, 5.453778, 0.4001274, 3, 64);
         CreateWall(40.56831, 3.903672, -17.60006, 6.194584, 3.238344, 0.4001274, 5, 65);
@@ -451,7 +451,7 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(42.71363, 5.530857, -22.65006, 1.611956, 1.60449, 1.619928, 5, 71);
         CreateWall(27.79171, 7.936794, -32.73777, 19.3618, 6.416366, 8.091341, 3, 72);
         CreateWall(27.78882, 7.936794, -28.30295, 7.260923, 6.416366, 0.8257637, 3, 73);
-        CreateWall(15.6907, 7.54498, -13.78543, 4.817293, 7.199996, 29.87009, 3, 74);
+        CreateWall(15.6907, 7.936794, -13.78543, 4.817293, 6.416366, 29.87009, 3, 74);
         CreateWall(18.42, 7.936794, -20.63499, 1, 6.416366, 7.24859, 3, 75);
         CreateWall(44.73563, 3.656087, -19.84385, 1.611956, 2.038029, 1.555517, 5, 76);
         CreateWall(54.45702, 6.858232, -27.74011, 4.934025, 8.573491, 20.66022, 5, 77);
@@ -559,7 +559,7 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(-26.675, 5.129626, -31.92304, 0.7861614, 5.646835, 0.8204193, 2, 179);
         CreateWall(-32.3, 5.129626, -31.92304, 0.7861614, 5.646835, 0.8204193, 2, 180);
         CreateWall(-40.78566, 3.90744, -21.84602, 1.629536, 1.62726, 1.619009, 2, 181);
-        CreateWall(15.57812, 6.657443, -1.713665, 4.750517, 8.66592, 5.782387, 3, 182);
+        CreateWall(15.65053, 3.52211, -1.713665, 4.895332, 2.395253, 5.782387, 3, 182);
         CreateWall(12.46407, 3.925133, 1.150944, 1.617191, 3.201298, 1.618112, 3, 183);
         CreateWall(5.992119, 5.469345, -0.4590559, 14.66269, 6.289724, 1.618112, 3, 184);
         CreateWall(23.35082, 3.525312, 3.975177, 2.418831, 2.389922, 2.420465, 3, 185);
@@ -587,6 +587,7 @@ void LoadAllCollisions(int mapToLoad)
         CreateWall(-20.6154, 6.148234, 9.235, 3.226804, 2.025973, 1.6, 1, 207);
         CreateWall(-21.006, 6.454825, 14.67238, 0.8, 1.41279, 0.415242, 1, 208);
         CreateWall(-21.006, 6.713649, 14.14657, 0.8, 0.895143, 0.8783064, 1, 209);
+        CreateWall(-2.28019, 2.288647, 25.35139, 2.052381, 6.477295, 1.62215, 4, 210);
     }
     else if (mapToLoad == TUTORIAL)
     {
@@ -1277,8 +1278,8 @@ void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibili
     // Is the gun is a shotgun, reduce accuracy
     if (getPlayerCurrentGun(shooterPlayer).bulletCountPerShoot != 1 && !checkVisibility)
     {
-        float xOffset = ((rand() % 100) - 50) / 3.0 * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
-        float yOffset2 = ((rand() % 100) - 50) / 3.0 * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
+        float xOffset = ((rand() % 100) - 50) / 3.0;
+        float yOffset2 = ((rand() % 100) - 50) / 3.0;
         UpdateLookRotationAI(CameraAngleToGrenadeDirection + yOffset2, tempAngle + xOffset, &x2, &y2, &z2);
     }
     else
@@ -1294,18 +1295,19 @@ void prepareAiRaycast(int fromPlayerIndex, int toPlayerIndex, bool checkVisibili
         int coef = 1;
         if (shooterPlayer->flashed)
             coef = 3;
+
         if ((targetPlayer->isAi && targetPlayer->target != NO_PLAYER) || (!targetPlayer->isAi && targetPlayer->PlayerPhysic->xspeed + targetPlayer->PlayerPhysic->yspeed + targetPlayer->PlayerPhysic->zspeed == 0))
         {
             // Better accuracy if target is not moving
-            x2 += ((rand() % 200) - 100) / 1300.0 * coef;
-            y2 += ((rand() % 200) - 100) / 1300.0 * coef;
-            z2 += ((rand() % 200) - 100) / 1300.0 * coef;
+            x2 += ((rand() % 150) - 75) / 1300.0 * coef * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
+            y2 += ((rand() % 220) - 110) / 1300.0 * coef * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
+            z2 += ((rand() % 150) - 75) / 1300.0 * coef * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
         }
         else
         {
-            x2 += ((rand() % 200) - 100) / 700.0 * coef;
-            y2 += ((rand() % 200) - 100) / 700.0 * coef;
-            z2 += ((rand() % 200) - 100) / 700.0 * coef;
+            x2 += ((rand() % 150) - 75) / 700.0 * coef * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
+            y2 += ((rand() % 220) - 110) / 700.0 * coef * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
+            z2 += ((rand() % 150) - 75) / 700.0 * coef * (1 - getPlayerCurrentGun(shooterPlayer).inaccuracyReductionForBot);
         }
     }
 

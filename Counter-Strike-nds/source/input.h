@@ -35,6 +35,7 @@ extern int gamepadTouchAreaX2;
 extern int gamepadTouchAreaY1;
 extern int gamepadTouchAreaY2;
 extern float sensitivity;
+extern float buttonsSensitivity;
 extern int xAngleAdded;
 extern int yAngleAdded;
 

@@ -9,6 +9,7 @@
 #include "keyboard.h"
 #include "input.h"
 #include "tutorial.h"
+#include "stats.h"
 
 // File system
 #include <fat.h>
@@ -47,10 +48,23 @@ void Save()
     sprintf(saveText + strlen(saveText), "sensitivity %f\n", sensitivity);
     sprintf(saveText + strlen(saveText), "tutorial_done %d\n", tutorialDone);
     sprintf(saveText + strlen(saveText), "show_ping %d\n", showPing);
+    sprintf(saveText + strlen(saveText), "inputs %d\n", INPUT_COUNT);
     for (int i = 0; i < INPUT_COUNT; i++)
     {
         sprintf(saveText + strlen(saveText), "k%d %d\n", i, inputs[i].value);
     }
+    sprintf(saveText + strlen(saveText), "cursor_transparency %f\n", cursorTransparency);
+    sprintf(saveText + strlen(saveText), "buttons_sensitivity %f\n", buttonsSensitivity);
+
+    // Stats
+    sprintf(saveText + strlen(saveText), "total_bots_kill_count %d\n", totalBotsKillCount);
+    sprintf(saveText + strlen(saveText), "total_online_players_kill_count %d\n", totalOnlinePlayersKillCount);
+    sprintf(saveText + strlen(saveText), "total_death_count %d\n", totalDeathCount);
+    sprintf(saveText + strlen(saveText), "total_finished_party %d\n", totalFinishedParty);
+    sprintf(saveText + strlen(saveText), "total_played_seconds %d\n", totalPlayedSeconds);
+    sprintf(saveText + strlen(saveText), "total_played_minutes %d\n", totalPlayedMinutes);
+    sprintf(saveText + strlen(saveText), "total_played_hours %d\n", totalPlayedHours);
+    sprintf(saveText + strlen(saveText), "total_wins %d\n", totalWins);
 
     if (savefile != NULL)
     {
@@ -77,6 +91,7 @@ void Load()
 
     if (savefile != NULL)
     {
+        int inputsFound = 14;
         int inputCount = 0;
         while (1)
         {
@@ -134,7 +149,73 @@ void Load()
                 fscanf(savefile, "%d", &tmpShowPing);
                 showPing = tmpShowPing;
             }
-            else // Read inputs
+            else if (strcmp(word, "inputs") == 0) //
+            {
+                int tmpinputsFound;
+                fscanf(savefile, "%d", &tmpinputsFound);
+                inputsFound = tmpinputsFound;
+            }
+            else if (strcmp(word, "cursor_transparency") == 0)
+            {
+                float tmpcursorTransparency;
+                fscanf(savefile, "%f", &tmpcursorTransparency);
+                cursorTransparency = tmpcursorTransparency;
+            }
+            else if (strcmp(word, "buttons_sensitivity") == 0)
+            {
+                float tmpbuttonsSensitivity;
+                fscanf(savefile, "%f", &tmpbuttonsSensitivity);
+                buttonsSensitivity = tmpbuttonsSensitivity;
+            }
+            else if (strcmp(word, "total_bots_kill_count") == 0)
+            {
+                int tmptotalBotsKillCount;
+                fscanf(savefile, "%d", &tmptotalBotsKillCount);
+                totalBotsKillCount = tmptotalBotsKillCount;
+            }
+            else if (strcmp(word, "total_online_players_kill_count") == 0)
+            {
+                int tmptotalOnlinePlayersKillCount;
+                fscanf(savefile, "%d", &tmptotalOnlinePlayersKillCount);
+                totalOnlinePlayersKillCount = tmptotalOnlinePlayersKillCount;
+            }
+            else if (strcmp(word, "total_death_count") == 0)
+            {
+                int tmptotalDeathCount;
+                fscanf(savefile, "%d", &tmptotalDeathCount);
+                totalDeathCount = tmptotalDeathCount;
+            }
+            else if (strcmp(word, "total_finished_party") == 0)
+            {
+                int tmptotalFinishedParty;
+                fscanf(savefile, "%d", &tmptotalFinishedParty);
+                totalFinishedParty = tmptotalFinishedParty;
+            }
+            else if (strcmp(word, "total_played_seconds") == 0)
+            {
+                int tmptotalPlayedSeconds;
+                fscanf(savefile, "%d", &tmptotalPlayedSeconds);
+                totalPlayedSeconds = tmptotalPlayedSeconds;
+            }
+            else if (strcmp(word, "total_played_minutes") == 0)
+            {
+                int tmptotalPlayedMinutes;
+                fscanf(savefile, "%d", &tmptotalPlayedMinutes);
+                totalPlayedMinutes = tmptotalPlayedMinutes;
+            }
+            else if (strcmp(word, "total_played_hours") == 0)
+            {
+                int tmptotalPlayedHours;
+                fscanf(savefile, "%d", &tmptotalPlayedHours);
+                totalPlayedHours = tmptotalPlayedHours;
+            }
+            else if (strcmp(word, "total_wins") == 0)
+            {
+                int tmptotalWins;
+                fscanf(savefile, "%d", &tmptotalWins);
+                totalWins = tmptotalWins;
+            }
+            else if (inputsFound != inputCount) // Read inputs
             {
                 char inputIndex[12];
                 sprintf(inputIndex, "k%d", inputCount);
@@ -158,9 +239,7 @@ void Load()
                             }
                         }
                     }
-                    printf("%d %d %s\n", inputCount, tmpInput, inputsNames[inputs[inputCount].nameIndex]);
                 }
-                // printf("%s\n", inputIndex);
                 inputCount++;
             }
         }

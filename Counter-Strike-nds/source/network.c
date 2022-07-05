@@ -308,7 +308,7 @@ void ReadServerData()
 
                 // Start spliting incoming data
                 char *ptr = strtok(currentPacket, ";");
-                int countI = 0;
+                int SplitCount = 0;
                 char arr[10][64] =
                     {"",
                      "",
@@ -324,98 +324,14 @@ void ReadServerData()
                 // Split data
                 while (ptr != NULL)
                 {
-                    strcpy(arr[countI], ptr);
-                    countI++;
+                    strcpy(arr[SplitCount], ptr);
+                    SplitCount++;
                     ptr = strtok(NULL, ";");
                 }
 
                 // Check packet info
 
-                if (strcmp(arr[REQUEST_NAME_INDEX], "SETID") == 0) // Add player
-                {
-                    int ParsedId = -1;
-                    sscanf(arr[1], "%d", &ParsedId);
-
-                    // Spawn player
-                    AddNewPlayer(ParsedId, true, false);
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "TimerA") == 0) // Timer changes
-                {
-                    // Parse seconds and minutes texts to int
-                    sscanf(arr[1], "%d", &PartyMinutes);
-                    sscanf(arr[2], "%d", &PartySeconds);
-                    if (firstConnection)
-                    {
-                        BombSeconds = PartySeconds;
-                    }
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETMAP") == 0) // Timer changes
-                {
-                    int newMapId = -1;
-                    // Parse seconds and minutes texts to int
-                    sscanf(arr[1], "%d", &newMapId);
-
-                    UnLoadMap(currentMap);
-                    currentMap = newMapId;
-                    LoadMap(currentMap);
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETMODE") == 0) // Timer changes
-                {
-                    // Parse seconds and minutes texts to int
-                    sscanf(arr[1], "%d", &currentPartyMode);
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "TEAM") == 0) // Change team
-                {
-                    // Get player id
-                    int ParsedPlayerId = -1;
-                    sscanf(arr[1], "%d", &ParsedPlayerId);
-
-                    // Get Team value
-                    int ParsedIsCounter = -1;
-                    sscanf(arr[2], "%d", &ParsedIsCounter);
-
-                    // Find player and affect new value
-                    for (int i = 0; i < MaxPlayer; i++)
-                        if (AllPlayers[i].Id == ParsedPlayerId)
-                        {
-                            AllPlayers[i].Team = ParsedIsCounter;
-
-                            UpdatePlayerTexture(i);
-                            break;
-                        }
-
-                    // Update screen if team screen is opened
-                    if (currentMenu == SCORE_BOARD)
-                    {
-                        UpdateBottomScreenFrameCount += 8;
-                    }
-                    else if (currentMenu == GAME)
-                    {
-                        initGameMenu();
-                    }
-
-                    // TODO check this
-                    if (localPlayer->Id == ParsedPlayerId)
-                    {
-                        if (roundState != TRAINING)
-                            changeCameraPlayerView(false);
-
-                        if (ParsedIsCounter != -1)
-                        {
-                            AllButtons[0].isHidden = false;
-                        }
-                        AllButtons[1].isHidden = false;
-                        AllButtons[2].isHidden = false;
-                        WaitForTeamResponse = false;
-                    }
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "PING") == 0) // Get ping request from server
-                {
-                    // Parse ping text to int
-                    sscanf(arr[1], "%d", &ping);
-                    SendPing = true;
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "POS") == 0) // Player position update
+                if (strcmp(arr[REQUEST_NAME_INDEX], "POS") == 0) // Player position update
                 {
                     // Get target player id
                     int PlayerIdInt = -1;
@@ -540,6 +456,193 @@ void ReadServerData()
                     GetPanningByPosition(&Panning, &Volume, SoundPos, xWithoutYForAudio, zWithoutYForAudio, 0.15);
                     Play3DSound(SFX_RIC, Volume, Panning, NULL);
                 }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SHOOT") == 0) // Shoot from a player
+                {
+                    // Get player id
+                    int ParsedPlayerId = UNUSED;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
+
+                    // Get gun id
+                    int ParsedGunId = EMPTY;
+                    sscanf(arr[2], "%d", &ParsedGunId);
+
+                    // Make a sound
+                    int Panning, Volume;
+                    GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, AllGuns[ParsedGunId].MaxSoundDistance);
+                    Player *player = NULL;
+                    int index = UNUSED;
+                    for (int i = 0; i < MaxPlayer; i++)
+                    {
+                        if (AllPlayers[i].Id == ParsedPlayerId)
+                        {
+                            player = &AllPlayers[i];
+                            index = i;
+                            break;
+                        }
+                    }
+                    if (player != NULL)
+                    {
+                        if (player->currentGunInInventory == 1 || player->currentGunInInventory == 2)
+                            player->AllAmmoMagazine[player->currentGunInInventory - 1].AmmoCount--;
+
+                        if (CurrentCameraPlayer == index)
+                        {
+                            setGunRecoil(player);
+                        }
+
+                        if (ParsedGunId < GunCount)
+                            Play3DSound(AllGuns[ParsedGunId].gunSound, Volume, Panning, player);
+                    }
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "TimerA") == 0) // Timer changes
+                {
+                    // Parse seconds and minutes texts to int
+                    sscanf(arr[1], "%d", &PartyMinutes);
+                    sscanf(arr[2], "%d", &PartySeconds);
+                    if (firstConnection)
+                    {
+                        BombSeconds = PartySeconds;
+                    }
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "PING") == 0) // Get ping request from server
+                {
+                    // Parse ping text to int
+                    sscanf(arr[1], "%d", &ping);
+                    SendPing = true;
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "CURGUN") == 0) // Set current gun in inventory
+                {
+                    int PlayerIdInt = UNUSED;
+                    sscanf(arr[1], "%d", &PlayerIdInt);
+
+                    // Find player to set health
+                    for (int i = 0; i < MaxPlayer; i++)
+                    {
+                        if (AllPlayers[i].Id == PlayerIdInt)
+                        {
+                            int newGun = 0;
+                            sscanf(arr[2], "%d", &newGun);
+                            AllPlayers[i].currentGunInInventory = newGun;
+                            if (i == CurrentCameraPlayer)
+                                UpdateGunTexture();
+
+                            break;
+                        }
+                    }
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "HITSOUND") == 0) // Make a hit sound
+                {
+                    int PlayerId, HitType;
+
+                    sscanf(arr[2], "%d", &PlayerId);
+                    sscanf(arr[3], "%d", &HitType);
+
+                    int Panning, Volume;
+                    if (PlayerId != localPlayer->Id)
+                        GetPanning(PlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
+                    else
+                    {
+                        Panning = 128;
+                        Volume = 255;
+
+                        xOffset = (rand() % ScreenShakeAmount + ScreenShakeMinAmount) / 100.0;
+                        if (rand() % 2 == 0)
+                            xOffset = -xOffset;
+
+                        yOffset = (rand() % ScreenShakeAmount + ScreenShakeMinAmount) / 100.0;
+                        if (rand() % 2 == 0)
+                            yOffset = -yOffset;
+
+                        redHealthTextCounter = 62;
+                    }
+
+                    Player *player = NULL;
+                    for (int i = 0; i < MaxPlayer; i++)
+                    {
+                        if (AllPlayers[i].Id == PlayerId)
+                        {
+                            player = &AllPlayers[i];
+                            break;
+                        }
+                    }
+
+                    if (HitType == 0)
+                        Play3DSound(SFX_FLESH_IMPACT, Volume, Panning, player); // Check with kevlar
+                    else if (HitType == 1)
+                        Play3DSound(SFX_HEADSHOT1, Volume, Panning, player);
+                    else if (HitType == 2)
+                        Play3DSound(SFX_FLESH_IMPACT, Volume, Panning, player);
+                    else
+                        Play3DSound(SFX_KNIFE_HIT_PLAYER, Volume, Panning, player);
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETID") == 0) // Add player
+                {
+                    int ParsedId = -1;
+                    sscanf(arr[1], "%d", &ParsedId);
+
+                    // Spawn player
+                    AddNewPlayer(ParsedId, true, false);
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETMAP") == 0) // Set the map
+                {
+                    int newMapId = -1;
+                    // Parse seconds and minutes texts to int
+                    sscanf(arr[1], "%d", &newMapId);
+
+                    UnLoadMap(currentMap);
+                    currentMap = newMapId;
+                    LoadMap(currentMap);
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETMODE") == 0) // Set the party mode
+                {
+                    // Parse seconds and minutes texts to int
+                    sscanf(arr[1], "%d", &currentPartyMode);
+                }
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "TEAM") == 0) // Change team
+                {
+                    // Get player id
+                    int ParsedPlayerId = -1;
+                    sscanf(arr[1], "%d", &ParsedPlayerId);
+
+                    // Get Team value
+                    int ParsedIsCounter = -1;
+                    sscanf(arr[2], "%d", &ParsedIsCounter);
+
+                    // Find player and affect new value
+                    for (int i = 0; i < MaxPlayer; i++)
+                        if (AllPlayers[i].Id == ParsedPlayerId)
+                        {
+                            AllPlayers[i].Team = ParsedIsCounter;
+
+                            UpdatePlayerTexture(i);
+                            break;
+                        }
+
+                    // Update screen if team screen is opened
+                    if (currentMenu == SCORE_BOARD)
+                    {
+                        UpdateBottomScreenFrameCount += 8;
+                    }
+                    else if (currentMenu == GAME)
+                    {
+                        initGameMenu();
+                    }
+
+                    // TODO check this
+                    if (localPlayer->Id == ParsedPlayerId)
+                    {
+                        if (roundState != TRAINING)
+                            changeCameraPlayerView(false);
+
+                        if (ParsedIsCounter != -1)
+                        {
+                            AllButtons[0].isHidden = false;
+                        }
+                        AllButtons[1].isHidden = false;
+                        AllButtons[2].isHidden = false;
+                        WaitForTeamResponse = false;
+                    }
+                }
                 else if (strcmp(arr[REQUEST_NAME_INDEX], "BOMBPLACE") == 0) // Bomb place update
                 {
                     // Temp variables
@@ -592,7 +695,7 @@ void ReadServerData()
                         SetBombDefuseZone(BombPosition.x, BombPosition.z, &bombDefuseZone);
                     }
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "VOTERESULT") == 0) // Confirm shop gun buy, or set player gun from server command
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "VOTERESULT") == 0) // Get the current vote values
                 {
                     int VoteTypeInt = -1;
                     sscanf(arr[1], "%d", &VoteTypeInt);
@@ -623,7 +726,7 @@ void ReadServerData()
                         }
                         else if (ConfirmResultInt == 1) // Okay
                         {
-                            CurrentScopeLevel = 0;
+                            DisableAim();
                             SetGunInInventory(ConfirmArgumentInt, ConfirmInventoryIndexInt);
                             setSelectedGunInInventory(0, ConfirmInventoryIndexInt);
                         }
@@ -668,7 +771,7 @@ void ReadServerData()
                     if (currentMenu == SCORE_BOARD)
                         UpdateBottomScreenFrameCount += 8;
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETSHOPZONE") == 0) // Round state changes
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETSHOPZONE") == 0) // Update the shop zone
                 {
                     shopDisableTimer = SHOP_DISABLE_TIMER;
                     setShopZone(localPlayer);
@@ -713,7 +816,7 @@ void ReadServerData()
                             AllPlayers[i].Id = UNUSED;
                             PlayerCount--;
                             NE_ModelDelete(AllPlayers[i].PlayerModel);
-                            if (i == 0) ////////////////////////////////////////////////////////////TODO KICK SYSTEM
+                            if (i == 0)
                             {
                                 NE_PhysicsDelete(AllPlayers[i].PlayerPhysic);
                             }
@@ -757,65 +860,7 @@ void ReadServerData()
                         }
                     }
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "CURGUN") == 0) // Set current gun in inventory
-                {
-                    int PlayerIdInt = UNUSED;
-                    sscanf(arr[1], "%d", &PlayerIdInt);
-
-                    // Find player to set health
-                    for (int i = 0; i < MaxPlayer; i++)
-                    {
-                        if (AllPlayers[i].Id == PlayerIdInt)
-                        {
-                            int newGun = 0;
-                            sscanf(arr[2], "%d", &newGun);
-                            AllPlayers[i].currentGunInInventory = newGun;
-                            if (i == CurrentCameraPlayer)
-                                UpdateGunTexture();
-
-                            break;
-                        }
-                    }
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "SHOOT") == 0) // Shoot from a player
-                {
-                    // Get player id
-                    int ParsedPlayerId = UNUSED;
-                    sscanf(arr[1], "%d", &ParsedPlayerId);
-
-                    // Get gun id
-                    int ParsedGunId = EMPTY;
-                    sscanf(arr[2], "%d", &ParsedGunId);
-
-                    // Make a sound
-                    int Panning, Volume;
-                    GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, AllGuns[ParsedGunId].MaxSoundDistance);
-                    Player *player = NULL;
-                    int index = UNUSED;
-                    for (int i = 0; i < MaxPlayer; i++)
-                    {
-                        if (AllPlayers[i].Id == ParsedPlayerId)
-                        {
-                            player = &AllPlayers[i];
-                            index = i;
-                            break;
-                        }
-                    }
-                    if (player != NULL)
-                    {
-                        if (CurrentCameraPlayer == index)
-                        {
-                            if (player->currentGunInInventory == 1 || player->currentGunInInventory == 2)
-                                player->AllAmmoMagazine[player->currentGunInInventory - 1].AmmoCount--;
-
-                            setGunRecoil(player);
-                        }
-
-                        if (ParsedGunId < GunCount)
-                            Play3DSound(AllGuns[ParsedGunId].gunSound, Volume, Panning, player);
-                    }
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETBOMB") == 0) // Shoot from a player
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "SETBOMB") == 0) // Set/remove the bomb of a player
                 {
                     // Get player id
                     int ParsedPlayerId = UNUSED;
@@ -840,7 +885,7 @@ void ReadServerData()
                         }
                     }
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "RELOADED") == 0) // Get a player name
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "RELOADED") == 0) // Reload the gun of a player
                 {
                     // Get player id
                     int ParsedPlayerId = UNUSED;
@@ -889,51 +934,6 @@ void ReadServerData()
                 {
                     strcpy(partyCode, arr[1]);
                     isPrivate = true;
-                }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "HITSOUND") == 0) // Make a hit sound
-                {
-                    int PlayerId, HitType;
-
-                    sscanf(arr[2], "%d", &PlayerId);
-                    sscanf(arr[3], "%d", &HitType);
-
-                    int Panning, Volume;
-                    if (PlayerId != localPlayer->Id)
-                        GetPanning(PlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, 0.10);
-                    else
-                    {
-                        Panning = 128;
-                        Volume = 255;
-
-                        xOffset = (rand() % ScreenShakeAmount + ScreenShakeMinAmount) / 100.0;
-                        if (rand() % 2 == 0)
-                            xOffset = -xOffset;
-
-                        yOffset = (rand() % ScreenShakeAmount + ScreenShakeMinAmount) / 100.0;
-                        if (rand() % 2 == 0)
-                            yOffset = -yOffset;
-
-                        redHealthTextCounter = 62;
-                    }
-
-                    Player *player = NULL;
-                    for (int i = 0; i < MaxPlayer; i++)
-                    {
-                        if (AllPlayers[i].Id == PlayerId)
-                        {
-                            player = &AllPlayers[i];
-                            break;
-                        }
-                    }
-
-                    if (HitType == 0)
-                        Play3DSound(SFX_FLESH_IMPACT, Volume, Panning, player); // Check with kevlar
-                    else if (HitType == 1)
-                        Play3DSound(SFX_HEADSHOT1, Volume, Panning, player);
-                    else if (HitType == 2)
-                        Play3DSound(SFX_FLESH_IMPACT, Volume, Panning, player);
-                    else
-                        Play3DSound(SFX_KNIFE_HIT_PLAYER, Volume, Panning, player);
                 }
                 else if (strcmp(arr[REQUEST_NAME_INDEX], "ERROR") == 0) // Show text from server
                 {
@@ -1047,23 +1047,23 @@ void ReadServerData()
                 }
                 else if (strcmp(arr[REQUEST_NAME_INDEX], "ADDRANGE") == 0) // Add multiples non local players
                 {
-                    for (int i = 1; i < countI; i++)
+                    for (int i = 1; i < SplitCount; i++)
                     {
                         int FoundId = -1;
                         sscanf(arr[i], "%d", &FoundId);
                         AddNewPlayer(FoundId, false, false);
                     }
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "ENDGAME") == 0) // Add multiples non local players
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "ENDGAME") == 0) // End the party
                 {
                     partyFinished = true;
                     initFinalScoreMenu();
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "ENDUPDATE") == 0) // Add multiples non local players
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "ENDUPDATE") == 0) // End the update party sequence
                 {
                     firstConnection = false;
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "INVTORY") == 0) // Add multiples non local players
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "INVTORY") == 0) // Get the inventory of a player
                 {
                     int ParsedPlayerId = UNUSED;
                     sscanf(arr[1], "%d", &ParsedPlayerId);
@@ -1073,7 +1073,7 @@ void ReadServerData()
                         if (AllPlayers[i].Id == ParsedPlayerId)
                         {
                             FoundPlayer = i;
-                            for (int i2 = 2; i2 < countI; i2++)
+                            for (int i2 = 2; i2 < SplitCount; i2++)
                             {
                                 int FoundGunId = EMPTY;
                                 sscanf(arr[i2], "%d", &FoundGunId);
@@ -1082,12 +1082,13 @@ void ReadServerData()
                             break;
                         }
                     }
+                    // If the current player camera is looked by the local player, update the gun texture
                     if (FoundPlayer == CurrentCameraPlayer)
                     {
                         UpdateGunTexture();
                     }
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "AMMO") == 0) // Add multiples non local players
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "AMMO") == 0) // Get the ammo count of a player
                 {
                     int ParsedPlayerId = UNUSED;
                     sscanf(arr[1], "%d", &ParsedPlayerId);
@@ -1111,12 +1112,12 @@ void ReadServerData()
                         }
                     }
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "KEY") == 0) // Bomb place update
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "KEY") == 0) // Get the key from the server
                 {
                     SendKeyResponse = true;
                     sscanf(arr[1], "%d", &serverKey);
                 }
-                else if (strcmp(arr[REQUEST_NAME_INDEX], "GRENADE") == 0) // Bomb place update
+                else if (strcmp(arr[REQUEST_NAME_INDEX], "GRENADE") == 0) // Spawn a player's grenade
                 {
                     // Temp variables
                     float XDirection = -1;

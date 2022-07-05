@@ -24,7 +24,7 @@
 
 #define ButtonCount 8
 #define CheckBoxCount 3
-#define SliderCount 1
+#define SliderCount 2
 
 #define ColorTerroristsTeam RGB15(26, 26, 13)
 #define ColorCounterTeam RGB15(14, 20, 29)
@@ -53,11 +53,12 @@ extern char errorText[ERROR_TEXT_LENGTH];
 extern bool showFinalScore;
 extern bool showPing;
 extern int showShootFriendMessage;
+extern float cursorTransparency;
 
 enum UiMenu
 {
     GAME = 0,
-    GAME_FINISHED = 1,
+    // GAME_FINISHED = 1, //Unused
     SCORE_BOARD = 2,
     SHOPCATEGORIES = 3,
     SETTINGS = 4,
@@ -77,6 +78,7 @@ enum UiMenu
     JOIN_CREATE_PARTY = 17,
     ENTER_CODE = 18,
     ONLINE_ERROR = 19,
+    STATS = 20,
 };
 
 enum shopCategory
@@ -163,7 +165,6 @@ void showDialog();
 void setDialogText(char *text);
 
 void initGameMenu();
-void initGameFinishedMenu();
 void initScoreMenu();
 void initShopCategoriesMenu();
 void initSettingsMenu();
@@ -183,6 +184,7 @@ void initFinalScoreMenu();
 void initJoinCreatePartyMenu();
 void initEnterCodeMenu();
 void initOnlineErrorMenu();
+void initStatsMenu();
 
 void drawKeyboardInput();
 
@@ -211,6 +213,7 @@ void drawPartyModeSelectionMenu();
 void drawJoinCreatePartyMenu();
 void drawEnterCodeMenu();
 void drawOnlineErrorMenu();
+void drawStatsMenu();
 
 void unloadShopMenu();
 void unloadControllerMenu();

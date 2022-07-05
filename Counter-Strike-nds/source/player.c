@@ -12,6 +12,7 @@
 #include "map.h"
 #include "collisions.h"
 #include "sounds.h"
+#include "stats.h"
 
 /**
  * @brief Create shadow for each players
@@ -51,6 +52,7 @@ void setPlayerHealth(int playerIndex, int health)
         {
             killPlayer(player);
         }
+
         // If died player is the local player
         if (playerIndex == 0)
         {

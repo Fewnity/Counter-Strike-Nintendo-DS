@@ -187,6 +187,7 @@ void onNewRoundStart()
     // Reset some values
     bombDropped = false;
     bombSet = false;
+    bombPlantedAt = -1;
     BombPlanted = false;
     BombDefused = false;
     bombBipTimer = 0;
@@ -337,7 +338,8 @@ void partyTimerTick()
                         else if (roundState == END)
                         {
                             partyFinished = true;
-                            initGameFinishedMenu();
+                            initFinalScoreMenu();
+                            // initGameFinishedMenu();
                         }
                     }
                 }

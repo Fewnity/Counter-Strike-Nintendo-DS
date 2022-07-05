@@ -578,7 +578,7 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 70;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 26;
+    AllGuns[gunIndex].maxBotShootDisance = 32;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "SG 552";
     gunIndex++;
@@ -604,7 +604,7 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 72.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 26;
+    AllGuns[gunIndex].maxBotShootDisance = 32;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "SG 550";
     gunIndex++;
@@ -630,7 +630,7 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 85;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 26;
+    AllGuns[gunIndex].maxBotShootDisance = 32;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "Scout";
     gunIndex++;
@@ -656,7 +656,7 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 82.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 26;
+    AllGuns[gunIndex].maxBotShootDisance = 32;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "G3SG1";
     gunIndex++;
@@ -682,7 +682,7 @@ void AddGuns()
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
     AllGuns[gunIndex].penetration = 97.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 30;
+    AllGuns[gunIndex].maxBotShootDisance = 36;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0.7;
     AllGuns[gunIndex].name = "AWP";
     gunIndex++;
@@ -970,6 +970,10 @@ void StopReloading(int playerIndx)
  */
 void startReloadGun(int playerIndx)
 {
+    if (playerIndx == 0)
+    {
+        DisableAim();
+    }
     Player *player = &AllPlayers[playerIndx];
     if (player->currentGunInInventory == 1 || player->currentGunInInventory == 2)
     {

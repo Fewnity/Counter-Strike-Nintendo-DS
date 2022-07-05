@@ -12,6 +12,7 @@
 #include "map.h"
 #include "sounds.h"
 #include "movements.h"
+#include "equipment.h"
 #include "collisions.h"
 #include "grenade.h"
 
@@ -1332,7 +1333,7 @@ void CreateWaypoints(int mapToLoad)
         CreateWaypoint(13, -7, 0.55, -6.5, 4, edge13);
     }
 }
-Waypoint Waypoints[maxPoint];
+Waypoint Waypoints[maxPoint]; // TODO replace this by a malloc
 
 /**
  * @brief Get the Waypoints list
@@ -1357,7 +1358,7 @@ int getNearestWaypoint(float x, float y, float z)
     int nearestWaypointId = -1;
     int distance = 99999;
     // Check every waypoint
-    for (int waypointIndex = 0; waypointIndex < maxPoint; waypointIndex++)
+    for (int waypointIndex = 0; waypointIndex < waypointsSize; waypointIndex++)
     {
         // Calculate the distance between waypoint position and the position given
         int currentDistance = sqrtf(powf((Waypoints[waypointIndex].x - x), 2.0) + powf((Waypoints[waypointIndex].y - y), 2.0) + powf((Waypoints[waypointIndex].z - z), 2.0));
@@ -1369,6 +1370,20 @@ int getNearestWaypoint(float x, float y, float z)
     }
     return nearestWaypointId;
 }
+
+/**
+ * @brief Get the distance bewteen a player and the waypoint
+ *
+ * @param player1Index
+ * @param waypointIndex
+ * @return int distance between the player and the waypoint
+ */
+int GetDistanceBewteenPlayerAndWaypoint(int playerIndex, int waypointIndex)
+{
+    Player *player1 = &AllPlayers[playerIndex];
+    return sqrtf(powf((player1->position.x - Waypoints[waypointIndex].x), 2.0) + powf((player1->position.y - Waypoints[waypointIndex].y), 2.0) + powf((player1->position.z - Waypoints[waypointIndex].z), 2.0));
+}
+
 /**
  * @brief Get the distance bewteen two players
  *
@@ -1634,7 +1649,6 @@ void AiCheckForAction()
                         }
                         else
                         {
-                            // StartChecking(currentAiToCheck, random() % maxPoint);
                             GetRandomPoint(currentAiToCheck);
                             if (playerToCheck->Team == COUNTERTERRORISTS && BombPlanted && currentDefuserIndex == NO_PLAYER)
                             {
@@ -1646,7 +1660,6 @@ void AiCheckForAction()
             }
             else if (playerToCheck->lastSeenTarget != NO_PLAYER)
             {
-                // printf("lose Target4\n");
                 Player *lastSeenTargetPlayer = &AllPlayers[playerToCheck->lastSeenTarget];
                 int nearestWaypoint = getNearestWaypoint(lastSeenTargetPlayer->position.x, lastSeenTargetPlayer->position.y, lastSeenTargetPlayer->position.z);
                 StartChecking(currentAiToCheck, nearestWaypoint);
@@ -1667,16 +1680,17 @@ void AiCheckForAction()
 
                 if (playerToCheck->haveBomb)
                 {
-                    // TODO move to the nearest or random bomb site (random at the beginning and nearest after)
-                    if (random() % 2 == 0)
+                    float distanceA = GetDistanceBewteenPlayerAndWaypoint(currentAiToCheck, 14);
+                    float distanceB = GetDistanceBewteenPlayerAndWaypoint(currentAiToCheck, 29);
+
+                    // if (random() % 2 == 0)
+                    if (distanceA < distanceB)
                     {
                         StartChecking(currentAiToCheck, 14); // Bomb site A
-                        // printf("(%d)GO TO BOMB SITE A\n", currentAiToCheck);
                     }
                     else
                     {
                         StartChecking(currentAiToCheck, 29); // Bomb site B
-                        // printf("(%d)GO TO BOMB SITE B\n", currentAiToCheck);
                     }
                 }
                 else if (bombDropped && playerToCheck->Team == TERRORISTS)
@@ -1701,7 +1715,6 @@ void AiCheckForAction()
                 else
                 {
                     // TODO move to a random waypoint or stay some seconds
-                    // StartChecking(currentAiToCheck, random() % maxPoint);
                     GetRandomPoint(currentAiToCheck);
                 }
             }
@@ -1711,9 +1724,9 @@ void AiCheckForAction()
 
 void GetRandomPoint(int currentAiToCheck)
 {
-    if (IsExplode || (BombSeconds <= 5 && AllPlayers[currentAiToCheck].Team == TERRORISTS) || (BombSeconds <= 3 && AllPlayers[currentAiToCheck].Team == COUNTERTERRORISTS)) // Run away from the bomb
+    if (IsExplode || (BombPlanted && ((BombSeconds <= 5 && AllPlayers[currentAiToCheck].Team == TERRORISTS) || (BombSeconds <= 3 && AllPlayers[currentAiToCheck].Team == COUNTERTERRORISTS)))) // Run away from the bomb
     {
-        StartChecking(currentAiToCheck, random() % maxPoint);
+        StartChecking(currentAiToCheck, random() % waypointsSize);
     }
     else
     {
@@ -1855,6 +1868,21 @@ void CheckShopForBot(int playerIndex)
     Player *player = &AllPlayers[playerIndex];
     if (player->Id != UNUSED && player->isAi)
     {
+        if (player->armor == 0)
+        {
+            if (player->Money >= allEquipments[3].Price)
+            {
+                player->Money -= allEquipments[3].Price;
+                player->armor = 100;
+                player->haveHeadset = true;
+            }
+            else if (player->Money >= allEquipments[2].Price)
+            {
+                player->Money -= allEquipments[2].Price;
+                player->armor = 100;
+            }
+        }
+
         if (player->Team == COUNTERTERRORISTS)
         {
             // Buy only counter terrorist gun

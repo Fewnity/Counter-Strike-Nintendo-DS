@@ -21,6 +21,7 @@
 #include "tutorial.h"
 #include "keyboard.h"
 #include "draw3d.h"
+#include "stats.h"
 
 enum shopCategory ShopCategory = PISTOLS; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
 
@@ -78,6 +79,8 @@ int notificationType = 0;
 bool showPing = false;
 // Number of frame remaining to show the shoot friend message
 int showShootFriendMessage = 0;
+
+float cursorTransparency = 1;
 
 void SetCheckBoxToShow(int value)
 {
@@ -219,6 +222,7 @@ void startChangeMenu(enum UiMenu menuToShow)
     SetButtonToShow(0);
     SetCheckBoxToShow(0);
     SetSliderToShow(0);
+    isShowingKeyBoard = false;
 
     // Call the on close function
     if (haveToCallOnCloseMenu)
@@ -251,10 +255,6 @@ void ChangeMenu(int menuId)
     if (menuId == GAME)
     {
         initGameMenu();
-    }
-    else if (menuId == GAME_FINISHED) // map menu
-    {
-        initGameFinishedMenu();
     }
     else if (menuId == SCORE_BOARD) // Score board screen
     {
@@ -406,6 +406,7 @@ void closeMap()
 void BuyWeapon(int unused)
 {
     PlayBasicSound(SFX_KEYBOARD_SOUND);
+    DisableAim();
     if (Connection != OFFLINE)
     {
         SetSendBuyWeapon(true);
@@ -801,8 +802,8 @@ void drawTopScreenUI()
 
         for (int i = 1; i < MaxPlayer; i++)
         {
-            // If the other player is in game
-            if (AllPlayers[i].Id != UNUSED && AllPlayers[i].Team != SPECTATOR && !AllPlayers[i].IsDead && (AllPlayers[i].Team == localPlayer->Team || AllPlayers[i].mapVisivilityTimer > 0))
+            // Draw other player if he is alive, visible or in the same team as the local player or if the local player is dead in a cusual party mode
+            if (AllPlayers[i].Id != UNUSED && AllPlayers[i].Team != SPECTATOR && !AllPlayers[i].IsDead && (AllPlayers[i].Team == localPlayer->Team || AllPlayers[i].mapVisivilityTimer > 0 || (currentPartyMode == 1 && localPlayer->IsDead)))
             {
                 // Calculate other players points
                 float xPos2 = map(AllPlayers[i].position.x, -46, 57.5, -170, 170);
@@ -836,6 +837,43 @@ void drawTopScreenUI()
     }
     else
     {
+        // Draw teams indicators
+        if (!isInTutorial && currentMap != TUTORIAL)
+        {
+            int counterCount = 0;
+            int terroristCount = 0;
+            for (int i = 0; i < MaxPlayer; i++)
+            {
+                if (AllPlayers[i].Team == SPECTATOR || AllPlayers[i].Id == UNUSED)
+                    continue;
+
+                // Add an offset (right or left position for the point)
+                int xoffset = 28 + terroristCount * 8;
+
+                // Set grey color for dead players
+                int color = ColorTerroristsTeam;
+                if (AllPlayers[i].Team == COUNTERTERRORISTS)
+                {
+                    color = ColorCounterTeam;
+                    xoffset = -32 + counterCount * -8;
+                    counterCount++;
+                }
+                else
+                {
+                    terroristCount++;
+                }
+
+                // If the player is dead, set the color to grey
+                if (AllPlayers[i].IsDead)
+                    color = RGB15(7, 7, 7);
+
+                // Draw point
+                NE_2DDrawQuad(ScreenCenterWidth + xoffset, 4, ScreenCenterWidth + 3 + xoffset, 7, 1, color);
+                NE_2DDrawQuad(ScreenCenterWidth - 1 + xoffset, 5, ScreenCenterWidth - 1 + 5 + xoffset, 6, 1, color);
+                NE_2DDrawQuad(ScreenCenterWidth + 1 + xoffset, 3, ScreenCenterWidth + 2 + xoffset, 8, 1, color);
+            }
+        }
+
         if (isDebugTopScreen)
         {
             // DEBUG show player position
@@ -849,8 +887,9 @@ void drawTopScreenUI()
             // DEBUG show CPU usage
             char CPU[40];
 
-            sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
-            //  sprintf(CPU, "%0.3f %0.3f %0.3f", debugValue1, debugValue2, debugValue3);
+            // sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
+            //   sprintf(CPU, "%0.3f %0.3f %0.3f", debugValue1, debugValue2, debugValue3);
+            sprintf(CPU, "%d %d %d", totalPlayedSeconds, totalPlayedMinutes, totalPlayedHours);
 
             NE_TextPrint(0,        // Font slot
                          1, 1,     // Coordinates x(column), y(row)
@@ -860,8 +899,8 @@ void drawTopScreenUI()
             char CPU2[120] = "";
             for (int i = 0; i < MaxPlayer; i++)
             {
-                // sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].Health, AllPlayers[i].haveBomb);
-                sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].target, AllPlayers[i].lastSeenTarget);
+                sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].Health, AllPlayers[i].armor);
+                // sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].target, AllPlayers[i].lastSeenTarget);
             }
 
             NE_TextPrint(0,        // Font slot
@@ -883,7 +922,7 @@ void drawTopScreenUI()
 
         if (!BombPlanted)
         {
-            if (!allPartyModes[currentPartyMode].infiniteTimer && (!localPlayer->IsDead || roundState == TRAINING))
+            if (!allPartyModes[currentPartyMode].infiniteTimer && (!localPlayer->IsDead || roundState == TRAINING) && !partyFinished)
             {
                 char Timer[30];
                 int timerXOffset = 0;
@@ -1178,7 +1217,9 @@ void drawTopScreenUI()
             if (CurrentScopeLevel == 0) // Draw gun if player doesn't aim with his gun
             {
                 // Draw cross air
+                NE_SpriteSetParams(TopScreenSprites[0], cursorTransparency * 31, 0, NE_White);
                 NE_SpriteDraw(TopScreenSprites[0]);
+                NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
 
                 //  Draw gun
                 if (!selectPlayer->IsDead)
@@ -1204,7 +1245,6 @@ void drawTopScreenUI()
                         leftGunY += valueToAdd;
                     }
                     int lightCoef = 31 * selectPlayer->lightCoef;
-                    // NE_2DDrawTexturedQuad(rightGunX, rightGunY, rightGunX + 96, rightGunY + 96, 1, TopScreenSpritesMaterials[1]); // Gun
                     NE_2DDrawTexturedQuadColor(rightGunX, rightGunY, rightGunX + 96, rightGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef));
                     if (selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory] < GunCount && AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isDualGun)
                         NE_2DDrawTexturedQuadColor(leftGunX + 96, leftGunY, leftGunX, leftGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef)); // Gun
@@ -1459,23 +1499,6 @@ void initGameMenu()
 }
 
 /**
- * @brief Init game finished menu
- *
- */
-void initGameFinishedMenu()
-{
-    SetTwoScreenMode(false);
-
-    startChangeMenu(GAME_FINISHED);
-
-    renderFunction = &drawGameFinishedMenu;
-
-    lastOpenedMenu = &initMainMenu;
-
-    setQuitButton(true);
-}
-
-/**
  * @brief Init score menu
  *
  */
@@ -1539,6 +1562,16 @@ void initFinalScoreMenu()
 
     setQuitButton(true);
 
+    totalFinishedParty++;
+
+    if ((CounterScore > TerroristsScore && localPlayer->Team == COUNTERTERRORISTS) || (TerroristsScore > CounterScore && localPlayer->Team == TERRORISTS))
+    {
+        totalWins++;
+    }
+
+    uiTimer = 8;
+    actionOfUiTimer = SAVE;
+
     showFinalScore = true;
 }
 
@@ -1581,7 +1614,7 @@ void initShopCategoriesMenu()
  */
 void initSettingsMenu()
 {
-    SetTwoScreenMode(false);
+    SetTwoScreenMode(true);
 
     startChangeMenu(SETTINGS);
 
@@ -1637,6 +1670,15 @@ void initSettingsMenu()
     AllButtons[2].yTextPos = 18;
     updateKeyboardModeButton();
 
+    AllSliders[0].xPos = 20;
+    AllSliders[0].yPos = 158;
+    AllSliders[0].xSize = 100;
+    AllSliders[0].min = 0;
+    AllSliders[0].max = 1;
+    AllSliders[0].step = 0.1;
+    AllSliders[0].value = &cursorTransparency;
+
+    SetSliderToShow(1);
     SetButtonToShow(3);
     SetCheckBoxToShow(2);
 }
@@ -1699,7 +1741,6 @@ void initQuitMenu()
     AllButtons[1].yPos = 98;
     AllButtons[1].xSize = 80;
     AllButtons[1].ySize = 20;
-    // AllButtons[1].OnClick = &initMainMenu;
     AllButtons[1].OnClick = &QuitParty;
     AllButtons[1].xTextPos = 9;
     AllButtons[1].yTextPos = 13;
@@ -1859,6 +1900,10 @@ void initControllerMenu()
     AllButtons[4].xTextPos = mapTextXPosition;
     AllButtons[4].yTextPos = 1;
     AllButtons[4].text = "Map";
+    if (currentMap == TUTORIAL)
+        AllButtons[4].isHidden = true;
+    else
+        AllButtons[4].isHidden = false;
 
     SetButtonToShow(5);
 }
@@ -1882,7 +1927,7 @@ void initMainMenu()
         SendLeave = true;
     }
     Connection = UNSELECTED;
-    // return;
+
     setQuitButton(false);
 
     removeAllPlayers();
@@ -1901,7 +1946,6 @@ void initMainMenu()
     AllButtons[0].ySize = 24;
 
     AllButtons[0].OnClick = &initSelectionMapImageMenu;
-    // AllButtons[0].OnClick = &initPartyModeSelectionMenu;
     AllButtons[0].parameter = 0;
     AllButtons[0].xTextPos = 10;
     AllButtons[0].yTextPos = 6;
@@ -1928,9 +1972,18 @@ void initMainMenu()
     AllButtons[2].yTextPos = 18;
     AllButtons[2].text = "Settings";
 
+    AllButtons[3].xPos = 76;
+    AllButtons[3].yPos = 170;
+    AllButtons[3].xSize = ScreenWidth - 160;
+    AllButtons[3].ySize = 20;
+    AllButtons[3].OnClick = &initStatsMenu;
+    AllButtons[3].xTextPos = 13;
+    AllButtons[3].yTextPos = 22;
+    AllButtons[3].text = "Stats";
+
     launchMusic();
 
-    SetButtonToShow(3);
+    SetButtonToShow(4);
 }
 
 /**
@@ -2019,17 +2072,22 @@ void initControlsSettingsMenu()
     AllButtons[0].text = "";
 
     AllSliders[0].xPos = 140;
-    AllSliders[0].yPos = 128;
+    AllSliders[0].yPos = 148;
     AllSliders[0].xSize = 100;
-    // AllSliders[0].ySize = 32;
     AllSliders[0].min = MIN_SENSITIVITY;
     AllSliders[0].max = MAX_SENSITIVITY;
     AllSliders[0].step = 0.1;
-
-    // int val = 2;
     AllSliders[0].value = &sensitivity;
 
-    SetSliderToShow(1);
+    AllSliders[1].xPos = 20;
+    AllSliders[1].yPos = 148;
+    AllSliders[1].xSize = 100;
+    AllSliders[1].min = MIN_SENSITIVITY;
+    AllSliders[1].max = MAX_SENSITIVITY;
+    AllSliders[1].step = 0.1;
+    AllSliders[1].value = &buttonsSensitivity;
+
+    SetSliderToShow(2);
     SetButtonToShow(1);
     SetCheckBoxToShow(1);
 }
@@ -2424,6 +2482,18 @@ void initOnlineErrorMenu()
     setQuitButton(true);
 }
 
+void initStatsMenu()
+{
+    SetTwoScreenMode(false);
+
+    startChangeMenu(STATS);
+
+    renderFunction = &drawStatsMenu;
+    lastOpenedMenu = &initMainMenu;
+
+    setQuitButton(true);
+}
+
 /**
  * @brief Draw game menu
  *
@@ -2441,102 +2511,6 @@ void drawGameMenu()
         char PartyCodeText[30] = "Party code : ";
         sprintf(PartyCodeText + strlen(PartyCodeText), "%s ", partyCode);
         printLongText(17, 31, 10, PartyCodeText);
-    }
-}
-
-/**
- * @brief Draw game finished menu
- *
- */
-void drawGameFinishedMenu()
-{
-    NE_TextPrint(0,        // Font slot
-                 9, 1,     // Coordinates x(column), y(row)
-                 NE_White, // Color
-                 "Party finished");
-
-    // Draw white bars
-    NE_2DDrawQuad(0, 25, 256, 28, 19, RGB15(31, 31, 31));
-    NE_2DDrawQuad(126, 28, 130, 180, 19, RGB15(31, 31, 31));
-
-    // Counter terrorists text
-    char CounterScoreText[30] = "Counter t";
-    int offset = 0;
-    if (!allPartyModes[currentPartyMode].noScore)
-    {
-        sprintf(CounterScoreText + strlen(CounterScoreText), " : %d ", CounterScore);
-    }
-    else
-    {
-        offset = 2;
-    }
-
-    NE_TextPrint(0,             // Font slot
-                 1 + offset, 4, // Coordinates x(column), y(row)
-                 NE_White,      // Color
-                 CounterScoreText);
-
-    // Show each counter terrorists player
-    int Count1 = 0;
-    for (int i = 0; i < MaxPlayer; i++)
-    {
-        if (AllPlayers[i].Team == COUNTERTERRORISTS)
-        {
-            int y = 6 + Count1 * 3;
-
-            char playerName[PLAYER_MAX_LENGTH];
-            sprintf(playerName, AllPlayers[i].name);
-            NE_TextPrint(0,        // Font slot
-                         1, y,     // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         playerName);
-
-            char playerValues[PLAYER_MAX_LENGTH];
-            sprintf(playerValues, "K : %d D : %d", AllPlayers[i].KillCount, AllPlayers[i].DeathCount);
-            NE_TextPrint(0,                 // Font slot
-                         1, y + 1,          // Coordinates x(column), y(row)
-                         RGB15(17, 17, 17), // Color
-                         playerValues);
-
-            Count1++;
-        }
-    }
-
-    // Counter terrorists text
-    char TerroristsScoreText[30] = "Terrorists";
-    if (!allPartyModes[currentPartyMode].noScore)
-    {
-        sprintf(TerroristsScoreText + strlen(TerroristsScoreText), " : %d ", TerroristsScore);
-    }
-    NE_TextPrint(0,              // Font slot
-                 17 + offset, 4, // Coordinates x(column), y(row)
-                 NE_White,       // Color
-                 TerroristsScoreText);
-
-    // Show each terrorists player
-    int Count2 = 0;
-    for (int i = 0; i < MaxPlayer; i++)
-    {
-        if (AllPlayers[i].Team == TERRORISTS)
-        {
-            int y = 6 + Count2 * 3;
-
-            char playerName[PLAYER_MAX_LENGTH];
-            sprintf(playerName, AllPlayers[i].name);
-            NE_TextPrint(0,        // Font slot
-                         17, y,    // Coordinates x(column), y(row)
-                         NE_White, // Color
-                         playerName);
-
-            char playerValues[PLAYER_MAX_LENGTH];
-            sprintf(playerValues, "K : %d D : %d", AllPlayers[i].KillCount, AllPlayers[i].DeathCount);
-            NE_TextPrint(0,                 // Font slot
-                         17, y + 1,         // Coordinates x(column), y(row)
-                         RGB15(17, 17, 17), // Color
-                         playerValues);
-
-            Count2++;
-        }
     }
 }
 
@@ -2725,6 +2699,10 @@ void drawSettingsMenu()
 
     printLongText(1, 16, 3, "Use Rumble Pack (cause crash on 3DS)");
     printLongText(17, 32, 4, "Show ping");
+
+    char gamePadSensitivityText[29];
+    sprintf(gamePadSensitivityText, "Crosshair transparency : %d%%", (int)(*AllSliders[0].value * 100));
+    printLongText(1, 16, 15, gamePadSensitivityText);
 }
 
 /**
@@ -3012,13 +2990,22 @@ void drawControlsSettingsMenu()
                  NE_White, // Color
                  "Controls settings");
 
-    printLongText(2, 15, 4, "Left-handed gamepad mode");
+    printLongText(2, 15, 4, "Left-handed gamepad");
     printLongText(20, 28, 6, "Change controls");
 
-    char MoneyText[26];
-    sprintf(MoneyText, "Gamepad sensitivity : %0.1f", *AllSliders[0].value);
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 13, 11,   // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Camera");
 
-    printLongText(17, 32, 11, MoneyText);
+    char gamePadSensitivityText[26];
+    sprintf(gamePadSensitivityText, "Gamepad sensitivity : %0.1f", *AllSliders[0].value);
+    printLongText(17, 32, 13, gamePadSensitivityText);
+
+    char buttonsSensitivityText[33];
+    sprintf(buttonsSensitivityText, "Buttons sensitivity : %0.1f", *AllSliders[1].value);
+    printLongText(2, 16, 13, buttonsSensitivityText);
 }
 
 /**
@@ -3163,6 +3150,62 @@ void drawOnlineErrorMenu()
                  "Information :");
 
     printLongText(2, 30, 5, errorText);
+}
+
+void drawStatsMenu()
+{
+    NE_TextPrint(0,        // Font slot
+                 11, 1,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Statistics :");
+
+    /*char botKillCountText[26];
+    sprintf(botKillCountText, "Bots killed : %d", totalBotsKillCount);
+    printLongText(1, 16, 5, botKillCountText);
+
+    char onlineKillCountText[26];
+    sprintf(onlineKillCountText, "Online players killed : %d", totalOnlinePlayersKillCount);
+    printLongText(16, 31, 5, onlineKillCountText);
+
+    char timerText[26];
+    sprintf(timerText, "Time played : %02dh:%02dm", totalPlayedHours, totalPlayedMinutes);
+    printLongText(0, 16, 11, timerText);
+
+    char deathCountText[26];
+    sprintf(deathCountText, "Death count : %d", totalDeathCount);
+    printLongText(16, 31, 11, deathCountText);
+
+    char partyCountText[26];
+    sprintf(partyCountText, "Finished parties : %d", totalFinishedParty);
+    printLongText(1, 16, 17, partyCountText);
+
+    char winCountText2[26];
+    sprintf(winCountText2, "Winned parties : %d", totalWins);
+    printLongText(16, 31, 17, winCountText2);*/
+
+    char botKillCountText[26];
+    sprintf(botKillCountText, "Bots killed : %d", totalBotsKillCount);
+    printLongText(0, 33, 5, botKillCountText);
+
+    char onlineKillCountText[26];
+    sprintf(onlineKillCountText, "Online players killed : %d", totalOnlinePlayersKillCount);
+    printLongText(0, 33, 8, onlineKillCountText);
+
+    char timerText[26];
+    sprintf(timerText, "Time played : %02dh:%02dm", totalPlayedHours, totalPlayedMinutes);
+    printLongText(0, 33, 11, timerText);
+
+    char deathCountText[26];
+    sprintf(deathCountText, "Death count : %d", totalDeathCount);
+    printLongText(0, 33, 14, deathCountText);
+
+    char partyCountText[26];
+    sprintf(partyCountText, "Finished parties : %d", totalFinishedParty);
+    printLongText(0, 33, 17, partyCountText);
+
+    char winCountText2[26];
+    sprintf(winCountText2, "Winned parties : %d", totalWins);
+    printLongText(0, 33, 20, winCountText2);
 }
 
 /**

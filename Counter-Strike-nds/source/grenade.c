@@ -261,7 +261,7 @@ void UpdateGrenades()
                 // Start Smoke or flash effect
                 if (grenade->GrenadeType == SMOKE || grenade->GrenadeType == FLASH)
                 {
-                    grenade->Timer = 1;
+                    grenade->Timer = 20;
                 }
             }
             else

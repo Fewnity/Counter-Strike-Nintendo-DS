@@ -31,6 +31,7 @@ int gamepadTouchAreaY2 = 194;
 
 // Game pad sensitivity
 float sensitivity = DEFAULT_SENSITIVITY;
+float buttonsSensitivity = DEFAULT_SENSITIVITY;
 
 // Current used slider index
 int currentSlider = -1;

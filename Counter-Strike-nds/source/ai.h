@@ -36,6 +36,7 @@ void CreateWaypoints(int mapToLoad);
 void CreateWaypoint(int id, float x, float y, float z, int edgeCount, int *edge);
 void CheckPathWaypoint(int playerIndex, int StartWaypoint, int FinalWaypoint);
 int GetDistanceBewteenTwoPlayers(int player1Index, int player2Index);
+int GetDistanceBewteenPlayerAndWaypoint(int playerIndex, int waypointIndex);
 int getNearestWaypoint(float x, float y, float z);
 void setBotsNames();
 void ResetTakenBotsNames();

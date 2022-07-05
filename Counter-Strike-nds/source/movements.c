@@ -111,7 +111,7 @@ void AddAnglesToPlayer(float xAngleToAdd, float yAngleToAdd)
  */
 void RotatePlayer(bool *NeedUpdateViewRotation, bool *SendPosition, float *CameraAngleY)
 {
-    float AngleSpeed = 2;
+    float AngleSpeed = 1 * buttonsSensitivity;
 
     // If the player is scoping, the angle speed is lower
     if (GetCurrentScopeLevel() == 1)
