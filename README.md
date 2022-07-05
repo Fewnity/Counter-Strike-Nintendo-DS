@@ -1,7 +1,9 @@
 # Counter Strike Nintendo DS
-Counter Strike port on Nintendo DS (Work on Emulator and on real hardware).
-For multiplayer on emulator, please use [Melon DS](https://melonds.kuribo64.net/downloads.php).
-There is no emulator with online support on Android at this time.
+**Counter Strike port on Nintendo DS with online multiplayer** (Works on **emulator** and on **real hardware**).
+
+For **multiplayer** on **emulator**, please use [Melon DS](https://melonds.kuribo64.net/downloads.php).<br/>
+There is no emulator with **online** support on **Android** at this time.<br/>
+**Ad hoc (Nifi) multiplayer** is not supported (I'm looking for help about that!)<br/>
 
 ![image](https://user-images.githubusercontent.com/39272935/176778790-14707835-d15d-473b-baeb-3cb51864b004.png)
 ![image](https://user-images.githubusercontent.com/39272935/176778935-59555499-c40e-4325-83f8-8d89778a75af.png)
@@ -22,14 +24,17 @@ To have sounds and musics, you need to use a virtual SD card. Because sounds and
 - Set in the DLDI settings (Config->Emu settings->DLDI) the counter_strike_sd.raw file as SD card. Or create your own [here](https://melonds.kuribo64.net/board/thread.php?pid=2902) and put the soundbank.bin and the counter_strike_music.raw files in the virtual SD card
 
 ## Network Setup
-### On DS
 - Create a Wifi without a password or with a WEP protection. You can use your phone/a compatibke router or a Linux/Mac OS computer with Wifi adapter to do an hotspot
-- Start a game that support online multiplayer like **Mario Kart**
-- Open the Wifi Setup and select a available wifi slot
+### On DS
+- Start a game that **support online multiplayer** like **Mario Kart**
+- Open the **Wifi setup** and select an available wifi slot
 - Search an access point and add your wifi
 
-### On 3DS
-- To write...
+### On 3DS/2DS
+- Open **settings**
+- Open **Internet settings**
+- Open the **Nintendo DS connection** menu and select an available wifi slot
+- Search an access point and add your wifi
 
 ## How to compile the game
 - Install [DevKitPro](https://github.com/devkitPro/installer/releases/latest) and check the **NDS Development** option
@@ -40,6 +45,7 @@ To have sounds and musics, you need to use a virtual SD card. Because sounds and
 - Copy the **Counter-Strike-nds.nds** from the project folder and the **soundbank.bin** file from the build folder
 
 ## TODO
+- [ ] Ad hoc (Nifi) multiplayer : **Difficult**
 - [ ] Add fall damage : **Easy**
 - [ ] Smoke doesn't affect bots at this time : **Easy**
 - [ ] Online chat (empty menu already exists) : **Medium**
