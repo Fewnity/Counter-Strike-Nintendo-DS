@@ -48,6 +48,7 @@ Note : To avoid coding collisions, path finding..., there is an Unity project to
 
 ## TODO
 - [ ] Ad hoc (Nifi) multiplayer : **Difficult**
+- [ ] Disable sleep mode in multiplayer : **?**
 - [ ] Add fall damage : **Easy**
 - [ ] Smoke doesn't affect bots at this time : **Easy**
 - [ ] Online chat (empty menu already exists) : **Medium**
