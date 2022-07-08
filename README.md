@@ -44,6 +44,8 @@ To have sounds and musics, you need to use a virtual SD card. Because sounds and
 - Compile the game (Open a **CMD**, write **"cd C:\devkitPro\nitro-engine\examples\Counter-Strike-nds"** then **"make"**)
 - Copy the **Counter-Strike-nds.nds** from the project folder and the **soundbank.bin** file from the build folder
 
+Note : To avoid coding collisions, path finding..., there is an Unity project to export code : https://github.com/Fewnity/Counter-Strike-DS-Unity-Project
+
 ## TODO
 - [ ] Ad hoc (Nifi) multiplayer : **Difficult**
 - [ ] Add fall damage : **Easy**
