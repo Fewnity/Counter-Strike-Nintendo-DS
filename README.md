@@ -24,7 +24,7 @@ To have sounds and musics, you need to use a virtual SD card. Because sounds and
 - Set in the DLDI settings (Config->Emu settings->DLDI) the counter_strike_sd.raw file as SD card. Or create your own [here](https://melonds.kuribo64.net/board/thread.php?pid=2902) and put the soundbank.bin and the counter_strike_music.raw files in the virtual SD card
 
 ## Network Setup
-- Create a Wifi without a password or with a WEP protection. You can use your phone/a compatible router or a Linux/Mac OS computer with Wifi adapter to do an hotspot
+- Create a Wifi without a password or with a WEP protection. You can use your phone/a compatible router or a Linux/Mac OS computer with Wifi adapter to do a hotspot
 ### On DS
 - Start a game that **supports online multiplayer** like **Mario Kart**
 - Open the **Wifi setup** and select an available wifi slot
