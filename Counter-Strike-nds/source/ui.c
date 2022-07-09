@@ -2502,15 +2502,15 @@ void drawGameMenu()
 {
     // Print texts
     NE_TextPrint(0,        // Font slot
-                 12, 2,    // Coordinates x(column), y(row)
+                 12, 1,    // Coordinates x(column), y(row)
                  NE_White, // Color
                  "Main menu");
 
     if (isPrivate)
     {
-        char PartyCodeText[30] = "Party code : ";
+        char PartyCodeText[30] = "Party code: ";
         sprintf(PartyCodeText + strlen(PartyCodeText), "%s ", partyCode);
-        printLongText(17, 31, 10, PartyCodeText);
+        printLongText(10, 23, 3, PartyCodeText);
     }
 }
 
