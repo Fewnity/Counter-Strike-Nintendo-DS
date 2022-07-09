@@ -217,7 +217,7 @@ void Load()
             }
             else if (inputsFound != inputCount) // Read inputs
             {
-                char inputIndex[12];
+                char inputIndex[13];
                 sprintf(inputIndex, "k%d", inputCount);
                 if (strcmp(word, inputIndex) == 0)
                 {

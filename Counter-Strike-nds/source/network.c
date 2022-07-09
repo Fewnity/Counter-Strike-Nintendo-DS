@@ -1352,7 +1352,7 @@ void ReadServerData()
             Wifi_GetData(WIFIGETDATA_MACADDRESS, 6, macAddress);
 
             // sprintf(InfoToSend + strlen(InfoToSend), "{KEY;%d;%X%X%X%X%X%X;%s;%s}", getKeyResponse(serverKey), macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5], localPlayer->name, GAME_VERSION);
-            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%X%X%X%X%X%X;%s;%s}", KEY, getKeyResponse(serverKey), macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5], localPlayer->name, GAME_VERSION);
+            sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%02X%02X%02X%02X%02X%02X;%s;%s}", KEY, getKeyResponse(serverKey), macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5], localPlayer->name, GAME_VERSION);
 
             if (partyOption == JOIN_PRIVATE_PARTY)
                 // sprintf(InfoToSend + strlen(InfoToSend), "{PARTY;%d;%s}", partyOption, partyCode);

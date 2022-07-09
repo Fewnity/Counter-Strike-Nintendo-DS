@@ -727,14 +727,14 @@ void drawKeyboardInput()
         sprintf(editedName, "%s", tempText);
 
         int nameLength = strlen(editedName);
-        for (int i = nameLength; i < 20; i++)
+        for (int i = nameLength; i < maxInputLength; i++)
         {
             sprintf(editedName + nameLength, "_");
             nameLength++;
         }
 
         NE_TextPrint(0,        // Font slot
-                     6, 12,    // Coordinates x(column), y(row)
+                     10, 12,   // Coordinates x(column), y(row)
                      NE_White, // Color
                      editedName);
     }
@@ -750,7 +750,7 @@ void drawKeyboardInput()
         sprintf(code, "%s", tempText);
 
         int codeLength = strlen(code);
-        for (int i = codeLength; i < 5; i++)
+        for (int i = codeLength; i < maxInputLength; i++)
         {
             sprintf(code + codeLength, "_");
             codeLength++;
@@ -889,7 +889,7 @@ void drawTopScreenUI()
 
             // sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
             //   sprintf(CPU, "%0.3f %0.3f %0.3f", debugValue1, debugValue2, debugValue3);
-            sprintf(CPU, "%d %d %d", totalPlayedSeconds, totalPlayedMinutes, totalPlayedHours);
+            sprintf(CPU, "%d %d", AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isDualGun, selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]);
 
             NE_TextPrint(0,        // Font slot
                          1, 1,     // Coordinates x(column), y(row)
@@ -1038,8 +1038,8 @@ void drawTopScreenUI()
 
         if (Connection != OFFLINE && showPing)
         {
-            char PING[9];
-            sprintf(PING, "Ping : %d", ping);
+            char PING[8];
+            sprintf(PING, "Ping %d", ping);
             // DEBUG for player show ping
             int backgroundSize = strlen(PING) * 8;
             int backgroundOffset = 0; // 1 * 8
@@ -1051,10 +1051,6 @@ void drawTopScreenUI()
                          0, 0,     // Coordinates x(column), y(row)
                          NE_White, // Color
                          PING);
-        }
-        else
-        {
-            // TextYOffset--;
         }
 
         // Show event text
@@ -1247,7 +1243,11 @@ void drawTopScreenUI()
                     int lightCoef = 31 * selectPlayer->lightCoef;
                     NE_2DDrawTexturedQuadColor(rightGunX, rightGunY, rightGunX + 96, rightGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef));
                     if (selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory] < GunCount && AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isDualGun)
-                        NE_2DDrawTexturedQuadColor(leftGunX + 96, leftGunY, leftGunX, leftGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef)); // Gun
+                    {
+                        NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_FRONT, NE_MODULATION); // Polygon is inverted for mirroring, so we need to invert the culling
+                        NE_2DDrawTexturedQuadColor(leftGunX + 96, leftGunY, leftGunX, leftGunY + 96, 1, TopScreenSpritesMaterials[1], RGB15(lightCoef, lightCoef, lightCoef));
+                        NE_PolyFormat(31, 0, NE_LIGHT_0, NE_CULL_BACK, NE_MODULATION);
+                    }
                 }
 
                 // Draw gun muzzle flash
@@ -1704,7 +1704,7 @@ void initChangeNameMenu()
     keyboardAction = KEYBOARD_ACTION_CHANGE_NAME;
     onKeyboardCloseSucces = &ChangeMenu;
     onKeyboardCloseCancel = &ChangeMenu;
-    maxInputLength = 20;
+    maxInputLength = 13;
     minInputLength = 1;
     SetCanChangeCase(true);
 
@@ -3158,30 +3158,6 @@ void drawStatsMenu()
                  11, 1,    // Coordinates x(column), y(row)
                  NE_White, // Color
                  "Statistics :");
-
-    /*char botKillCountText[26];
-    sprintf(botKillCountText, "Bots killed : %d", totalBotsKillCount);
-    printLongText(1, 16, 5, botKillCountText);
-
-    char onlineKillCountText[26];
-    sprintf(onlineKillCountText, "Online players killed : %d", totalOnlinePlayersKillCount);
-    printLongText(16, 31, 5, onlineKillCountText);
-
-    char timerText[26];
-    sprintf(timerText, "Time played : %02dh:%02dm", totalPlayedHours, totalPlayedMinutes);
-    printLongText(0, 16, 11, timerText);
-
-    char deathCountText[26];
-    sprintf(deathCountText, "Death count : %d", totalDeathCount);
-    printLongText(16, 31, 11, deathCountText);
-
-    char partyCountText[26];
-    sprintf(partyCountText, "Finished parties : %d", totalFinishedParty);
-    printLongText(1, 16, 17, partyCountText);
-
-    char winCountText2[26];
-    sprintf(winCountText2, "Winned parties : %d", totalWins);
-    printLongText(16, 31, 17, winCountText2);*/
 
     char botKillCountText[26];
     sprintf(botKillCountText, "Bots killed : %d", totalBotsKillCount);

@@ -1,0 +1,7 @@
+- For EACH new update, replace all files with new files.
+
+- I have no sound
+
+On Emulator
+You need to enable DLDI SD card and put the counter_strike_sd.raw file as SD card
+Melon DS supports DLDI : https://melonds.kuribo64.net/downloads.php
