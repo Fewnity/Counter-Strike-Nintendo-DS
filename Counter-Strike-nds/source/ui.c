@@ -597,7 +597,7 @@ void showPartyEventText(int event)
     }
     else if (event == COUNTER_TERRORISTS_WIN)
     {
-        strncpy(gameEventNotificationText, "Counter Terrorist win", 30);
+        strncpy(gameEventNotificationText, "Counter-Terrorists win", 30);
         PlayBasicSound(SFX_COUNTERTERRORISTWIN);
     }
     else if (event == BOMB_PLANTED)
@@ -887,7 +887,7 @@ void drawTopScreenUI()
             // DEBUG show CPU usage
             char CPU[40];
 
-            // sprintf(CPU, "CPU : %d%%, Mem : %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
+            // sprintf(CPU, "CPU: %d%%, Mem: %d%%", NE_GetCPUPercent(), NE_TextureFreeMemPercent());
             //   sprintf(CPU, "%0.3f %0.3f %0.3f", debugValue1, debugValue2, debugValue3);
             sprintf(CPU, "%d %d", AllGuns[selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]].isDualGun, selectPlayer->AllGunsInInventory[selectPlayer->currentGunInInventory]);
 
@@ -910,7 +910,7 @@ void drawTopScreenUI()
 
             // DEBUG show map zone to show
             char Occlusion[20];
-            sprintf(Occlusion, "Zone to show : ");
+            sprintf(Occlusion, "Zone to show: ");
             for (int i = 0; i < allMaps[currentMap].AllZones[localPlayer->CurrentOcclusionZone].ZoneCount; i++)
                 sprintf(Occlusion + strlen(Occlusion), "%d ", allMaps[currentMap].AllZones[localPlayer->CurrentOcclusionZone].visibleMapPart[i]);
 
@@ -963,7 +963,7 @@ void drawTopScreenUI()
                 sprintf(Timer + strlen(Timer), "%02d::%02d", PartyMinutes, PartySeconds);
 
                 if (isDebugTopScreen)
-                    sprintf(Timer + strlen(Timer), " State : %d", roundState);
+                    sprintf(Timer + strlen(Timer), " State: %d", roundState);
 
                 NE_TextPrint(0,                                  // Font slot
                              13 - timerXOffset, 4 + TextYOffset, // Coordinates x(column), y(row)
@@ -1139,7 +1139,7 @@ void drawTopScreenUI()
             NE_TextPrint(0,        // Font slot
                          4, 20,    // Coordinates x(column), y(row)
                          NE_White, // Color
-                         "Don't shoot your friends");
+                         "Don't shoot your friends!");
         }
 
         if (selectPlayer->Team != SPECTATOR)
@@ -1437,7 +1437,7 @@ void initGameMenu()
     AllButtons[0].xSize = 100;
     AllButtons[0].ySize = 24;
     AllButtons[0].OnClick = &initScoreMenu;
-    AllButtons[0].xTextPos = 11;
+    AllButtons[0].xTextPos = 12;
     AllButtons[0].yTextPos = 14;
     if (localPlayer->Team == SPECTATOR)
         AllButtons[0].text = "Choose team";
@@ -1450,7 +1450,7 @@ void initGameMenu()
     AllButtons[1].xSize = 100;
     AllButtons[1].ySize = 24;
     AllButtons[1].OnClick = &initShopCategoriesMenu;
-    AllButtons[1].xTextPos = 11;
+    AllButtons[1].xTextPos = 12;
     AllButtons[1].yTextPos = 10;
     AllButtons[1].text = "Open shop";
 
@@ -1460,7 +1460,7 @@ void initGameMenu()
     AllButtons[2].xSize = 100;
     AllButtons[2].ySize = 24;
     AllButtons[2].OnClick = &initSettingsMenu;
-    AllButtons[2].xTextPos = 11;
+    AllButtons[2].xTextPos = 12;
     AllButtons[2].yTextPos = 18;
     AllButtons[2].text = "Settings";
 
@@ -1470,7 +1470,7 @@ void initGameMenu()
     AllButtons[3].xSize = 100;
     AllButtons[3].ySize = 24;
     AllButtons[3].OnClick = &initQuitMenu;
-    AllButtons[3].xTextPos = 11;
+    AllButtons[3].xTextPos = 12;
     AllButtons[3].yTextPos = 22;
     AllButtons[3].text = "Quit game";
 
@@ -1480,7 +1480,7 @@ void initGameMenu()
     AllButtons[4].xSize = 100;
     AllButtons[4].ySize = 24;
     AllButtons[4].OnClick = &initControllerMenu;
-    AllButtons[4].xTextPos = 11;
+    AllButtons[4].xTextPos = 13;
     AllButtons[4].yTextPos = 6;
     AllButtons[4].text = "Gamepad";
 
@@ -2209,14 +2209,14 @@ void initControlsChangeMenu()
     else if (controlsPage == 2)
     {
         AllButtons[2].parameter = LEFT_GUN;
-        AllButtons[2].xTextPos = 4;
+        AllButtons[2].xTextPos = 1;
         AllButtons[2].yTextPos = 4;
-        AllButtons[2].text = "Left gun";
+        AllButtons[2].text = "Previous weapon";
 
         AllButtons[3].parameter = RIGHT_GUN;
-        AllButtons[3].xTextPos = 19;
+        AllButtons[3].xTextPos = 18;
         AllButtons[3].yTextPos = 4;
-        AllButtons[3].text = "Right gun";
+        AllButtons[3].text = "Next weapon";
 
         SetButtonToShow(4);
     }
@@ -2548,7 +2548,7 @@ void drawScoreMenu()
     int offset = 0;
     if (!allPartyModes[currentPartyMode].noScore)
     {
-        sprintf(CounterScoreText + strlen(CounterScoreText), " : %d ", CounterScore);
+        sprintf(CounterScoreText + strlen(CounterScoreText), ": %d ", CounterScore);
     }
     else
     {
@@ -2565,7 +2565,7 @@ void drawScoreMenu()
     {
         if (AllPlayers[i].Team == COUNTERTERRORISTS)
         {
-            int y = 6 + Count1 * 3;
+            int y = 6 + Count1 * 4;
 
             char playerName[PLAYER_MAX_LENGTH];
 
@@ -2576,9 +2576,14 @@ void drawScoreMenu()
                          playerName);
 
             char playerValues[PLAYER_MAX_LENGTH];
-            sprintf(playerValues, "K : %d D : %d", AllPlayers[i].KillCount, AllPlayers[i].DeathCount);
+            sprintf(playerValues, "Kills:  %d", AllPlayers[i].KillCount);
             NE_TextPrint(0,                 // Font slot
                          1, y + 1,          // Coordinates x(column), y(row)
+                         RGB15(17, 17, 17), // Color
+                         playerValues);
+			sprintf(playerValues, "Deaths: %d", AllPlayers[i].DeathCount);
+            NE_TextPrint(0,                 // Font slot
+                         1, y + 2,          // Coordinates x(column), y(row)
                          RGB15(17, 17, 17), // Color
                          playerValues);
 
@@ -2590,7 +2595,7 @@ void drawScoreMenu()
     char TerroristsScoreText[30] = "Terrorists";
     if (!allPartyModes[currentPartyMode].noScore)
     {
-        sprintf(TerroristsScoreText + strlen(TerroristsScoreText), " : %d ", TerroristsScore);
+        sprintf(TerroristsScoreText + strlen(TerroristsScoreText), ": %d ", TerroristsScore);
     }
 
     NE_TextPrint(0,              // Font slot
@@ -2604,10 +2609,10 @@ void drawScoreMenu()
     {
         if (AllPlayers[i].Team == TERRORISTS)
         {
-            int y = 6 + Count2 * 3;
+            int y = 6 + Count2 * 4;
 
             char playerName[PLAYER_MAX_LENGTH];
-            // sprintf(playerName, "id : %d", AllPlayers[i].Id);
+            // sprintf(playerName, "id: %d", AllPlayers[i].Id);
             sprintf(playerName, AllPlayers[i].name);
             NE_TextPrint(0,        // Font slot
                          17, y,    // Coordinates x(column), y(row)
@@ -2615,9 +2620,14 @@ void drawScoreMenu()
                          playerName);
 
             char playerValues[PLAYER_MAX_LENGTH];
-            sprintf(playerValues, "K : %d D : %d", AllPlayers[i].KillCount, AllPlayers[i].DeathCount);
+            sprintf(playerValues, "Kills:  %d", AllPlayers[i].KillCount);
             NE_TextPrint(0,                 // Font slot
                          17, y + 1,         // Coordinates x(column), y(row)
+                         RGB15(17, 17, 17), // Color
+                         playerValues);
+            sprintf(playerValues, "Deaths: %d", AllPlayers[i].DeathCount);
+            NE_TextPrint(0,                 // Font slot
+                         17, y + 2,         // Coordinates x(column), y(row)
                          RGB15(17, 17, 17), // Color
                          playerValues);
 
@@ -2697,11 +2707,11 @@ void drawSettingsMenu()
                  NE_White, // Color
                  "Keyboard mode");
 
-    printLongText(1, 16, 3, "Use Rumble Pack (cause crash on 3DS)");
+    printLongText(1, 16, 3, "Use Rumble Pak (causes crash on DSi/3DS)");
     printLongText(17, 32, 4, "Show ping");
 
     char gamePadSensitivityText[29];
-    sprintf(gamePadSensitivityText, "Crosshair transparency : %d%%", (int)(*AllSliders[0].value * 100));
+    sprintf(gamePadSensitivityText, "Crosshair transparency: %d%%", (int)(*AllSliders[0].value * 100));
     printLongText(1, 16, 15, gamePadSensitivityText);
 }
 
@@ -2716,14 +2726,14 @@ void drawQuitMenu()
         NE_TextPrint(0,        // Font slot
                      7, 3,     // Coordinates x(column), y(row)
                      NE_White, // Color
-                     "Skip the tutorial ?");
+                     "Skip the tutorial?");
     }
     else
     {
         NE_TextPrint(0,        // Font slot
-                     1, 3,     // Coordinates x(column), y(row)
+                     4, 3,     // Coordinates x(column), y(row)
                      NE_White, // Color
-                     "Do you want to quit the game ?");
+                     "Are you sure want to quit\n            the game?");
     }
 }
 
@@ -2892,7 +2902,7 @@ void drawMainMenu()
 void drawServersMenu()
 {
     /*char textIp[1024] = "";
-            sprintf(textIp + strlen(textIp), "ipCount : %d", TotalIpCount);
+            sprintf(textIp + strlen(textIp), "ipCount: %d", TotalIpCount);
 
             NE_TextPrint(0,        // Font slot
                          1, 10,    // Coordinates x(column), y(row)
@@ -2986,9 +2996,9 @@ void drawControlsSettingsMenu()
 {
     // Print texts
     NE_TextPrint(0,        // Font slot
-                 9, 1,     // Coordinates x(column), y(row)
+                 12, 1,     // Coordinates x(column), y(row)
                  NE_White, // Color
-                 "Controls settings");
+                 "Controls");
 
     printLongText(2, 15, 4, "Left-handed gamepad");
     printLongText(20, 28, 6, "Change controls");
@@ -3000,11 +3010,11 @@ void drawControlsSettingsMenu()
                  "Camera");
 
     char gamePadSensitivityText[26];
-    sprintf(gamePadSensitivityText, "Gamepad sensitivity : %0.1f", *AllSliders[0].value);
-    printLongText(17, 32, 13, gamePadSensitivityText);
+    sprintf(gamePadSensitivityText, "Gamepad sensitivity: %0.1f", *AllSliders[0].value);
+    printLongText(16, 32, 13, gamePadSensitivityText);
 
     char buttonsSensitivityText[33];
-    sprintf(buttonsSensitivityText, "Buttons sensitivity : %0.1f", *AllSliders[1].value);
+    sprintf(buttonsSensitivityText, "Button sensitivity: %0.1f", *AllSliders[1].value);
     printLongText(2, 16, 13, buttonsSensitivityText);
 }
 
@@ -3016,7 +3026,7 @@ void drawControlsChangeMenu()
 {
     // Print texts
     NE_TextPrint(0,        // Font slot
-                 10, 1,    // Coordinates x(column), y(row)
+                 9, 1,    // Coordinates x(column), y(row)
                  NE_White, // Color
                  "Change controls");
 
@@ -3147,7 +3157,7 @@ void drawOnlineErrorMenu()
     NE_TextPrint(0,        // Font slot
                  11, 1,    // Coordinates x(column), y(row)
                  NE_White, // Color
-                 "Information :");
+                 "Information:");
 
     printLongText(2, 30, 5, errorText);
 }
@@ -3157,30 +3167,30 @@ void drawStatsMenu()
     NE_TextPrint(0,        // Font slot
                  11, 1,    // Coordinates x(column), y(row)
                  NE_White, // Color
-                 "Statistics :");
+                 "Statistics:");
 
     char botKillCountText[26];
-    sprintf(botKillCountText, "Bots killed : %d", totalBotsKillCount);
+    sprintf(botKillCountText, "Bots killed: %d", totalBotsKillCount);
     printLongText(0, 33, 5, botKillCountText);
 
     char onlineKillCountText[26];
-    sprintf(onlineKillCountText, "Online players killed : %d", totalOnlinePlayersKillCount);
+    sprintf(onlineKillCountText, "Online players killed: %d", totalOnlinePlayersKillCount);
     printLongText(0, 33, 8, onlineKillCountText);
 
     char timerText[26];
-    sprintf(timerText, "Time played : %02dh:%02dm", totalPlayedHours, totalPlayedMinutes);
+    sprintf(timerText, "Time played: %02dh:%02dm", totalPlayedHours, totalPlayedMinutes);
     printLongText(0, 33, 11, timerText);
 
     char deathCountText[26];
-    sprintf(deathCountText, "Death count : %d", totalDeathCount);
+    sprintf(deathCountText, "Death count: %d", totalDeathCount);
     printLongText(0, 33, 14, deathCountText);
 
     char partyCountText[26];
-    sprintf(partyCountText, "Finished parties : %d", totalFinishedParty);
+    sprintf(partyCountText, "Finished parties: %d", totalFinishedParty);
     printLongText(0, 33, 17, partyCountText);
 
     char winCountText2[26];
-    sprintf(winCountText2, "Winned parties : %d", totalWins);
+    sprintf(winCountText2, "Victories: %d", totalWins);
     printLongText(0, 33, 20, winCountText2);
 }
 
