@@ -33,11 +33,11 @@ void getTutorialText()
     switch (tutorialStep)
     {
     case TextWelcome:
-        sprintf(tutorialText, "Welcome in Counter Strike");
+        sprintf(tutorialText, "Welcome to Counter Strike");
         return;
 
     case TextLookAround:
-        sprintf(tutorialText, "Look around you with the stylus");
+        sprintf(tutorialText, "Look around with the stylus");
         return;
 
     case TextMovePlayer:
@@ -53,11 +53,11 @@ void getTutorialText()
         return;
 
     case TextReload:
-        sprintf(tutorialText, "Reload with the reload button in the gamepad");
+        sprintf(tutorialText, "Reload with the reload button on the gamepad");
         return;
 
     case TextChangeGun:
-        sprintf(tutorialText, "Change gun with left/right arrow in the gamepad");
+        sprintf(tutorialText, "Change weapons with the left/right arrows on the gamepad");
         return;
 
     case TextPlantBomb:
