@@ -404,7 +404,7 @@ void initKeyboard()
     allOtherKeys[index].OnClick = &makeDelete;
     index++;
 
-    strncpy(allOtherKeys[index].name, "shift", 8);
+    strncpy(allOtherKeys[index].name, "caps", 8);
     allOtherKeys[index].xPos = 6;
     allOtherKeys[index].yPos = 1 + 2 * (yOffset2 + 3);
     allOtherKeys[index].xCenter = 19;
