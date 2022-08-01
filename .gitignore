@@ -1,3 +1,4 @@
 /Counter-Strike-nds/build/
+/Counter-Strike-nds/soundbank.bin
 *.nds
 *.elf
