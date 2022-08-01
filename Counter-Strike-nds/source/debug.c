@@ -9,6 +9,8 @@
 // File system
 #include <fat.h>
 
+#include <NEMain.h>
+
 // File
 FILE *debugFile;
 
@@ -20,14 +22,20 @@ FILE *debugFile;
 void debugPrint(const char *text)
 {
     // Open the file
-    debugFile = fopen("fat:/debug_cs.log", "a");
+    if (debugFile == NULL)
+    {
+        debugFile = fopen("fat:/debug_cs.log", "a");
+    }
 
     // Print the message and a new line
     fprintf(debugFile, text);
     fprintf(debugFile, "\n");
 
     // Close the file
-    fclose(debugFile);
+    if (debugFile != NULL)
+    {
+        fclose(debugFile);
+    }
 }
 
 /**

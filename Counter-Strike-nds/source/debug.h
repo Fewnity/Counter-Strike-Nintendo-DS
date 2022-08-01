@@ -7,8 +7,6 @@
 #ifndef DEBUG_H_ /* Include guard */
 #define DEBUG_H_
 
-#include <NEMain.h>
-
 void debugPrint(const char *text);
 void error_handler(const char *text);
 
