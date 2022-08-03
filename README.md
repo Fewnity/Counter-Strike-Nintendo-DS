@@ -1,5 +1,5 @@
 # Counter Strike Nintendo DS
-**Counter Strike port to Nintendo DS with online multiplayer** (Works on **emulator** and on **real hardware**).
+**Counter Strike demake to Nintendo DS with online multiplayer** (Works on **emulator** and on **real hardware**).
 
 For **multiplayer** on **emulator**, please use [melonDS](https://melonds.kuribo64.net/downloads.php).<br/>
 There is no emulator with **online** support on **Android** at this time.<br/>
