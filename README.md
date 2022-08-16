@@ -63,7 +63,7 @@ Note : To avoid coding collisions, path finding..., there is an Unity project to
 - [ ] Smoke doesn't affect bots at this time : **Easy**
 - [ ] Online chat (empty menu already exists) : **Medium**
 - [ ] Create a NitroFS version for sounds and musics (and keep the FAT version for better compatibility) : **Medium**
-- [ ] Improve bots (make bots stays close to the bomb area for exemple) : **Medium**
+- [ ] Put data in JSON files (weapons/equipments/bots names/ai waypoints) : **Medium**
 - [ ] Add Wingman mode : **Medium**
 - [ ] Add input profiles : **Medium**
 - [ ] Possibility to change cursor : **Medium**
