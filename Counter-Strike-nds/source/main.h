@@ -46,13 +46,6 @@
 #include "explosion_bin.h"
 #include "smokeSphere_bin.h"
 
-#include "road_bin.h"
-#include "wallWindow_bin.h"
-#include "wall_bin.h"
-#include "DustPart3_1_3ds_bin.h"
-#include "DustPart3_2_3ds_bin.h"
-#include "DustPart3_3_3ds_bin.h"
-
 #include "tutorialMapUnShadowed_3ds_bin.h"
 #include "tutorialMapShadowed_3ds_bin.h"
 
@@ -330,6 +323,7 @@ typedef struct // Player values
 
 	Vector3 position;
 	Vector3 lerpDestination;
+	float cameraAngle;
 	float Angle;
 	float AngleDestination;
 
@@ -460,7 +454,6 @@ typedef struct //
 {
 	void *texture;
 	char name[8];
-	// int action;
 	int xPos;
 	int yPos;
 	int xSize;
@@ -473,7 +466,6 @@ typedef struct //
 extern float flashaAnimation;
 extern bool flashed;
 extern int ShowMuzzle;
-// extern int currentGunInInventory;
 extern int rightGunX;
 extern int rightGunY;
 extern int leftGunX;
@@ -490,9 +482,6 @@ extern int bombTimer;
 extern int CurrentScopeLevel;
 
 extern int KillTextShowTimer;
-
-extern NE_Material *TopScreenSpritesMaterials[6];
-extern bool isDebugTopScreen;
 
 extern NE_Sprite *TopScreenSprites[2];
 extern NE_Camera *Camera;
@@ -514,13 +503,9 @@ extern CheckBox AllCheckBoxs[CheckBoxCount];
 extern Slider AllSliders[SliderCount];
 extern int ButtonToShow;
 extern int currentMenu;
-extern NE_Material *BottomScreenSpritesMaterials[9];
 extern NE_Sprite *BottomScreenSprites[1];
-// extern CollisionBox2D AllTriggersCollisions[OcclusionZonesCount];
 extern NE_Material *GroundMaterial;
 extern NE_Material *GroundMaterialShadowed;
-// extern Stairs AllStairs[StairsCount];
-extern float CameraAngleY;
 extern float xWithoutYForMap;
 extern float zWithoutYForMap;
 extern float xWithoutYForOcclusionSide1;
@@ -566,14 +551,9 @@ extern enum actionAfterUiTimer actionOfUiTimer;
 extern int RumbleTimer;
 extern Site AllBombsTriggersCollisions[2];
 extern bool useRumble;
-extern Input inputs[INPUT_COUNT];
-extern bool scanForInput;
-extern int currentInputScanned;
-extern const char *inputsNames[INPUT_NAMES_COUNT];
 extern int shopDisableTimer;
 extern CollisionBoxF shopZone;
 extern bool isInShopZone;
-extern NE_Palette *Palettes[17];
 extern bool NeedUpdateViewRotation;
 extern int changeSecondTimer;
 extern int changeMinuteTimer;
@@ -588,21 +568,11 @@ extern int playerWantToStart;
 extern int playerWantToStartLimite;
 
 //////All functions
-void CalculatePlayerPosition(int PlayerId);
 void GameLoop();
-void AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI);
-void DrawGun();
 double map(double x, double in_min, double in_max, double out_min, double out_max);
 int mapInt(int x, int in_min, int in_max, int out_min, int out_max);
-void ReadOneIntData(char *data, int *result, int EndPosition, int CallTypeEndPosition);
-void ReadPlayerIdInt(char *data, int *result, int StartPosition, int FromPlayerIdEndPosition);
-void setPlayerPositionAtSpawns(int playerIndex);
-void SetTwoScreenMode(bool value);
-void killPlayer(Player *player);
-void addExplosionScreenShake();
 void JoinParty(int option);
 void setNeedRespawn(Player *player);
-void prepareParty(bool multiplayerMode);
 void increaseFrameCount();
 void resetFrameCount();
 
@@ -616,19 +586,16 @@ NE_Sprite **GetSpritesBottom();
 NE_Material **GetBottomScreenSpritesMaterials();
 NE_Palette **GetPalettes();
 
-void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckScore);
 void checkStartGameLoop();
-void CheckJump();
 int GetCurrentMenu();
 void SetCurrentMenu(int value);
 int GetUpdateBottomScreenOneFrame();
 void SetUpdateBottomScreenOneFrame(int value);
 int GetButtonToShow();
 void SetButtonToShow(int value);
-void StartSinglePlayer(int partyMode);
+
 void SetWaitForTeamResponse(bool value);
-void setCameraMapPosition();
-void checkMusicSteaming();
+void dropBomb(Player *HittedClient, int hittedPlayerIndex);
 
 bool GetAlwaysUpdateBottomScreen();
 bool GetNeedUpdateViewRotation();
@@ -653,24 +620,10 @@ void SetSelectedGunShop(int Value);
 int GetSelectedGunShop();
 void SetCurrentCameraPlayer(int Value);
 int GetCurrentCameraPlayer();
-void SetGunInInventory(int Value, int inventoryIndex);
-void SetGunInInventoryForNonLocalPlayer(int playerIndex, int Value, int inventoryIndex);
 void SetSendBuyWeapon(bool Value);
 void SetNeedUpdateViewRotation(bool Value);
-void ChangeGunInInventoryForLocalPlayer(int Left);
-void ChangeGunInInventory(int playerIndex, int Left);
 void setPlayersPositionAtSpawns();
-void OnPartyQuit();
-void QuitParty(int option);
 
-void setNewRoundHandWeapon();
-void makeHit(int hitBy, int playerHit, float distance, int shootIndex);
-void buyGun();
-void setSelectedGunInInventory(int playerIndex, int gunIndex);
-void changeCameraPlayerView(bool left);
-void checkCameraPlayerView(bool left, bool *Found, int *FirstFound, int i);
-
-void removeAllPlayers();
 void rumble(int timer);
 bool isLocalPlayerMoving();
 
