@@ -58,7 +58,7 @@ extern float cursorTransparency;
 enum UiMenu
 {
     GAME = 0,
-    // NIFI_MULTIPLAYER = 1, // Unused
+    NIFI_MULTIPLAYER = 1, // Unused
     SCORE_BOARD = 2,
     SHOPCATEGORIES = 3,
     SETTINGS = 4,
@@ -66,7 +66,7 @@ enum UiMenu
     SHOP = 6,
     CONTROLLER = 7,
     MAIN = 8,
-    // MULTIPLAYER_NIFI_WIFI = 9,
+    MULTIPLAYER_NIFI_WIFI = 9,
     CHANGENAME = 10,
     CHAT = 11,
     CONTROLSSETTINGS = 12,
@@ -105,6 +105,7 @@ typedef struct //
     int yPos;
     int xSize;
     int ySize;
+    // bool value;
     bool *value;
 } CheckBox;
 
@@ -183,6 +184,8 @@ void initJoinCreatePartyMenu();
 void initEnterCodeMenu();
 void initOnlineErrorMenu();
 void initStatsMenu();
+void initMultiplayerNifiWifiMenu();
+void initNifiMultiplayerMenu();
 
 void drawKeyboardInput();
 
@@ -212,6 +215,8 @@ void drawJoinCreatePartyMenu();
 void drawEnterCodeMenu();
 void drawOnlineErrorMenu();
 void drawStatsMenu();
+void drawMultiplayerNifiWifiMenu();
+void drawNifiMultiplayerMenu();
 
 void unloadShopMenu();
 void unloadControllerMenu();

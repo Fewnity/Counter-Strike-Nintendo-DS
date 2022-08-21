@@ -461,7 +461,11 @@ void checkStartGameLoop()
 	else if (Connection != UNSELECTED)
 	{
 		// FOR ONLINE
-		JoinParty(JOIN_RANDOM_PARTY);
+		// JoinParty(JOIN_RANDOM_PARTY);
+		if (Connection == DEBUG_IP_1)
+			JoinParty(JOIN_NIFI_PARTY);
+		else
+			JoinParty(CREATE_NIFI_PARTY);
 	}
 	else
 	{
@@ -493,12 +497,32 @@ void JoinParty(int option)
 	if (Connection == UNSELECTED)
 	{
 		Connection = ONLINE_SERVER_IP;
+		//   Connection = DEBUG_IP_2;
 	}
-	// WIFI CODE
-	prepareParty(1);
 
-	// END WIFI CODE
-	initNetwork(option);
+	// SetNeedChangeScreen(true);
+	if (option == CREATE_NIFI_PARTY || option == JOIN_NIFI_PARTY)
+	{
+		prepareParty(2);
+
+		StartSinglePlayer(0);
+		// Unload old map and load new one
+		if (currentMap != currentSelectionMap)
+		{
+			UnLoadMap(currentMap);
+			currentMap = currentSelectionMap;
+			LoadMap(currentMap);
+		}
+		initNetwork(option, true);
+	}
+	else
+	{
+		// WIFI CODE
+		prepareParty(1);
+
+		// END WIFI CODE
+		initNetwork(option, false);
+	}
 }
 
 // Getters / setters

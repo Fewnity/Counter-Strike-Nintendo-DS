@@ -25,8 +25,8 @@ void LoadGrenades()
     AllGrenades[grenadeIndex].maxQuantity[0] = 1;
     AllGrenades[grenadeIndex].maxQuantity[1] = 1;
     AllGrenades[grenadeIndex].maxQuantity[2] = 1;
-    AllGrenades[grenadeIndex].name = "Explosive grenade";
-    AllGrenades[grenadeIndex].description = "The explosive grenade administers high damage";
+    strcpy(AllGrenades[grenadeIndex].name, "Explosive grenade");
+    strcpy(AllGrenades[grenadeIndex].description, "The explosive grenade administers high damage");
     grenadeIndex++;
 
     AllGrenades[grenadeIndex].type = SMOKE;
@@ -38,8 +38,8 @@ void LoadGrenades()
     AllGrenades[grenadeIndex].maxQuantity[0] = 1;
     AllGrenades[grenadeIndex].maxQuantity[1] = 1;
     AllGrenades[grenadeIndex].maxQuantity[2] = 1;
-    AllGrenades[grenadeIndex].name = "Smoke grenade";
-    AllGrenades[grenadeIndex].description = "The smoke grenade creates an area smoke screen.";
+    strcpy(AllGrenades[grenadeIndex].name, "Smoke grenade");
+    strcpy(AllGrenades[grenadeIndex].description, "The smoke grenade creates an area smoke screen.");
     grenadeIndex++;
 
     AllGrenades[grenadeIndex].type = FLASH;
@@ -51,7 +51,7 @@ void LoadGrenades()
     AllGrenades[grenadeIndex].maxQuantity[0] = 2;
     AllGrenades[grenadeIndex].maxQuantity[1] = 1;
     AllGrenades[grenadeIndex].maxQuantity[2] = 1;
-    AllGrenades[grenadeIndex].name = "Flash";
-    AllGrenades[grenadeIndex].description = "The flashbang grenade temporarily blinds anybody";
+    strcpy(AllGrenades[grenadeIndex].name, "Flash");
+    strcpy(AllGrenades[grenadeIndex].description, "The flashbang grenade temporarily blinds anybody");
     grenadeIndex++;
 }

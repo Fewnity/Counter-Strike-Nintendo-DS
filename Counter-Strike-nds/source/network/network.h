@@ -25,63 +25,64 @@ enum JoinType
 {
     JOIN_RANDOM_PARTY = 0,
     CREATE_PRIVATE_PARTY = 1,
-    JOIN_PRIVATE_PARTY = 2
+    JOIN_PRIVATE_PARTY = 2,
+    CREATE_NIFI_PARTY = 3,
+    JOIN_NIFI_PARTY = 4,
 };
 
-enum RequestType
-{
-    PING = 0,
-    STPEP = 1,
-    WALLHIT = 2,
-    BOMBPLACE = 3,
-    BOMBPLACING = 4,
-    BOMBDEFUSE = 5,
-    CURGUN = 6,
-    LEAVE = 7,
-    VOTE = 8,
-    GRENADE = 9,
-    POS = 10,
-    SETNAME = 11,
-    SHOOT = 12,
-    HIT = 13,
-    PARTY = 14,
-    BUY = 15,
-    TEAM = 16,
-    KEY = 17,
-    SETID = 18,
-    TIMER = 19,
-    SETMAP = 20,
-    SETMODE = 21,
-    VOTERESULT = 22,
-    CONFIRM = 23,
-    SETMONEY = 24,
-    SCORE = 25,
-    SCRBOARD = 26,
-    SETSHOPZONE = 27,
-    PARTYROUND = 28,
-    SETHEALTH = 29,
-    SETBOMB = 30,
-    SETCODE = 31,
-    HITSOUND = 32,
-    ERROR = 33,
-    TEXT = 34,
-    TEXTPLAYER = 35,
-    ADDRANGE = 36,
-    ENDGAME = 37,
-    ENDUPDATE = 38,
-    INVTORY = 39,
-    GETBOMB = 40,
-    FRAME = 41,
-    RELOADED = 42,
-    STATUS = 43,
-};
+// enum RequestType
+// {
+//     PING = 0,
+//     STPEP = 1,
+//     WALLHIT = 2,
+//     BOMBPLACE = 3,
+//     BOMBPLACING = 4,
+//     BOMBDEFUSE = 5,
+//     CURGUN = 6,
+//     LEAVE = 7,
+//     VOTE = 8,
+//     GRENADE = 9,
+//     POS = 10,
+//     SETNAME = 11,
+//     SHOOT = 12,
+//     HIT = 13,
+//     PARTY = 14,
+//     BUY = 15,
+//     TEAM = 16,
+//     KEY = 17,
+//     SETID = 18,
+//     TIMER = 19,
+//     SETMAP = 20,
+//     SETMODE = 21,
+//     VOTERESULT = 22,
+//     CONFIRM = 23,
+//     SETMONEY = 24,
+//     SCORE = 25,
+//     SCRBOARD = 26,
+//     SETSHOPZONE = 27,
+//     PARTYROUND = 28,
+//     SETHEALTH = 29,
+//     SETBOMB = 30,
+//     SETCODE = 31,
+//     HITSOUND = 32,
+//     ERROR = 33,
+//     TEXT = 34,
+//     TEXTPLAYER = 35,
+//     ADDRANGE = 36,
+//     ENDGAME = 37,
+//     ENDUPDATE = 38,
+//     INVTORY = 39,
+//     GETBOMB = 40,
+//     FRAME = 41,
+//     RELOADED = 42,
+//     STATUS = 43,
+// };
 
 #define REQUEST_NAME_INDEX 0
 
 #define DEBUG_IP_1_STRING ""
 #define DEBUG_IP_2_STRING ""
-//#define ONLINE_SERVER_IP_STRING "cs.fewnity.com"
-#define ONLINE_SERVER_IP_STRING "88.127.205.50"
+#define ONLINE_SERVER_IP_STRING "cs.fewnity.com"
 #define SERVER_PORT 6003
 #define LOCAL_SERVER_PORT 1080 // For the android server version (but this is not used)
 
@@ -114,9 +115,10 @@ extern bool SendReloaded;
 
 extern int timeOut;
 extern int frameCount;
+extern bool isNifiMode;
 
 void SetPlayer();
-void initNetwork(int option);
+void initNetwork(int option, bool nifiMode);
 void connectToServer(char *url, bool LocalMode, int my_socket, enum JoinType option);
 void ReadServerListData();
 void ReadServerData();

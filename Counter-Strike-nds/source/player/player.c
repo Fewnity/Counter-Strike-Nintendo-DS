@@ -459,6 +459,7 @@ void removeAllPlayers()
     {
         Player *player = &AllPlayers[i];
         player->Id = UNUSED;
+        player->client.id = UNUSED;
         player->Team = SPECTATOR;
 
         // Delete model
@@ -716,6 +717,8 @@ int AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
             player->position.z = -2;
 
             player->Id = NewId;
+            player->client.id = NewId;
+            printf("Player id %d %d created\n", player->Id, player->client.id);
 
             setPlayerHealth(i, 100);
             player->isAi = isAI;

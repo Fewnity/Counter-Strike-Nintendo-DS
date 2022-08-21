@@ -575,10 +575,15 @@ void setQuitButton(bool value)
  */
 void SetTeam(int i)
 {
-    if (applyRules)
+    if (applyRules || (isHost && isNifiMode))
     {
         AllPlayers[0].Team = i;
         UpdateBottomScreenFrameCount += 8;
+        if (isHost && isNifiMode)
+        {
+            SetTempTeam(i);
+            SetSendTeam(true);
+        }
     }
     else if (!applyRules)
     {
@@ -937,9 +942,9 @@ void drawTopScreenUI()
             char CPU2[120] = "";
             for (int i = 0; i < MaxPlayer; i++)
             {
-                sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].Health, AllPlayers[i].armor);
+                // sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].Health, AllPlayers[i].armor);
                 //  sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].Health, AllPlayers[i].armor);
-                // sprintf(CPU2 + strlen(CPU2), "%s t%d i%d i%d\n", AllPlayers[i].name, AllPlayers[i].Team, AllPlayers[i].Id, AllPlayers[i].client.id);
+                sprintf(CPU2 + strlen(CPU2), "%s t%d i%d i%d\n", AllPlayers[i].name, AllPlayers[i].Team, AllPlayers[i].Id, AllPlayers[i].client.id);
                 // sprintf(CPU2 + strlen(CPU2), "%s %d %d\n", AllPlayers[i].name, AllPlayers[i].target, AllPlayers[i].lastSeenTarget);
             }
 
@@ -1995,7 +2000,7 @@ void initMainMenu()
     AllButtons[1].yPos = 87;
     AllButtons[1].xSize = ScreenWidth - 80;
     AllButtons[1].ySize = 24;
-    AllButtons[1].OnClick = &initJoinCreatePartyMenu;
+    AllButtons[1].OnClick = &initMultiplayerNifiWifiMenu;
     AllButtons[1].isHidden = false;
     AllButtons[1].xTextPos = 11;
     AllButtons[1].yTextPos = 12;
@@ -2397,7 +2402,7 @@ void initJoinCreatePartyMenu()
 
     renderFunction = &drawJoinCreatePartyMenu;
 
-    lastOpenedMenu = &initMainMenu;
+    lastOpenedMenu = &initMultiplayerNifiWifiMenu;
 
     setQuitButton(true);
 
@@ -2487,6 +2492,84 @@ void initStatsMenu()
     lastOpenedMenu = &initMainMenu;
 
     setQuitButton(true);
+}
+
+/**
+ * @brief Init multiplayer menu
+ *
+ */
+void initMultiplayerNifiWifiMenu()
+{
+    SetTwoScreenMode(true);
+
+    startChangeMenu(NIFI_MULTIPLAYER);
+
+    renderFunction = &drawMultiplayerNifiWifiMenu;
+
+    lastOpenedMenu = &initMainMenu;
+
+    setQuitButton(true);
+
+    // Set change controls button
+    AllButtons[0].xPos = 36;
+    AllButtons[0].yPos = 44;
+    AllButtons[0].xSize = 190;
+    AllButtons[0].ySize = 32;
+    AllButtons[0].OnClick = &initNifiMultiplayerMenu;
+    AllButtons[0].xTextPos = 8;
+    AllButtons[0].yTextPos = 7;
+    AllButtons[0].text = "Local multiplayer";
+
+    AllButtons[1].xPos = 36;
+    AllButtons[1].yPos = 123;
+    AllButtons[1].xSize = 190;
+    AllButtons[1].ySize = 32;
+    AllButtons[1].OnClick = &initJoinCreatePartyMenu;
+    AllButtons[1].xTextPos = 8;
+    AllButtons[1].yTextPos = 17;
+    AllButtons[1].text = "Online multiplayer";
+
+    SetButtonToShow(2);
+}
+
+/**
+ * @brief Init multiplayer menu
+ *
+ */
+void initNifiMultiplayerMenu()
+{
+    SetTwoScreenMode(true);
+
+    startChangeMenu(NIFI_MULTIPLAYER);
+
+    renderFunction = &drawNifiMultiplayerMenu;
+
+    lastOpenedMenu = &initMultiplayerNifiWifiMenu;
+
+    setQuitButton(true);
+
+    // Set change controls button
+    AllButtons[0].xPos = 36;
+    AllButtons[0].yPos = 44;
+    AllButtons[0].xSize = 190;
+    AllButtons[0].ySize = 32;
+    AllButtons[0].OnClick = &JoinParty;
+    AllButtons[0].parameter = CREATE_NIFI_PARTY;
+    AllButtons[0].xTextPos = 10;
+    AllButtons[0].yTextPos = 7;
+    AllButtons[0].text = "Create a room";
+
+    AllButtons[1].xPos = 36;
+    AllButtons[1].yPos = 92;
+    AllButtons[1].xSize = 190;
+    AllButtons[1].ySize = 32;
+    AllButtons[1].OnClick = &JoinParty;
+    AllButtons[1].parameter = JOIN_NIFI_PARTY;
+    AllButtons[1].xTextPos = 11;
+    AllButtons[1].yTextPos = 13;
+    AllButtons[1].text = "Join a room";
+
+    SetButtonToShow(2);
 }
 
 /**
@@ -2799,7 +2882,7 @@ void drawShopMenu()
     else if (GetShopCategory() == 4) // If current shop category is equipements
     {
         // Gun name
-        printLongConstChar(21, 31, 4, allEquipments[SelectedGunShop - GunCount - shopGrenadeCount].name);
+        printLongText(21, 31, 4, allEquipments[SelectedGunShop - GunCount - shopGrenadeCount].name);
 
         // Gun price
         NE_TextPrint(0,        // Font slot
@@ -2815,12 +2898,12 @@ void drawShopMenu()
                      PriceText);
 
         // Print description
-        printLongConstChar(21, 31, 7, allEquipments[SelectedGunShop - GunCount - shopGrenadeCount].description);
+        printLongText(21, 31, 7, allEquipments[SelectedGunShop - GunCount - shopGrenadeCount].description);
     }
     else if (GetShopCategory() == 5) // If current shop category is grenades
     {
         // Gun name
-        printLongConstChar(21, 31, 4, AllGrenades[SelectedGunShop - GunCount].name);
+        printLongText(21, 31, 4, AllGrenades[SelectedGunShop - GunCount].name);
 
         // Gun price
         NE_TextPrint(0,        // Font slot
@@ -2836,7 +2919,7 @@ void drawShopMenu()
                      PriceText);
 
         // Print description
-        printLongConstChar(21, 31, 7, AllGrenades[SelectedGunShop - GunCount].description);
+        printLongText(21, 31, 7, AllGrenades[SelectedGunShop - GunCount].description);
     }
 }
 
@@ -3112,6 +3195,34 @@ void drawStatsMenu()
     char winCountText2[26];
     sprintf(winCountText2, "Victories: %d", totalWins);
     printLongText(0, 33, 20, winCountText2);
+}
+
+/**
+ * @brief Draw multiplayer menu
+ *
+ */
+void drawMultiplayerNifiWifiMenu()
+{
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 11, 1,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Multiplayer");
+}
+
+/**
+ * @brief Draw multiplayer menu
+ *
+ */
+void drawNifiMultiplayerMenu()
+{
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 11, 1,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Multiplayer");
+
+    printLongText(2, 30, 19, "Note : You can only create one room, CS:DS can't use more than one room at the same time");
 }
 
 /**

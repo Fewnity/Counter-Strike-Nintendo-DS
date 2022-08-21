@@ -15,6 +15,8 @@
 #include "ui.h"
 #include "grenade.h"
 
+#include "nifi.h"
+
 // Math functions
 #include <math.h>
 
@@ -45,6 +47,13 @@
 #include "repeat_bin.h"
 #include "explosion_bin.h"
 #include "smokeSphere_bin.h"
+
+#include "road_bin.h"
+#include "wallWindow_bin.h"
+#include "wall_bin.h"
+#include "DustPart3_1_3ds_bin.h"
+#include "DustPart3_2_3ds_bin.h"
+#include "DustPart3_3_3ds_bin.h"
 
 #include "tutorialMapUnShadowed_3ds_bin.h"
 #include "tutorialMapShadowed_3ds_bin.h"
@@ -403,6 +412,8 @@ typedef struct // Player values
 	int currentShadowCollBox;
 	float lightCoef;
 	int mapVisivilityTimer;
+
+	Client client;
 } Player;
 
 typedef struct // 2D area (box) values for trigger with stairs start height, final height and direction
@@ -454,6 +465,7 @@ typedef struct //
 {
 	void *texture;
 	char name[8];
+	// int action;
 	int xPos;
 	int yPos;
 	int xSize;
@@ -483,6 +495,8 @@ extern int CurrentScopeLevel;
 
 extern int KillTextShowTimer;
 
+// extern NE_Material *TopScreenSpritesMaterials[6];
+
 extern NE_Sprite *TopScreenSprites[2];
 extern NE_Camera *Camera;
 extern NE_Material *PlayerMaterial;
@@ -506,6 +520,7 @@ extern int currentMenu;
 extern NE_Sprite *BottomScreenSprites[1];
 extern NE_Material *GroundMaterial;
 extern NE_Material *GroundMaterialShadowed;
+// extern float CameraAngleY;
 extern float xWithoutYForMap;
 extern float zWithoutYForMap;
 extern float xWithoutYForOcclusionSide1;
@@ -568,6 +583,7 @@ extern int playerWantToStart;
 extern int playerWantToStartLimite;
 
 //////All functions
+// void CalculatePlayerPosition(int PlayerId);
 void GameLoop();
 double map(double x, double in_min, double in_max, double out_min, double out_max);
 int mapInt(int x, int in_min, int in_max, int out_min, int out_max);
@@ -595,6 +611,7 @@ int GetButtonToShow();
 void SetButtonToShow(int value);
 
 void SetWaitForTeamResponse(bool value);
+// void setCameraMapPosition();
 void dropBomb(Player *HittedClient, int hittedPlayerIndex);
 
 bool GetAlwaysUpdateBottomScreen();

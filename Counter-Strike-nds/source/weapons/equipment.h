@@ -24,8 +24,8 @@ typedef struct //
 {
     void *texture;            // Equipment texture for shop
     int Price;                // Equipment price
-    const char *name;         // Equipment name
-    const char *description;  // Equipment description
+    char name[20];            // Equipment name
+    char description[50];     // Equipment description
     enum teamEnum team;       // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     bool isHided;             // Is hided from shop?
     enum EQUIPMENT_ENUM type; // Equipment type

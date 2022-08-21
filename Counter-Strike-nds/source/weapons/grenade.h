@@ -24,8 +24,8 @@ typedef struct //
 {
     void *texture;
     int Price;
-    const char *name;
-    const char *description;
+    char name[20];
+    char description[50];
     enum GRENADE_ENUM type;
     int maxQuantity[3];
     mm_word collisionSound;

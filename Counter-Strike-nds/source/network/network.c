@@ -5,6 +5,7 @@
 // This file is part of Counter Strike Nintendo DS Multiplayer Edition (CS:DS)
 
 #include "../main.h"
+//#include "debug.h"
 #include "sounds.h"
 #include "movements.h"
 #include "grenade.h"
@@ -15,6 +16,7 @@
 #include "party.h"
 #include "player.h"
 #include "security.h"
+#include "nifi.h"
 #include "camera.h"
 
 #include <dswifi9.h>
@@ -65,40 +67,59 @@ char partyCode[PARTY_CODE_LENGTH];
 
 // Is the party private?
 bool isPrivate = false;
+bool isNifiMode = false;
 
-char Values[1024] = "";     // Store all the values received from the wifi and wainting for treatment
-char TempValues[1024] = ""; // Store values that can't be treated yet
-
-void initNetwork(int option)
+void initNetwork(int option, bool nifiMode)
 {
-    // See Wifi_CheckInit to replace my_socket == 0 by !Wifi_CheckInit()
-    // Call Wifi_InitDefault only once (by checking if the socket was already used), or the wifi will not work after that
-    if (my_socket == 0 && !Wifi_InitDefault(WFC_CONNECT))
+    isNifiMode = nifiMode;
+    if (nifiMode)
     {
-        Connection = UNSELECTED;
-        initMainMenu();
-    }
-    else // Then connect to server
-    {
-        my_socket = socket(AF_INET, SOCK_STREAM, 0);
-        if (Connection == DEBUG_IP_1)
+        nifiInit();
+        if (option == JOIN_NIFI_PARTY)
         {
-            connectToServer(DEBUG_IP_1_STRING, false, my_socket, option);
+            tryJoinRoom = true;
+            resetNifiValues();
         }
-        else if (Connection == ONLINE_SERVER_IP)
+        else
         {
-            connectToServer(ONLINE_SERVER_IP_STRING, false, my_socket, option);
-        }
-        else if (Connection == DEBUG_IP_2)
-        {
-            connectToServer(DEBUG_IP_2_STRING, false, my_socket, option);
-        }
-        else if (Connection == LOCAL)
-        {
-            connectToServer("", true, my_socket, option); // Local mode (Android phone with the android server version (unreleased))
+            createRoom();
+            AddNewPlayer(0, true, false);
         }
 
+        connectToServer("", true, my_socket, option); // Local mode (Android phone with the android server version (unreleased))
         Connection = UNSELECTED;
+    }
+    else
+    {
+        // See Wifi_CheckInit to replace my_socket == 0 by !Wifi_CheckInit()
+        // Call Wifi_InitDefault only once (by checking if the socket was already used), or the wifi will not work after that
+        if (my_socket == 0 && !Wifi_InitDefault(WFC_CONNECT))
+        {
+            Connection = UNSELECTED;
+            initMainMenu();
+        }
+        else // Then connect to server
+        {
+            my_socket = socket(AF_INET, SOCK_STREAM, 0);
+            if (Connection == DEBUG_IP_1)
+            {
+                connectToServer(DEBUG_IP_1_STRING, false, my_socket, option);
+            }
+            else if (Connection == ONLINE_SERVER_IP)
+            {
+                connectToServer(ONLINE_SERVER_IP_STRING, false, my_socket, option);
+            }
+            else if (Connection == DEBUG_IP_2)
+            {
+                connectToServer(DEBUG_IP_2_STRING, false, my_socket, option);
+            }
+            else if (Connection == LOCAL)
+            {
+                connectToServer("", true, my_socket, option); // Local mode (Android phone with the android server version (unreleased))
+            }
+
+            Connection = UNSELECTED;
+        }
     }
 }
 
@@ -200,7 +221,109 @@ void treatData()
         }
 
         // Check packet info
-        if (strcmp(arr[REQUEST_NAME_INDEX], "POS") == 0) // Player position update
+        if (strcmp(arr[0], "ROOM") == 0) // Check if the request is about room management
+        {
+            if (isHost) // These request are for the host client
+            {
+                if (strcmp(arr[1], "SCAN") == 0) // A client is searching for a room
+                {
+                    printf("%s SEARCH FOR ROOM\n", arr[2]);
+
+                    // Get the mac address of the client
+                    sprintf(tempMacAddress, arr[2]);
+                    addClient(EMPTY, false);
+                }
+                else if (strcmp(arr[1], "CONFIRM_LISTEN") == 0) // If the client has received host's data
+                {
+                    // Get the id of the client that has received the data
+                    int clientId = intParse(arr[2]);
+
+                    // If the id of the client is the same as the id of current treated client
+                    if (clientId == AllPlayers[speakTo].Id)
+                    {
+                        communicateWithNextClient();
+                    }
+                }
+            }
+            else // These request are for non-host clients
+            {
+                if (strcmp(arr[1], "CONFIRM_JOIN") == 0) // The host said that the local client can join the room
+                {
+                    // Check if the mac address of the local client is the same as the one of the client that wants to join the room
+                    if (strcmp(arr[2], localPlayer->client.macAddress) == 0 && localPlayer->Id == EMPTY)
+                    {
+                        // Get the host id
+                        int hostId = intParse(arr[3]);
+                        int clientId = intParse(arr[4]);
+
+                        AddNewPlayer(clientId, true, false);
+
+                        addClient(hostId, true);
+
+                        printf("JOINED %d'S ROOM, YOUR ID: %d %d\n", hostId, localPlayer->Id, localPlayer->client.id);
+                        tryJoinRoom = false;
+                    }
+                }
+                else if (strcmp(arr[1], "WANTSPEAK") == 0) // The host asked for communication
+                {
+                    int clientId = intParse(arr[2]);
+                    // If the host wants to communicate with the local client
+
+                    if (localPlayer->Id == clientId)
+                    {
+                        lastCommunication = 0;
+                        int messageId = intParse(arr[3]);
+
+                        // If the request wasn't read yet
+                        if (localPlayer->client.lastMessageId < messageId)
+                        {
+                            // Clear temp buffer
+                            strcpy(tempSendBuffer, "");
+                            skipData = false;
+                            localPlayer->client.lastMessageId = messageId;
+                        }
+                        else // If the request was already read
+                        {
+                            // Skip the request data
+                            skipData = true;
+                        }
+
+                        SendDataTo(&AllPlayers[hostIndex].client);
+                    }
+                }
+                else if (strcmp(arr[1], "ADDCLIENTS") == 0) // Add multiples non local players
+                {
+                    int destinatorId = intParse(arr[2]);
+
+                    if (destinatorId == localPlayer->Id)
+                    {
+                        for (int i = 3; i < SplitCount; i++)
+                        {
+                            int FoundId = intParse(arr[i]);
+                            addClient(FoundId, false);
+                        }
+                    }
+                }
+            }
+            //////// Next conditions are for the host and non-host clients
+
+            if (strcmp(arr[1], "QUIT") == 0 && !skipData) // A client quit the party
+            {
+                int clientId = intParse(arr[2]);
+                int destinatorId = intParse(arr[3]);
+
+                if (localPlayer->Id == destinatorId)
+                {
+                    Client *client = getClientById(clientId);
+                    if (client != NULL)
+                    {
+                        removeClient(client);
+                        printf("%d HAS LEFT THE ROOM\n", clientId);
+                    }
+                }
+            }
+        }
+        else if (strcmp(arr[REQUEST_NAME_INDEX], "POS") == 0) // Player position update
         {
             // Get target player id
             int PlayerIdInt = intParse(arr[1]);
@@ -257,6 +380,12 @@ void treatData()
                         AllPlayers[i].cameraAngle = CameraAngleInt;
                         break;
                     }
+
+                if (isHost)
+                {
+                    Client *client = &GetPlayer(PlayerIdInt)->client;
+                    shareRequest(client, POS);
+                }
             }
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "WALLHIT") == 0) // Wall hit position update for hit flash at wall animation
@@ -320,32 +449,39 @@ void treatData()
             // Get gun id
             int ParsedGunId = intParse(arr[2]);
 
-            // Make a sound
-            int Panning, Volume;
-            GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, AllGuns[ParsedGunId].MaxSoundDistance);
-            Player *player = NULL;
-            int index = UNUSED;
-            for (int i = 0; i < MaxPlayer; i++)
-            {
-                if (AllPlayers[i].Id == ParsedPlayerId)
-                {
-                    player = &AllPlayers[i];
-                    index = i;
-                    break;
-                }
-            }
-            if (player != NULL)
-            {
-                if (player->currentGunInInventory == 1 || player->currentGunInInventory == 2)
-                    player->AllAmmoMagazine[player->currentGunInInventory - 1].AmmoCount--;
+            int destinatorId = -1;
+            if (isNifiMode)
+                destinatorId = intParse(arr[3]);
 
-                if (CurrentCameraPlayer == index)
+            if (!isNifiMode || destinatorId == localPlayer->Id)
+            {
+                // Make a sound
+                int Panning, Volume;
+                GetPanning(ParsedPlayerId, &Panning, &Volume, xWithoutYForAudio, zWithoutYForAudio, AllGuns[ParsedGunId].MaxSoundDistance);
+                Player *player = NULL;
+                int index = UNUSED;
+                for (int i = 0; i < MaxPlayer; i++)
                 {
-                    setGunRecoil(player);
+                    if (AllPlayers[i].Id == ParsedPlayerId)
+                    {
+                        player = &AllPlayers[i];
+                        index = i;
+                        break;
+                    }
                 }
+                if (player != NULL)
+                {
+                    if (player->currentGunInInventory == 1 || player->currentGunInInventory == 2)
+                        player->AllAmmoMagazine[player->currentGunInInventory - 1].AmmoCount--;
 
-                if (ParsedGunId < GunCount)
-                    Play3DSound(AllGuns[ParsedGunId].gunSound, Volume, Panning, player);
+                    if (CurrentCameraPlayer == index)
+                    {
+                        setGunRecoil(player);
+                    }
+
+                    if (ParsedGunId < GunCount)
+                        Play3DSound(AllGuns[ParsedGunId].gunSound, Volume, Panning, player);
+                }
             }
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "TimerA") == 0) // Timer changes
@@ -455,38 +591,57 @@ void treatData()
             // Get Team value
             int ParsedIsCounter = intParse(arr[2]);
 
-            // Find player and affect new value
-            for (int i = 0; i < MaxPlayer; i++)
-                if (AllPlayers[i].Id == ParsedPlayerId)
+            int destinatorId = -1;
+            if (isNifiMode)
+                destinatorId = intParse(arr[3]);
+
+            if (!isNifiMode || destinatorId == localPlayer->Id)
+            {
+                Client *client = &GetPlayer(ParsedPlayerId)->client;
+                bool canChange = true;
+                if (isNifiMode && isHost)
                 {
-                    AllPlayers[i].Team = ParsedIsCounter;
-                    UpdatePlayerTexture(i);
-                    break;
+                    tempTeam = ParsedIsCounter;
+                    createRequest(client, client, TEAM);
                 }
-
-            // Update screen if team screen is opened
-            if (currentMenu == SCORE_BOARD)
-            {
-                UpdateBottomScreenFrameCount += 8;
-            }
-            else if (currentMenu == GAME)
-            {
-                initGameMenu();
-            }
-
-            // TODO check this
-            if (localPlayer->Id == ParsedPlayerId)
-            {
-                if (roundState != TRAINING)
-                    changeCameraPlayerView(false);
-
-                if (ParsedIsCounter != -1)
+                if (canChange)
                 {
-                    AllButtons[0].isHidden = false;
+                    // Find player and affect new value
+                    for (int i = 0; i < MaxPlayer; i++)
+                        if (AllPlayers[i].Id == ParsedPlayerId)
+                        {
+                            AllPlayers[i].Team = ParsedIsCounter;
+                            UpdatePlayerTexture(i);
+                            break;
+                        }
+
+                    // Update screen if team screen is opened
+                    if (currentMenu == SCORE_BOARD)
+                    {
+                        UpdateBottomScreenFrameCount += 8;
+                    }
+                    else if (currentMenu == GAME)
+                    {
+                        initGameMenu();
+                    }
+
+                    // TODO check this
+                    if (localPlayer->Id == ParsedPlayerId)
+                    {
+                        if (roundState != TRAINING)
+                            changeCameraPlayerView(false);
+
+                        if (ParsedIsCounter != -1)
+                        {
+                            AllButtons[0].isHidden = false;
+                        }
+                        AllButtons[1].isHidden = false;
+                        AllButtons[2].isHidden = false;
+                        WaitForTeamResponse = false;
+                    }
                 }
-                AllButtons[1].isHidden = false;
-                AllButtons[2].isHidden = false;
-                WaitForTeamResponse = false;
+                if (isHost)
+                    shareRequest(client, TEAM);
             }
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "BOMBPLACE") == 0) // Bomb place update
@@ -857,7 +1012,14 @@ void treatData()
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "BOMBDEFUSE") == 0) // Bomb defuse sound
         {
-            BombDefused = true;
+            int destinatorId = -1;
+            if (isNifiMode)
+                destinatorId = intParse(arr[1]);
+
+            if (!isNifiMode || destinatorId == localPlayer->Id)
+            {
+                BombDefused = true;
+            }
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "ADDRANGE") == 0) // Add multiples non local players
         {
@@ -928,19 +1090,33 @@ void treatData()
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "GRENADE") == 0) // Spawn a player's grenade
         {
-            // Convert chars into ints
-            float XDirection = floatParse(arr[1]);
-            float YDirection = floatParse(arr[2]);
-            float ZDirection = floatParse(arr[3]);
-            int XInt = intParse(arr[4]);
-            int YInt = intParse(arr[5]);
-            int ZInt = intParse(arr[6]);
-            int GrenadeType = intParse(arr[7]);
+            int destinatorId = -1;
+            if (isNifiMode)
+                destinatorId = intParse(arr[9]);
 
-            PhysicalGrenade *newGrenade = CreateGrenade(GrenadeType, 0);
-            if (newGrenade != NULL)
+            if (!isNifiMode || destinatorId == localPlayer->Id)
             {
-                lanchGrenade(newGrenade, XDirection, YDirection, ZDirection, XInt, YInt, ZInt);
+                // Convert chars into ints
+                float XDirection = floatParse(arr[1]);
+                float YDirection = floatParse(arr[2]);
+                float ZDirection = floatParse(arr[3]);
+                int XInt = intParse(arr[4]);
+                int YInt = intParse(arr[5]);
+                int ZInt = intParse(arr[6]);
+                int GrenadeType = intParse(arr[7]);
+                int playerId = intParse(arr[8]);
+
+                PhysicalGrenade *newGrenade = CreateGrenade(GrenadeType, playerId);
+                if (newGrenade != NULL)
+                {
+                    lanchGrenade(newGrenade, XDirection, YDirection, ZDirection, XInt, YInt, ZInt);
+                }
+
+                if (isHost)
+                {
+                    Client *client = &GetPlayer(playerId)->client;
+                    shareRequest(client, GRENADE);
+                }
             }
         }
 
@@ -965,10 +1141,30 @@ void ReadServerData()
     int recvd_len = 0;
     char incoming_buffer[64];
 
+    // TODO CHECK THIS FOR THE ONLINE MODE
+    printf("START READING %d\n", isNifiMode);
+
     // Read a maximum of 64 char in one loop
-    while ((recvd_len = recv(my_socket, incoming_buffer, 63, 0)) != 0) // if recv returns 0, the socket has been closed. (Sometimes yes, sometimes not, lol)
+    while ((!isNifiMode && (recvd_len = recv(my_socket, incoming_buffer, 63, 0)) != 0) || isNifiMode) // if recv returns 0, the socket has been closed. (Sometimes yes, sometimes not, lol)
     {
-        if (recvd_len > 0)
+
+        // If the client is trying to join a room in nifi mode, send a join request to the server
+        if (isNifiMode)
+        {
+            if (Connection == UNSELECTED)
+                break;
+            if (tryJoinRoom)
+            {
+                joinRoomTimer--;
+                if (joinRoomTimer == 0) // Resend the request each time the timer is ended
+                {
+                    scanForRoom();
+                    // Reset the timer
+                    joinRoomTimer = WIFI_TIMEOUT * 5;
+                }
+            }
+        }
+        else if (recvd_len > 0)
         {
             // printf("\n{%d %s}\n", recvd_len, wirelessData);
             timeOut = 0;
@@ -1029,6 +1225,8 @@ void sendDataToServer()
     // Send shoot data for sound/animation for clients
     if (SendLeave)
     {
+        shareRequest(&localPlayer->client, LEAVE);
+
         sprintf(InfoToSend + strlen(InfoToSend), "{%d}", LEAVE);
         SendLeave = false;
     }
@@ -1040,6 +1238,8 @@ void sendDataToServer()
     // If local player need to be updated for other player (59 bytes)
     if (localPlayer->Id != -1 && SendPosition && SendPositionData == 0)
     {
+        shareRequest(&localPlayer->client, POS);
+
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%d;%d;%d;%0.0f}", POS, localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z, (int)localPlayer->Angle, localPlayer->cameraAngle);
 
         SendPosition = false;
@@ -1049,6 +1249,7 @@ void sendDataToServer()
     // Send grenade launch
     if (SendGrenade)
     {
+        shareRequest(&localPlayer->client, GRENADE);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%f;%f;%f}", GRENADE, x, y, z);
         SendGrenade = false;
     }
@@ -1057,6 +1258,7 @@ void sendDataToServer()
     if (SendBombPlace)
     {
         SendBombPlace = false;
+        shareRequest(&localPlayer->client, BOMBPLACE);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%d;%d;%d}", BOMBPLACE, (int)(BombPosition.x * 4096.0), (int)(BombPosition.y * 4096.0), (int)(BombPosition.z * 4096.0), BombPosition.r);
     }
 
@@ -1064,6 +1266,7 @@ void sendDataToServer()
     if (SendBombDefused)
     {
         SendBombDefused = false;
+        shareRequest(&localPlayer->client, BOMBDEFUSE);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d}", BOMBDEFUSE);
     }
 
@@ -1071,12 +1274,14 @@ void sendDataToServer()
     if (SendBombPlacing)
     {
         SendBombPlacing = false;
+        shareRequest(&localPlayer->client, BOMBPLACING);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d}", BOMBPLACING);
     }
 
     // Send team data
     if (SendTeam)
     {
+        shareRequest(&localPlayer->client, TEAM);
         SendTeam = false;
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d}", TEAM, tempTeam);
         tempTeam = -1;
@@ -1086,6 +1291,7 @@ void sendDataToServer()
     if (SendPing)
     {
         SendPing = false;
+        // shareRequest(&localPlayer->client, PING);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d}", PING);
     }
 
@@ -1093,6 +1299,7 @@ void sendDataToServer()
     if (SendBuyWeapon)
     {
         SendBuyWeapon = false;
+        shareRequest(&localPlayer->client, BUY);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d}", BUY, GetSelectedGunShop());
     }
 
@@ -1100,6 +1307,7 @@ void sendDataToServer()
     if (SendReloaded)
     {
         SendReloaded = false;
+        shareRequest(&localPlayer->client, RELOADED);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d}", RELOADED);
     }
 
@@ -1107,12 +1315,14 @@ void sendDataToServer()
     if (SendSelectedGun)
     {
         SendSelectedGun = false;
+        shareRequest(&localPlayer->client, CURGUN);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d}", CURGUN, localPlayer->currentGunInInventory);
     }
 
     // Send shoot data for sound/animation for clients
     if (SendShoot)
     {
+        shareRequest(&localPlayer->client, SHOOT);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d}", SHOOT);
         SendShoot = false;
     }
@@ -1131,6 +1341,7 @@ void sendDataToServer()
     // Send hit data
     if (sendHitClient)
     {
+        shareRequest(&localPlayer->client, HIT);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d", HIT);
         for (int i = 0; i < FLASH_MODELS_COUNT; i++)
         {
@@ -1147,6 +1358,7 @@ void sendDataToServer()
     if (SendVoteStartNow)
     {
         SendVoteStartNow = false;
+        shareRequest(&localPlayer->client, VOTE);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;0}", VOTE);
     }
 
@@ -1154,6 +1366,7 @@ void sendDataToServer()
     if (SendWallHit)
     {
         SendWallHit = false;
+        shareRequest(&localPlayer->client, WALLHIT);
         for (int i = 0; i < getPlayerCurrentGun(localPlayer).bulletCountPerShoot; i++)
         {
             sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%d;%d}", WALLHIT, WallHitXPos[i], WallHitYPos[i], WallHitZPos[i]);
@@ -1164,6 +1377,7 @@ void sendDataToServer()
     if (SendPlayerName)
     {
         SendPlayerName = false;
+        shareRequest(&localPlayer->client, SETNAME);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%s}", SETNAME, localPlayer->name);
     }
 
@@ -1174,9 +1388,11 @@ void sendDataToServer()
 
         u8 macAddress[6];
         Wifi_GetData(WIFIGETDATA_MACADDRESS, 6, macAddress);
+        shareRequest(&localPlayer->client, KEY);
 
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%02X%02X%02X%02X%02X%02X;%s;%s}", KEY, getKeyResponse(serverKey), macAddress[0], macAddress[1], macAddress[2], macAddress[3], macAddress[4], macAddress[5], localPlayer->name, GAME_VERSION);
 
+        shareRequest(&localPlayer->client, PARTY);
         if (partyOption == JOIN_PRIVATE_PARTY)
             sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%s}", PARTY, partyOption, partyCode);
         else
@@ -1187,12 +1403,13 @@ void sendDataToServer()
     if (SendGetDroppedBomb)
     {
         SendGetDroppedBomb = false;
+        shareRequest(&localPlayer->client, GETBOMB);
         sprintf(InfoToSend + strlen(InfoToSend), "{%d}", GETBOMB);
     }
 
     // Get string data length
     int InfoLentgh = strlen(InfoToSend);
-    if (InfoLentgh != 0)
+    if (InfoLentgh != 0 && !isNifiMode)
     {
         // Send the current frame
         char tmp[20];
