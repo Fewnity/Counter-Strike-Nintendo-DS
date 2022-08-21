@@ -77,6 +77,7 @@ void initNetwork(int option, bool nifiMode)
         nifiInit();
         if (option == JOIN_NIFI_PARTY)
         {
+            printf("\x1B[31mSTART SCAN %d\x1B[37m", tryJoinRoom);
             tryJoinRoom = true;
             resetNifiValues();
         }
@@ -338,53 +339,55 @@ void treatData()
 
             int AngleInt = intParse(arr[5]);
             int CameraAngleInt = intParse(arr[6]);
+            int destinatorId = -1;
+            if (isNifiMode)
+                destinatorId = intParse(arr[7]);
 
-            // If new position is for the local player
-            if (localPlayer->Id == PlayerIdInt)
+            if (!isNifiMode || destinatorId == localPlayer->Id)
             {
-                // Set new position and teleport player
-                localPlayer->position.x = XFloat;
-                localPlayer->position.y = YFloat;
-                localPlayer->position.z = ZFloat;
-                localPlayer->Angle = AngleInt;
-                localPlayer->PlayerPhysic->xspeed = 0;
-                localPlayer->PlayerPhysic->yspeed = 0;
-                localPlayer->PlayerPhysic->zspeed = 0;
-                NE_ModelSetCoord(localPlayer->PlayerModel, localPlayer->position.x, localPlayer->position.y, localPlayer->position.z);
-                ForceUpdateLookRotation(localPlayer->cameraAngle);
-            }
-            else
-            {
-                // Find player with unique ID to update his informations
-                for (int i = 1; i < MaxPlayer; i++)
-                    if (AllPlayers[i].Id == PlayerIdInt)
-                    {
-                        // If player has no position, teleport the player to new updated position (0 default position)
-                        if (AllPlayers[i].lerpDestination.x == 0)
-                        {
-                            AllPlayers[i].position.x = XFloat;
-                            AllPlayers[i].position.y = YFloat;
-                            AllPlayers[i].position.z = ZFloat;
-                            AllPlayers[i].Angle = AngleInt;
-                        }
-
-                        // Set player destination
-                        AllPlayers[i].lerpDestination.x = XFloat;
-                        AllPlayers[i].lerpDestination.y = YFloat;
-                        AllPlayers[i].lerpDestination.z = ZFloat;
-
-                        AllPlayers[i].AngleDestination = AngleInt;
-
-                        // if (CurrentCameraPlayer == i)
-                        // CameraAngleY = CameraAngleInt;
-                        AllPlayers[i].cameraAngle = CameraAngleInt;
-                        break;
-                    }
-
-                if (isHost)
+                // If new position is for the local player
+                if (localPlayer->Id == PlayerIdInt)
                 {
-                    Client *client = &GetPlayer(PlayerIdInt)->client;
-                    shareRequest(client, POS);
+                    // Set new position and teleport player
+                    localPlayer->position.x = XFloat;
+                    localPlayer->position.y = YFloat;
+                    localPlayer->position.z = ZFloat;
+                    localPlayer->Angle = AngleInt;
+                    localPlayer->PlayerPhysic->xspeed = 0;
+                    localPlayer->PlayerPhysic->yspeed = 0;
+                    localPlayer->PlayerPhysic->zspeed = 0;
+                    NE_ModelSetCoord(localPlayer->PlayerModel, localPlayer->position.x, localPlayer->position.y, localPlayer->position.z);
+                    ForceUpdateLookRotation(localPlayer->cameraAngle);
+                }
+                else
+                {
+                    // Find player with unique ID to update his informations
+                    for (int i = 1; i < MaxPlayer; i++)
+                    {
+                        if (AllPlayers[i].Id == PlayerIdInt)
+                        {
+                            // If player has no position, teleport the player to new updated position (0 default position)
+                            if (AllPlayers[i].lerpDestination.x == 0)
+                            {
+                                AllPlayers[i].position.x = XFloat;
+                                AllPlayers[i].position.y = YFloat;
+                                AllPlayers[i].position.z = ZFloat;
+                                AllPlayers[i].Angle = AngleInt;
+                            }
+
+                            // Set player destination
+                            AllPlayers[i].lerpDestination.x = XFloat;
+                            AllPlayers[i].lerpDestination.y = YFloat;
+                            AllPlayers[i].lerpDestination.z = ZFloat;
+
+                            AllPlayers[i].AngleDestination = AngleInt;
+
+                            AllPlayers[i].cameraAngle = CameraAngleInt;
+
+                            shareRequest(&AllPlayers[i].client, POS);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -1152,12 +1155,16 @@ void ReadServerData()
         if (isNifiMode)
         {
             if (Connection == UNSELECTED)
+            {
+                printf("BREAK");
                 break;
+            }
             if (tryJoinRoom)
             {
                 joinRoomTimer--;
                 if (joinRoomTimer == 0) // Resend the request each time the timer is ended
                 {
+                    printf("SCAN %d", tryJoinRoom);
                     scanForRoom();
                     // Reset the timer
                     joinRoomTimer = WIFI_TIMEOUT * 5;
@@ -1238,6 +1245,7 @@ void sendDataToServer()
     // If local player need to be updated for other player (59 bytes)
     if (localPlayer->Id != -1 && SendPosition && SendPositionData == 0)
     {
+        printf("SEND POS");
         shareRequest(&localPlayer->client, POS);
 
         sprintf(InfoToSend + strlen(InfoToSend), "{%d;%d;%d;%d;%d;%0.0f}", POS, localPlayer->PlayerModel->x, localPlayer->PlayerModel->y, localPlayer->PlayerModel->z, (int)localPlayer->Angle, localPlayer->cameraAngle);

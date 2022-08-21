@@ -151,8 +151,8 @@ void shareRequest(Client *clientSender, enum RequestType requestType)
 		for (int clientIndex = 1; clientIndex < MAX_CLIENT; clientIndex++)
 		{
 			Client *clientToUpdate = &AllPlayers[clientIndex].client;
-			printf("%s%d %d|%s", CYAN, clientIndex, clientToUpdate->id, WHITE);
-			// Avoid sending the request to the current treated client
+			// printf("%s%d %d|%s", CYAN, clientIndex, clientToUpdate->id, WHITE);
+			//  Avoid sending the request to the current treated client
 			if (clientSender->id != clientToUpdate->id && clientToUpdate->id != EMPTY)
 			{
 				createRequest(clientSender, clientToUpdate, requestType);
@@ -162,7 +162,7 @@ void shareRequest(Client *clientSender, enum RequestType requestType)
 	else if (clientSender == &localPlayer->client) // Share the request to the host only
 	{
 		Client *clientToUpdate = &AllPlayers[hostIndex].client;
-		printf("%s%d%s", CYAN, hostIndex, WHITE);
+		// printf("%s%d%s", CYAN, hostIndex, WHITE);
 		createRequest(clientSender, clientToUpdate, requestType);
 	}
 }
@@ -183,18 +183,30 @@ void createRequest(Client *clientSender, Client *clientToUpdate, enum RequestTyp
 	if (senderPlayer == NULL)
 		return;
 
-	char buffer[60] = "";
+	char buffer[200] = "";
 
 	switch (requestType)
 	{
 	case POS:
-		if (clientToUpdate->id > 100)
-			printf("%s|WARNING %d|%s", RED, clientToUpdate->id, WHITE);
-		printf("id:%d", clientToUpdate->id);
+		// HERE : clientToUpdate->id looks incorrect in the buffer, but looks correct with a printf of the value
+		// The value looks correct with when remplacing the float by an int
+		// There are some dirty tricks to get the correct value but I have new problems
 		if (senderPlayer == localPlayer)
 			sprintf(buffer, "{POS;%d;%d;%d;%d;%d;%0.0f;%d}", senderPlayer->Id, senderPlayer->PlayerModel->x, senderPlayer->PlayerModel->y, senderPlayer->PlayerModel->z, (int)senderPlayer->Angle, senderPlayer->cameraAngle, clientToUpdate->id);
 		else
 			sprintf(buffer, "{POS;%d;%d;%d;%d;%d;%0.0f;%d}", senderPlayer->Id, (int)(senderPlayer->lerpDestination.x * 4096), (int)(senderPlayer->lerpDestination.y * 4096), (int)(senderPlayer->lerpDestination.z * 4096), (int)senderPlayer->AngleDestination, senderPlayer->cameraAngle, clientToUpdate->id);
+
+		// INT VERSION (WORKING) dirty fix
+		// if (senderPlayer == localPlayer)
+		//  	sprintf(buffer, "{POS;%d;%d;%d;%d;%d;%d;%d}", senderPlayer->Id, senderPlayer->PlayerModel->x, senderPlayer->PlayerModel->y, senderPlayer->PlayerModel->z, (int)senderPlayer->Angle, (int)senderPlayer->cameraAngle, clientToUpdate->id);
+		//  else
+		//  	sprintf(buffer, "{POS;%d;%d;%d;%d;%d;%d;%d}", senderPlayer->Id, (int)(senderPlayer->lerpDestination.x * 4096), (int)(senderPlayer->lerpDestination.y * 4096), (int)(senderPlayer->lerpDestination.z * 4096), (int)senderPlayer->AngleDestination, (int)senderPlayer->cameraAngle, clientToUpdate->id);
+
+		// FLOAT VERSION (WORKING) dirty fix, if clients is moving, the host will scan for room (tryJoinRoom changes value)
+		// if (senderPlayer == localPlayer)
+		// 		snprintf(buffer, sizeof(buffer), "{POS;%d;%d;%d;%d;%d;%0.0f;%d}", senderPlayer->Id, senderPlayer->PlayerModel->x, senderPlayer->PlayerModel->y, senderPlayer->PlayerModel->z, (int)senderPlayer->Angle, senderPlayer->cameraAngle, clientToUpdate->id);
+		// else
+		// 		snprintf(buffer, sizeof(buffer), "{POS;%d;%d;%d;%d;%d;%0.0f;%d}", senderPlayer->Id, (int)(senderPlayer->lerpDestination.x * 4096), (int)(senderPlayer->lerpDestination.y * 4096), (int)(senderPlayer->lerpDestination.z * 4096), (int)senderPlayer->AngleDestination, senderPlayer->cameraAngle, clientToUpdate->id);
 		break;
 	case TEAM:
 		sprintf(buffer, "{TEAM;%d;%d;%d}", clientSender->id, tempTeam, clientToUpdate->id);
@@ -479,14 +491,16 @@ void managerServer()
  * @param client client to add data to
  * @param data data to add
  */
-void AddDataTo(Client *client, const char *data)
+void AddDataTo(Client *client, char *data)
 {
 	if (client != NULL && client->id != EMPTY && strlen(data) != 0)
 	{
-		// printf("%sSEND BUF OLD : %s%s\n", RED, client->sendBuffer, WHITE);
+		// printf("AddDataTo : %s\n", data);
+		//  printf("%sSEND BUF OLD : %s%s\n", RED, client->sendBuffer, WHITE);
 		sprintf(client->sendBuffer + strlen(client->sendBuffer), "%s", data);
 		// sprintf(client->sendBuffer, "%s", data);
 		printf("%sSEND BUF : %s%s\n", YELLOW, client->sendBuffer, WHITE);
+		// printf("%sSEND BUF : %s\n", YELLOW, WHITE);
 	}
 }
 
@@ -513,6 +527,7 @@ void SendDataTo(Client *client)
 		sprintf(tempSendBuffer + strlen(tempSendBuffer), "%s", client->sendBuffer);
 
 		strcpy(client->sendBuffer, "");
+		client->sendBuffer[0] = '\0';
 	}
 
 	// Send data

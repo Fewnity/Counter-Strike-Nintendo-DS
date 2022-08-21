@@ -101,7 +101,7 @@ void createRoom();
 void scanForRoom();
 void addClient(int id, bool addHost);
 void SendDataTo(Client *client);
-void AddDataTo(Client *client, const char *data);
+void AddDataTo(Client *client, char *data);
 void removeClient(Client *client);
 void resetClientValues(Client *client);
 void managerServer();
