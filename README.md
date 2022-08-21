@@ -3,7 +3,7 @@
 
 # !!! WARNING !!!
 This branch has Nifi support, but with issues that I can't fix, I don't know the problem. Maybe you can help me.<br/>
-My problem is located in network/nifi.c, when a client is moving, the host sends the client's position to all other clients.<br/>
+My problem is located in network/nifi.c in the **createRequest** function, when a client is moving, the host sends the client's position to all other clients.<br/>
 To create the request buffer I'm using **sprintf** and at the end of the buffer I'm adding the client to update id (clientToUpdate->id).<br/>
 But this value is absolutely wrong in the buffer, exemple : clientToUpdate->id = 3 and the text buffer is {POS;....;1205062516} but If I'm doing a printf to print the value alone at screen, clientToUpdate->id looks good.<br/>
 I think my code is making a buffer overflow or is trying to acces an unexisting value somewhere (maybe the issue is caused by something else) because some variable is changing randomly.<br/>
