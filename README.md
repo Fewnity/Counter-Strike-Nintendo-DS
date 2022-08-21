@@ -1,14 +1,6 @@
 # Counter Strike Nintendo DS
 **Counter Strike demake on Nintendo DS with online multiplayer** (Works on **emulator** and on **real hardware**).
 
-# !!! WARNING !!!
-This branch has Nifi support, but with issues that I can't fix, I don't know the problem. Maybe you can help me.<br/>
-My problem is located in network/nifi.c, when a client is moving, the host sends the client's position to all other clients.<br/>
-To create the request buffer I'm using **sprintf** and at the end of the buffer I'm adding the client to update id (clientToUpdate->id).<br/>
-But this value is absolutely wrong in the buffer, exemple : clientToUpdate->id = 3 and the text buffer is {POS;....;1205062516} but If I'm doing a printf to print the value alone at screen, clientToUpdate->id looks good.<br/>
-I think my code is making a buffer overflow or is trying to acces an unexisting value somewhere (maybe the issue is caused by something else) because some variable is changing randomly.<br/>
-**Need help!** (To test the code, you need Melon DS, you can enable the debug mode by holding Select while starting the game (you will get a back screen and some texts)in the main menu you can click on B to join a Nifi Room and Y to create a room, you need to join a team to move).<br/>
-
 For **multiplayer** on **emulator**, please use [melonDS](https://melonds.kuribo64.net/downloads.php).<br/>
 There is no emulator with **online** support on **Android** at this time.<br/>
 **Ad hoc (Ni-Fi) multiplayer** is not supported (I'm looking for help with that!)<br/>
