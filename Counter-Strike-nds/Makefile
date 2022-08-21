@@ -21,8 +21,8 @@ include $(DEVKITARM)/ds_rules
 #---------------------------------------------------------------------------------
 TARGET   := $(shell basename $(CURDIR))
 BUILD    := build
-SOURCES  := source
-INCLUDES := include
+SOURCES  := source $(wildcard source/*) $(wildcard source/*/*)
+INCLUDES := include $(dir $(wildcard source/*)) $(dir $(wildcard source/*/*))
 DATA     := data
 GRAPHICS :=
 AUDIO    := audio
@@ -66,7 +66,7 @@ endif
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS := $(LIBNDS) $(PORTLIBS) $(DEVKITPRO)/nitro-engine
+LIBDIRS := ../libs $(LIBNDS) $(PORTLIBS) $(DEVKITPRO)/nitro-engine
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
