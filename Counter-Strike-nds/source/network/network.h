@@ -80,8 +80,7 @@ enum RequestType
 
 #define DEBUG_IP_1_STRING ""
 #define DEBUG_IP_2_STRING ""
-//#define ONLINE_SERVER_IP_STRING "cs.fewnity.com"
-#define ONLINE_SERVER_IP_STRING "88.127.205.50"
+#define ONLINE_SERVER_IP_STRING "cs.fewnity.com"
 #define SERVER_PORT 6003
 #define LOCAL_SERVER_PORT 1080 // For the android server version (but this is not used)
 
