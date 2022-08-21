@@ -9,6 +9,9 @@ But this value is absolutely wrong in the buffer, exemple : clientToUpdate->id =
 I think my code is making a buffer overflow or is trying to acces an unexisting value somewhere (maybe the issue is caused by something else) because some variable is changing randomly.<br/>
 **Need help!** (To test the code, you need Melon DS, you can enable the debug mode by holding Select while starting the game (you will get a back screen and some texts)in the main menu you can click on B to join a Nifi Room and Y to create a room, you need to join a team to move).<br/>
 
+I'm using my Nifi template as base, maybe the problem is here but the template alone is working good : https://github.com/Fewnity/Nintendo-DS-Nifi-Template <br/>
+The precompiled nifi lib is from here : https://github.com/Fewnity/dswifi
+
 For **multiplayer** on **emulator**, please use [melonDS](https://melonds.kuribo64.net/downloads.php).<br/>
 There is no emulator with **online** support on **Android** at this time.<br/>
 **Ad hoc (Ni-Fi) multiplayer** is not supported (I'm looking for help with that!)<br/>
