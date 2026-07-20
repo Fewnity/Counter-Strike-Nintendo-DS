@@ -43,6 +43,84 @@ void LoadGuns()
     AllGuns[gunIndex].name = "Knife";
     gunIndex++;
 
+    // Glock-18
+    AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.75;
+    AllGuns[gunIndex].Damage = 24;
+    AllGuns[gunIndex].texture = (void *)glock18_bin;
+    AllGuns[gunIndex].holdFireButton = false;
+    AllGuns[gunIndex].Price = 400;
+    AllGuns[gunIndex].gunSound = SFX_GLOCK18;
+    AllGuns[gunIndex].WalkSpeed = LIGHT_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].scopeId = -1;
+    AllGuns[gunIndex].gunCategory = PISTOLS; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].team = BOTH;     // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].MagazineCapacity = 20;
+    AllGuns[gunIndex].MaxAmmoCount = 120;
+    AllGuns[gunIndex].ReloadTime = 136; // 2.27 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = 17;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 9;
+    AllGuns[gunIndex].isBigGun = false;
+    AllGuns[gunIndex].MaxSoundDistance = 0.25;
+    AllGuns[gunIndex].penetration = 52;
+    AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
+    AllGuns[gunIndex].name = "Glock-18";
+    gunIndex++;
+
+    // USP
+    AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.79;
+    AllGuns[gunIndex].Damage = 29;
+    AllGuns[gunIndex].texture = (void *)uspsilencer_bin;
+    AllGuns[gunIndex].holdFireButton = false;
+    AllGuns[gunIndex].Price = 500;
+    AllGuns[gunIndex].gunSound = SFX_USP;
+    AllGuns[gunIndex].WalkSpeed = LIGHT_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].scopeId = -1;
+    AllGuns[gunIndex].gunCategory = PISTOLS;    // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].team = BOTH; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].MagazineCapacity = 12;
+    AllGuns[gunIndex].MaxAmmoCount = 100;
+    AllGuns[gunIndex].ReloadTime = 162; // 2.7 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = 9;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 6;
+    AllGuns[gunIndex].isBigGun = false;
+    AllGuns[gunIndex].MaxSoundDistance = 0.25;
+    AllGuns[gunIndex].penetration = 50;
+    AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
+    AllGuns[gunIndex].name = "USP";
+    gunIndex++;
+
+    // P228
+    AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.8;
+    AllGuns[gunIndex].Damage = 31;
+    AllGuns[gunIndex].texture = (void *)p228_bin;
+    AllGuns[gunIndex].holdFireButton = false;
+    AllGuns[gunIndex].Price = 600;
+    AllGuns[gunIndex].gunSound = SFX_P228;
+    AllGuns[gunIndex].WalkSpeed = LIGHT_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].scopeId = -1;
+    AllGuns[gunIndex].gunCategory = PISTOLS; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].team = BOTH;           // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].MagazineCapacity = 13;
+    AllGuns[gunIndex].MaxAmmoCount = 52;
+    AllGuns[gunIndex].ReloadTime = 162; // 2.7 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = 19;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 10;
+    AllGuns[gunIndex].isBigGun = false;
+    AllGuns[gunIndex].MaxSoundDistance = 0.25;
+    AllGuns[gunIndex].penetration = 62.5;
+    AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 20;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
+    AllGuns[gunIndex].name = "P228";
+    gunIndex++;
+
     // Desert Eagle
     AllGuns[gunIndex].fireRate = 13; // 1 / 267 * 3600
     AllGuns[gunIndex].DamageFalloff = 0.81;
@@ -120,84 +198,6 @@ void LoadGuns()
     AllGuns[gunIndex].maxBotShootDisance = 20;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "Five SeveN";
-    gunIndex++;
-
-    // Glock-18
-    AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.75;
-    AllGuns[gunIndex].Damage = 24;
-    AllGuns[gunIndex].texture = (void *)glock18_bin;
-    AllGuns[gunIndex].holdFireButton = false;
-    AllGuns[gunIndex].Price = 400;
-    AllGuns[gunIndex].gunSound = SFX_GLOCK18;
-    AllGuns[gunIndex].WalkSpeed = LIGHT_WEAPON_WALK_SPEED;
-    AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = PISTOLS; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].team = TERRORISTS;     // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    AllGuns[gunIndex].MagazineCapacity = 20;
-    AllGuns[gunIndex].MaxAmmoCount = 120;
-    AllGuns[gunIndex].ReloadTime = 136; // 2.27 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 17;
-    AllGuns[gunIndex].yMuzzleFlashOffset = 9;
-    AllGuns[gunIndex].isBigGun = false;
-    AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 52;
-    AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 20;
-    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
-    AllGuns[gunIndex].name = "Glock-18";
-    gunIndex++;
-
-    // P228
-    AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.8;
-    AllGuns[gunIndex].Damage = 31;
-    AllGuns[gunIndex].texture = (void *)p228_bin;
-    AllGuns[gunIndex].holdFireButton = false;
-    AllGuns[gunIndex].Price = 600;
-    AllGuns[gunIndex].gunSound = SFX_P228;
-    AllGuns[gunIndex].WalkSpeed = LIGHT_WEAPON_WALK_SPEED;
-    AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = PISTOLS; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].team = BOTH;           // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    AllGuns[gunIndex].MagazineCapacity = 13;
-    AllGuns[gunIndex].MaxAmmoCount = 52;
-    AllGuns[gunIndex].ReloadTime = 162; // 2.7 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 19;
-    AllGuns[gunIndex].yMuzzleFlashOffset = 10;
-    AllGuns[gunIndex].isBigGun = false;
-    AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 62.5;
-    AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 20;
-    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
-    AllGuns[gunIndex].name = "P228";
-    gunIndex++;
-
-    // USP
-    AllGuns[gunIndex].fireRate = 9; // 1 / 400 * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.79;
-    AllGuns[gunIndex].Damage = 29;
-    AllGuns[gunIndex].texture = (void *)uspsilencer_bin;
-    AllGuns[gunIndex].holdFireButton = false;
-    AllGuns[gunIndex].Price = 500;
-    AllGuns[gunIndex].gunSound = SFX_USP;
-    AllGuns[gunIndex].WalkSpeed = LIGHT_WEAPON_WALK_SPEED;
-    AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = PISTOLS;    // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].team = COUNTERTERRORISTS; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    AllGuns[gunIndex].MagazineCapacity = 12;
-    AllGuns[gunIndex].MaxAmmoCount = 100;
-    AllGuns[gunIndex].ReloadTime = 162; // 2.7 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 9;
-    AllGuns[gunIndex].yMuzzleFlashOffset = 6;
-    AllGuns[gunIndex].isBigGun = false;
-    AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 50;
-    AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 20;
-    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
-    AllGuns[gunIndex].name = "USP";
     gunIndex++;
 
     // M3
@@ -304,6 +304,32 @@ void LoadGuns()
     AllGuns[gunIndex].name = "MAC-10";
     gunIndex++;
 
+    // TMP
+    AllGuns[gunIndex].fireRate = 4; // 1 / 857  * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.85;
+    AllGuns[gunIndex].Damage = 19;
+    AllGuns[gunIndex].texture = (void *)tmp_bin;
+    AllGuns[gunIndex].holdFireButton = true;
+    AllGuns[gunIndex].Price = 1250;
+    AllGuns[gunIndex].gunSound = SFX_TMP;
+    AllGuns[gunIndex].WalkSpeed = MEDIUM_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].scopeId = -1;
+    AllGuns[gunIndex].gunCategory = SGM; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].team = COUNTERTERRORISTS;       // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].MagazineCapacity = 30;
+    AllGuns[gunIndex].MaxAmmoCount = 120;
+    AllGuns[gunIndex].ReloadTime = 126; // 2.1 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = 2;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 1;
+    AllGuns[gunIndex].isBigGun = true;
+    AllGuns[gunIndex].MaxSoundDistance = 0.25;
+    AllGuns[gunIndex].penetration = 50;
+    AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 17;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
+    AllGuns[gunIndex].name = "TMP";
+    gunIndex++;
+
     // MP5
     AllGuns[gunIndex].fireRate = 5; // 1 / 750 * 3600
     AllGuns[gunIndex].DamageFalloff = 0.84;
@@ -328,58 +354,6 @@ void LoadGuns()
     AllGuns[gunIndex].maxBotShootDisance = 17;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "MP5";
-    gunIndex++;
-
-    // P90
-    AllGuns[gunIndex].fireRate = 4; // 1 / 857 * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.885;
-    AllGuns[gunIndex].Damage = 25;
-    AllGuns[gunIndex].texture = (void *)p90_bin;
-    AllGuns[gunIndex].holdFireButton = true;
-    AllGuns[gunIndex].Price = 2350;
-    AllGuns[gunIndex].gunSound = SFX_P90;
-    AllGuns[gunIndex].WalkSpeed = MEDIUM_WEAPON_WALK_SPEED;
-    AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = SGM; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].team = BOTH;       // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    AllGuns[gunIndex].MagazineCapacity = 50;
-    AllGuns[gunIndex].MaxAmmoCount = 100;
-    AllGuns[gunIndex].ReloadTime = 198; // 3.3 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 5;
-    AllGuns[gunIndex].yMuzzleFlashOffset = 6;
-    AllGuns[gunIndex].isBigGun = true;
-    AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 75;
-    AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 17;
-    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
-    AllGuns[gunIndex].name = "P90";
-    gunIndex++;
-
-    // TMP
-    AllGuns[gunIndex].fireRate = 4; // 1 / 857  * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.85;
-    AllGuns[gunIndex].Damage = 19;
-    AllGuns[gunIndex].texture = (void *)tmp_bin;
-    AllGuns[gunIndex].holdFireButton = true;
-    AllGuns[gunIndex].Price = 1250;
-    AllGuns[gunIndex].gunSound = SFX_TMP;
-    AllGuns[gunIndex].WalkSpeed = MEDIUM_WEAPON_WALK_SPEED;
-    AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = SGM; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].team = BOTH;       // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    AllGuns[gunIndex].MagazineCapacity = 30;
-    AllGuns[gunIndex].MaxAmmoCount = 120;
-    AllGuns[gunIndex].ReloadTime = 126; // 2.1 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 2;
-    AllGuns[gunIndex].yMuzzleFlashOffset = 1;
-    AllGuns[gunIndex].isBigGun = true;
-    AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 50;
-    AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 17;
-    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
-    AllGuns[gunIndex].name = "TMP";
     gunIndex++;
 
     // UMP-45
@@ -408,56 +382,30 @@ void LoadGuns()
     AllGuns[gunIndex].name = "UMP-45";
     gunIndex++;
 
-    // AK-47
-    AllGuns[gunIndex].fireRate = 6; // 1 / 600 * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.98;
-    AllGuns[gunIndex].Damage = 35;
-    AllGuns[gunIndex].texture = (void *)ak47_bin;
+    // P90
+    AllGuns[gunIndex].fireRate = 4; // 1 / 857 * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.885;
+    AllGuns[gunIndex].Damage = 25;
+    AllGuns[gunIndex].texture = (void *)p90_bin;
     AllGuns[gunIndex].holdFireButton = true;
-    AllGuns[gunIndex].Price = 2500;
-    AllGuns[gunIndex].gunSound = SFX_AK47;
-    AllGuns[gunIndex].WalkSpeed = MEDIUM_MEDIUM_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].Price = 2350;
+    AllGuns[gunIndex].gunSound = SFX_P90;
+    AllGuns[gunIndex].WalkSpeed = MEDIUM_WEAPON_WALK_SPEED;
     AllGuns[gunIndex].scopeId = -1;
-    AllGuns[gunIndex].gunCategory = RIFLES; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].team = TERRORISTS;    // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    AllGuns[gunIndex].MagazineCapacity = 30;
-    AllGuns[gunIndex].MaxAmmoCount = 90;
-    AllGuns[gunIndex].ReloadTime = 205; // 2.43 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = 2;
-    AllGuns[gunIndex].yMuzzleFlashOffset = 2;
+    AllGuns[gunIndex].gunCategory = SGM; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].team = BOTH;       // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].MagazineCapacity = 50;
+    AllGuns[gunIndex].MaxAmmoCount = 100;
+    AllGuns[gunIndex].ReloadTime = 198; // 3.3 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = 5;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 6;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 77.5;
+    AllGuns[gunIndex].penetration = 75;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 23;
+    AllGuns[gunIndex].maxBotShootDisance = 17;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0;
-    AllGuns[gunIndex].name = "AK-47";
-    gunIndex++;
-
-    // AUG
-    AllGuns[gunIndex].fireRate = 6; // 1 / 666 * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.96;
-    AllGuns[gunIndex].Damage = 31;
-    AllGuns[gunIndex].texture = (void *)aug_bin;
-    AllGuns[gunIndex].holdFireButton = true;
-    AllGuns[gunIndex].Price = 3500;
-    AllGuns[gunIndex].gunSound = SFX_AUG;
-    AllGuns[gunIndex].WalkSpeed = MEDIUM_MEDIUM_WEAPON_WALK_SPEED;
-    AllGuns[gunIndex].scopeId = 1;
-    AllGuns[gunIndex].gunCategory = RIFLES;     // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].team = COUNTERTERRORISTS; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    AllGuns[gunIndex].MagazineCapacity = 30;
-    AllGuns[gunIndex].MaxAmmoCount = 90;
-    AllGuns[gunIndex].ReloadTime = 228; // 3.8 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = -2;
-    AllGuns[gunIndex].yMuzzleFlashOffset = 0;
-    AllGuns[gunIndex].isBigGun = true;
-    AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 70;
-    AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 23;
-    AllGuns[gunIndex].inaccuracyReductionForBot = 0.5;
-    AllGuns[gunIndex].name = "AUG";
+    AllGuns[gunIndex].name = "P90";
     gunIndex++;
 
     // FAMAS
@@ -512,6 +460,58 @@ void LoadGuns()
     AllGuns[gunIndex].name = "Galil";
     gunIndex++;
 
+    // AK-47
+    AllGuns[gunIndex].fireRate = 6; // 1 / 600 * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.98;
+    AllGuns[gunIndex].Damage = 35;
+    AllGuns[gunIndex].texture = (void *)ak47_bin;
+    AllGuns[gunIndex].holdFireButton = true;
+    AllGuns[gunIndex].Price = 2500;
+    AllGuns[gunIndex].gunSound = SFX_AK47;
+    AllGuns[gunIndex].WalkSpeed = MEDIUM_MEDIUM_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].scopeId = -1;
+    AllGuns[gunIndex].gunCategory = RIFLES; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].team = TERRORISTS;    // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].MagazineCapacity = 30;
+    AllGuns[gunIndex].MaxAmmoCount = 90;
+    AllGuns[gunIndex].ReloadTime = 205; // 2.43 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = 2;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 2;
+    AllGuns[gunIndex].isBigGun = true;
+    AllGuns[gunIndex].MaxSoundDistance = 0.25;
+    AllGuns[gunIndex].penetration = 77.5;
+    AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 23;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0;
+    AllGuns[gunIndex].name = "AK-47";
+    gunIndex++;
+
+    // Scout
+    AllGuns[gunIndex].fireRate = 75; // 1 / 48   * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.98;
+    AllGuns[gunIndex].Damage = 74;
+    AllGuns[gunIndex].texture = (void *)scout_bin;
+    AllGuns[gunIndex].holdFireButton = false;
+    AllGuns[gunIndex].Price = 2750;
+    AllGuns[gunIndex].gunSound = SFX_SCOUT;
+    AllGuns[gunIndex].WalkSpeed = MEDIUM_MEDIUM_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].scopeId = 0;
+    AllGuns[gunIndex].gunCategory = RIFLES; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].team = BOTH;          // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].MagazineCapacity = 10;
+    AllGuns[gunIndex].MaxAmmoCount = 90;
+    AllGuns[gunIndex].ReloadTime = 174; // 2.9 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = -4;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 3;
+    AllGuns[gunIndex].isBigGun = true;
+    AllGuns[gunIndex].MaxSoundDistance = 0.25;
+    AllGuns[gunIndex].penetration = 85;
+    AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 32;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
+    AllGuns[gunIndex].name = "Scout";
+    gunIndex++;
+
     // M4A1
     AllGuns[gunIndex].fireRate = 6; // 1 / 666 * 3600
     AllGuns[gunIndex].DamageFalloff = 0.97;
@@ -536,6 +536,32 @@ void LoadGuns()
     AllGuns[gunIndex].maxBotShootDisance = 23;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0;
     AllGuns[gunIndex].name = "M4A1";
+    gunIndex++;
+
+    // AUG
+    AllGuns[gunIndex].fireRate = 6; // 1 / 666 * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.96;
+    AllGuns[gunIndex].Damage = 31;
+    AllGuns[gunIndex].texture = (void *)aug_bin;
+    AllGuns[gunIndex].holdFireButton = true;
+    AllGuns[gunIndex].Price = 3500;
+    AllGuns[gunIndex].gunSound = SFX_AUG;
+    AllGuns[gunIndex].WalkSpeed = MEDIUM_MEDIUM_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].scopeId = 1;
+    AllGuns[gunIndex].gunCategory = RIFLES;     // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
+    AllGuns[gunIndex].team = COUNTERTERRORISTS; // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
+    AllGuns[gunIndex].MagazineCapacity = 30;
+    AllGuns[gunIndex].MaxAmmoCount = 90;
+    AllGuns[gunIndex].ReloadTime = 228; // 3.8 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = -2;
+    AllGuns[gunIndex].yMuzzleFlashOffset = 0;
+    AllGuns[gunIndex].isBigGun = true;
+    AllGuns[gunIndex].MaxSoundDistance = 0.25;
+    AllGuns[gunIndex].penetration = 70;
+    AllGuns[gunIndex].bulletCountPerShoot = 1;
+    AllGuns[gunIndex].maxBotShootDisance = 23;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.5;
+    AllGuns[gunIndex].name = "AUG";
     gunIndex++;
 
     // SG 552
@@ -590,30 +616,30 @@ void LoadGuns()
     AllGuns[gunIndex].name = "SG 550";
     gunIndex++;
 
-    // Scout
-    AllGuns[gunIndex].fireRate = 75; // 1 / 48   * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.98;
-    AllGuns[gunIndex].Damage = 74;
-    AllGuns[gunIndex].texture = (void *)scout_bin;
+    // AWP
+    AllGuns[gunIndex].fireRate = 88; // 1 / 41  * 3600
+    AllGuns[gunIndex].DamageFalloff = 0.99;
+    AllGuns[gunIndex].Damage = 115;
+    AllGuns[gunIndex].texture = (void *)awp_bin;
     AllGuns[gunIndex].holdFireButton = false;
-    AllGuns[gunIndex].Price = 2750;
-    AllGuns[gunIndex].gunSound = SFX_SCOUT;
-    AllGuns[gunIndex].WalkSpeed = MEDIUM_MEDIUM_WEAPON_WALK_SPEED;
+    AllGuns[gunIndex].Price = 4750;
+    AllGuns[gunIndex].gunSound = SFX_AWP;
+    AllGuns[gunIndex].WalkSpeed = HEAVY_WEAPON_WALK_SPEED;
     AllGuns[gunIndex].scopeId = 0;
     AllGuns[gunIndex].gunCategory = RIFLES; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
     AllGuns[gunIndex].team = BOTH;          // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
     AllGuns[gunIndex].MagazineCapacity = 10;
-    AllGuns[gunIndex].MaxAmmoCount = 90;
-    AllGuns[gunIndex].ReloadTime = 174; // 2.9 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = -4;
+    AllGuns[gunIndex].MaxAmmoCount = 30;
+    AllGuns[gunIndex].ReloadTime = 222; // 3.7 * 60
+    AllGuns[gunIndex].xMuzzleFlashOffset = -7;
     AllGuns[gunIndex].yMuzzleFlashOffset = 3;
     AllGuns[gunIndex].isBigGun = true;
     AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 85;
+    AllGuns[gunIndex].penetration = 97.5;
     AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 32;
-    AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
-    AllGuns[gunIndex].name = "Scout";
+    AllGuns[gunIndex].maxBotShootDisance = 36;
+    AllGuns[gunIndex].inaccuracyReductionForBot = 0.7;
+    AllGuns[gunIndex].name = "AWP";
     gunIndex++;
 
     // G3SG1
@@ -640,31 +666,5 @@ void LoadGuns()
     AllGuns[gunIndex].maxBotShootDisance = 32;
     AllGuns[gunIndex].inaccuracyReductionForBot = 0.6;
     AllGuns[gunIndex].name = "G3SG1";
-    gunIndex++;
-
-    // AWP
-    AllGuns[gunIndex].fireRate = 88; // 1 / 41  * 3600
-    AllGuns[gunIndex].DamageFalloff = 0.99;
-    AllGuns[gunIndex].Damage = 115;
-    AllGuns[gunIndex].texture = (void *)awp_bin;
-    AllGuns[gunIndex].holdFireButton = false;
-    AllGuns[gunIndex].Price = 4750;
-    AllGuns[gunIndex].gunSound = SFX_AWP;
-    AllGuns[gunIndex].WalkSpeed = HEAVY_WEAPON_WALK_SPEED;
-    AllGuns[gunIndex].scopeId = 0;
-    AllGuns[gunIndex].gunCategory = RIFLES; // 0 pistols, 1 Heavy, 2 sgm, 3 rifles, 4 equipment, 5 grenades
-    AllGuns[gunIndex].team = BOTH;          // 0 for terrorist only, 1 for counter terrorists only, -1 for both teams
-    AllGuns[gunIndex].MagazineCapacity = 10;
-    AllGuns[gunIndex].MaxAmmoCount = 30;
-    AllGuns[gunIndex].ReloadTime = 222; // 3.7 * 60
-    AllGuns[gunIndex].xMuzzleFlashOffset = -7;
-    AllGuns[gunIndex].yMuzzleFlashOffset = 3;
-    AllGuns[gunIndex].isBigGun = true;
-    AllGuns[gunIndex].MaxSoundDistance = 0.25;
-    AllGuns[gunIndex].penetration = 97.5;
-    AllGuns[gunIndex].bulletCountPerShoot = 1;
-    AllGuns[gunIndex].maxBotShootDisance = 36;
-    AllGuns[gunIndex].inaccuracyReductionForBot = 0.7;
-    AllGuns[gunIndex].name = "AWP";
     gunIndex++;
 }

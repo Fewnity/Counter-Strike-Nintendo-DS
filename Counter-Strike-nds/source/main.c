@@ -37,9 +37,8 @@ NE_Model *flashModels[FLASH_MODELS_COUNT];
 
 // Materials
 NE_Material *GroundMaterial = NULL;
-NE_Material *GroundMaterialShadowed = NULL;
+NE_Material *GeneralMaterial = NULL;
 
-//
 //////Players
 Player AllPlayers[MaxPlayer];
 // Player values
@@ -350,7 +349,7 @@ int main(void)
 		// DEBUG show connection mode
 		printf("A : Offline mode\n");				 // 0
 		printf("B : %s\n", DEBUG_IP_1_STRING);		 // 1
-		printf("Y : %s\n", ONLINE_SERVER_IP_STRING); // 2
+		printf("Y : %s\n", IpToGo); // 2
 		printf("X : %s\n", DEBUG_IP_2_STRING);		 // 3
 	}
 
@@ -362,6 +361,7 @@ int main(void)
 		isInTutorial = true;
 		currentSelectionMap = TUTORIAL;
 		StartSinglePlayer(2);
+		MapImgToLoadFunc();
 	}
 	else
 	{
@@ -403,7 +403,7 @@ void checkStartGameLoop()
 		// Add bots
 		if (currentPartyMode != 2)
 		{
-			for (int i = 1; i < MaxPlayer; i++)
+			for (int i = 1; i < amountOfBots; i++)
 				AddNewPlayer(i, false, true);
 		}
 
@@ -444,7 +444,10 @@ void checkStartGameLoop()
 			}
 			UpdatePlayerTexture(i);
 		}
-		AllPlayers[2].Team = AllPlayers[1].Team;
+		if (!equalTeam)
+		{
+			AllPlayers[2].Team = AllPlayers[1].Team;
+		}
 		UpdatePlayerTexture(2);
 
 		setPlayersPositionAtSpawns();

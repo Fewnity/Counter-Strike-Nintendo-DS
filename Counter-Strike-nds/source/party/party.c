@@ -12,9 +12,10 @@
 #include "stats.h"
 #include "camera.h"
 #include "sounds.h"
+#include "draw3d.h"
 
 // Party modes data
-PartyMode allPartyModes[3];
+PartyMode allPartyModes[5];
 
 // Waypoint where the bomb is planted
 int bombPlantedAt = -1;
@@ -24,6 +25,9 @@ int currentDefuserIndex = -1;
 Vector4 droppedBombPositionAndRotation;
 // Is the bomb dropped?
 bool bombDropped = false;
+
+//TopKillCount
+int TopKill = 0;
 
 // Party minutes timer
 int PartyMinutes = 0;
@@ -138,6 +142,64 @@ void AddAllPartyModes()
     allPartyModes[2].limitedShopByZoneAndTimer = false;
     allPartyModes[2].noScore = true;
     allPartyModes[2].infiniteGunAmmo = true;
+
+    // Deathmatch
+    AddPartyMode(3, true, 0, 10000, 10000, 0, 0, 0, 0, 0, 0, 0, 0, false, false, true);
+
+    allPartyModes[3].trainingMinutesDuration = 5;
+    allPartyModes[3].trainingSecondsDuration = 0;
+
+    allPartyModes[3].startRoundMinutesDuration = 0;
+    allPartyModes[3].startRoundSecondsDuration = 10;
+
+    allPartyModes[3].roundMinutesDuration = 0;
+    allPartyModes[3].roundSecondsDuration = 0;
+
+    allPartyModes[3].endRoundMinutesDuration = 0;
+    allPartyModes[3].endRoundSecondsDuration = 5;
+
+    allPartyModes[3].bombWaitingMinutesDuration = 0;
+    allPartyModes[3].bombWaitingSecondsDuration = 40;
+
+    allPartyModes[3].trainingRespawnMinutesDuration = 0;
+    allPartyModes[3].trainingRespawnSecondsDuration = 2;
+
+    allPartyModes[3].spawnWithArmor = true;
+
+    allPartyModes[3].infiniteMoney = true;
+    allPartyModes[3].infiniteTimer = false;
+    allPartyModes[3].limitedShopByZoneAndTimer = false;
+    allPartyModes[3].noScore = false;
+    allPartyModes[3].infiniteGunAmmo = true;
+
+    // GunGame
+    AddPartyMode(4, true, 0, 0, 10000, 0, 0, 0, 0, 0, 0, 0, 0, false, false, true);
+
+    allPartyModes[4].trainingMinutesDuration = 0;
+    allPartyModes[4].trainingSecondsDuration = 0;
+
+    allPartyModes[4].startRoundMinutesDuration = 0;
+    allPartyModes[4].startRoundSecondsDuration = 0;
+
+    allPartyModes[4].roundMinutesDuration = 0;
+    allPartyModes[4].roundSecondsDuration = 0;
+
+    allPartyModes[4].endRoundMinutesDuration = 0;
+    allPartyModes[4].endRoundSecondsDuration = 0;
+
+    allPartyModes[4].bombWaitingMinutesDuration = 0;
+    allPartyModes[4].bombWaitingSecondsDuration = 40;
+
+    allPartyModes[4].trainingRespawnMinutesDuration = 0;
+    allPartyModes[4].trainingRespawnSecondsDuration = 2;
+
+    allPartyModes[4].spawnWithArmor = true;
+
+    allPartyModes[4].infiniteMoney = false;
+    allPartyModes[4].infiniteTimer = true;
+    allPartyModes[4].limitedShopByZoneAndTimer = true;
+    allPartyModes[4].noScore = false;
+    allPartyModes[4].infiniteGunAmmo = true;
 }
 
 /**
@@ -235,39 +297,57 @@ void partyTimerTick()
                         // Change round state
                         if (!PartyStarted)
                         {
-                            // Start party
-                            PartyStarted = true;
-                            onNewRoundStart();
-
-                            // Set new timer
-                            PartyMinutes = allPartyModes[currentPartyMode].startRoundMinutesDuration;
-                            PartySeconds = allPartyModes[currentPartyMode].startRoundSecondsDuration;
-                            shopDisableTimer = SHOP_DISABLE_TIMER;
-                            roundState = WAIT_START;
-
-                            // Reset players
-                            for (int i = 0; i < MaxPlayer; i++)
+                            if(currentPartyMode < 3)
                             {
-                                if (AllPlayers[i].Id == UNUSED)
-                                    continue;
-                                resetPlayer(i);
-                                setPlayerMoney(i, allPartyModes[currentPartyMode].startMoney);
-                                AllPlayers[i].KillCount = 0;
-                                AllPlayers[i].DeathCount = 0;
+                            
+                                // Start party
+                                PartyStarted = true;
+                                onNewRoundStart();
+
+                                // Set new timer
+                                PartyMinutes = allPartyModes[currentPartyMode].startRoundMinutesDuration;
+                                PartySeconds = allPartyModes[currentPartyMode].startRoundSecondsDuration;
+                                shopDisableTimer = SHOP_DISABLE_TIMER;
+                                roundState = WAIT_START;
+
+                                // Reset players
+                                for (int i = 0; i < MaxPlayer; i++)
+                                {
+                                    if (AllPlayers[i].Id == UNUSED)
+                                        continue;
+                                    resetPlayer(i);
+                                    setPlayerMoney(i, allPartyModes[currentPartyMode].startMoney);
+                                    AllPlayers[i].KillCount = 0;
+                                    AllPlayers[i].DeathCount = 0;
+                                }
+
+                                // Update screen if needed
+                                if (currentMenu == SCORE_BOARD)
+                                    UpdateBottomScreenFrameCount += 8;
+
+
+                                // Buy guns for guns
+                                checkShopForBots();
+                                // Give the bomb to a player
+                                if(TwoSites == 1 || TwoSites == 2)
+                                {
+                                    setBombForARandomPlayer();
+                                }
+                                // Set players position to their spawns
+                                setPlayersPositionAtSpawns();
+                                // Put a weapons in the hands of each player
+                                setNewRoundHandWeapon();
                             }
 
-                            // Update screen if needed
-                            if (currentMenu == SCORE_BOARD)
-                                UpdateBottomScreenFrameCount += 8;
+                            //Stop game in Deathmatch
+                            if(currentPartyMode >= 3)
+                            {
+                                PartyStarted = true;
+                                showTopKillPlayer();
+                                removeAllPlayers();
+                                finishParty();
+                            }
 
-                            // Buy guns for guns
-                            checkShopForBots();
-                            // Give the bomb to a player
-                            setBombForARandomPlayer();
-                            // Set players position to their spawns
-                            setPlayersPositionAtSpawns();
-                            // Put a weapons in the hands of each player
-                            setNewRoundHandWeapon();
                         }
                         else if (roundState == WAIT_START)
                         {
@@ -275,10 +355,21 @@ void partyTimerTick()
                             // Set new timer
                             PartyMinutes = allPartyModes[currentPartyMode].roundMinutesDuration;
                             PartySeconds = allPartyModes[currentPartyMode].roundSecondsDuration;
-                            roundState = PLAYING;
+                            if(currentPartyMode >= 3)
+                            {
+                                roundState = TRAINING;
+                            }
+                            else
+                            {
+                                roundState = PLAYING;
+                            }
+
+                            // Play the start round clip
+                            PlayBasicSound(SFX_ZOOM);
                         }
                         else if (roundState == PLAYING)
                         {
+
                             // Stop the round
                             setEndRound();
 
@@ -332,7 +423,10 @@ void partyTimerTick()
                                 resetPlayer(i);
                             }
                             checkShopForBots();
-                            setBombForARandomPlayer();
+                            if(TwoSites == 1 || TwoSites == 2)
+                            {
+                                setBombForARandomPlayer();
+                            }
                             setPlayersPositionAtSpawns();
                             setNewRoundHandWeapon();
                             shopDisableTimer = SHOP_DISABLE_TIMER;
@@ -480,6 +574,40 @@ void CheckTeamDeathCount(int *TerroristsCount, int *CounterTerroristsCount, int 
 }
 
 /**
+ * @brief Gunswitch
+ *
+ * @param shooterPlayerIndex1
+ */
+void GunSwitch(int shooterPlayerIndex1)
+{
+    //GunGameEnd
+    if(AllPlayers[shooterPlayerIndex1].AllGunsInInventory[1] == 24)
+    {
+        PartyStarted = true;
+        showTopKillPlayer();
+        removeAllPlayers();
+        finishParty();
+    }
+
+    //Relode
+    AllPlayers[shooterPlayerIndex1].AllAmmoMagazine[0].AmmoCount = 0;
+    startReloadGun(shooterPlayerIndex1);
+
+    // Set the gun in the inventory
+    AllPlayers[shooterPlayerIndex1].AllGunsInInventory[1] = AllPlayers[shooterPlayerIndex1].AllGunsInInventory[1] + 1;
+    AllPlayers[shooterPlayerIndex1].currentGunInInventory = 1;
+
+    // Reset new gun ammo
+    ResetGunsAmmo(shooterPlayerIndex1);
+
+    // Set the gun texture at screen
+    if (shooterPlayerIndex1 == 0)
+    {
+        UpdateGunTexture();
+    }
+}
+
+/**
  * @brief Check player health after damage
  *
  * @param shooterPlayerIndex Shooter player index
@@ -561,6 +689,22 @@ void checkAfterDamage(int shooterPlayerIndex, int hittedPlayerIndex, bool CheckS
             {
                 // Increase killer kill count
                 killerClient->KillCount++;
+                if(TopKill < killerClient->KillCount)
+                {
+                    TopKill++;
+                }
+
+                if(currentPartyMode == 4)
+                {
+                    if (killerClient != localPlayer)
+                    {
+                        killerClient->KillCount++;
+                    }
+                    if(killerClient->KillCount % 2 == 0) // swithcing guns when your score is divided by 2
+                    {
+                        GunSwitch(shooterPlayerIndex);
+                    }
+                }
                 // if (AllShopElements[killerClient.AllGunsInInventory[killerClient.currentGunInInventory]] is Gun)
                 // AddMoneyTo(killerClient, ((Gun)AllShopElements[killerClient.AllGunsInInventory[killerClient.currentGunInInventory]]).KillMoneyBonus[killerClient.ClientParty.PartyType]);
             }
@@ -644,6 +788,8 @@ void QuitParty(int option)
 {
     initMainMenu();
     OnPartyQuit();
+
+    TopKill = 0;
 }
 
 /**
@@ -664,8 +810,10 @@ void OnPartyQuit()
  */
 void StartSinglePlayer(int partyMode)
 {
+    MapImgToLoadFunc();
     Connection = OFFLINE;
     currentPartyMode = partyMode;
+    
 }
 
 /**

@@ -14,6 +14,7 @@ enum keyboardActionEnum
 {
     KEYBOARD_ACTION_CHANGE_NAME = 0,
     KEYBOARD_ACTION_ENTER_CODE = 1,
+    KEYBOARD_ACTION_ENTER_IP = 2,
 };
 
 extern char tempText[21];

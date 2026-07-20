@@ -398,6 +398,14 @@ void ChangeMenu(int menuId)
     {
         initEnterCodeMenu();
     }
+    else if (menuId == ENTER_IP)
+    {
+        initEnterIPMenu();
+    }
+    else if (menuId == AI_Set)
+    {
+        initEnterIPMenu();
+    }
 }
 
 /**
@@ -553,6 +561,8 @@ void ChangeMap(int Left)
             currentSelectionMap = MAP_COUNT - 1;
     }
 
+    MapImgToLoad = currentSelectionMap;
+
     // Update texture
     NE_PaletteDelete(Palettes[10]);
     NE_MaterialDelete(BottomScreenSpritesMaterials[6]);
@@ -647,6 +657,25 @@ void showPartyEventText(int event)
 
     // Set the timer
     textToShowTimer = 360; // 6sec * 60 frames
+}
+
+/**
+ * @brief Show party event notification
+ *
+ * @param event Event type see TextEnum in ui.h
+ */
+void showTopKillPlayer()
+{
+    for (int i = 0; i < MaxPlayer; i++)
+    {
+        if (AllPlayers[i].KillCount == TopKill)
+        {
+            sprintf(killText, "TThe player {%d%s {hhas won", (int)AllPlayers[i].Team, AllPlayers[i].name);
+
+            KillTextShowTimer = 560;
+            notificationType = 0;
+        }
+    }   
 }
 
 /**
@@ -795,6 +824,29 @@ void drawKeyboardInput()
                      NE_White, // Color
                      code);
     }
+    else if (currentMenu == ENTER_IP)
+    {
+        NE_TextPrint(0,        // Font slot
+                     12, 2,    // Coordinates x(column), y(row)
+                     NE_White, // Color
+                     "Enter IP");
+
+        char ChengedIP[21];
+
+        sprintf(ChengedIP, "%s", tempText);
+
+        int IPLength = strlen(ChengedIP);
+        for (int i = IPLength; i < maxInputLength; i++)
+        {
+            sprintf(ChengedIP + IPLength, "_");
+            IPLength++;
+        }
+
+        NE_TextPrint(0,        // Font slot
+                     9, 12,   // Coordinates x(column), y(row)
+                     NE_White, // Color
+                     ChengedIP);
+    }
 }
 
 /**
@@ -830,7 +882,7 @@ void drawTopScreenUI()
         float mapYPos = map(selectPlayer->position.z, -41, 67, -177, 177);
 
         // Set map position and draw sprite
-        NE_SpriteSetPos(TopScreenSprites[1], ScreenCenterWidth - 170 / 2 + (mapXPos * zWithoutYForMap - mapYPos * xWithoutYForMap) / 2, ScreenCenterHeight - 177 / 2 + 2 + (mapYPos * zWithoutYForMap + mapXPos * xWithoutYForMap) / 2);
+        NE_SpriteSetPos(TopScreenSprites[1], ScreenCenterWidth - 170 / 2 + ((mapXPos * zWithoutYForMap - 3.5) - (mapYPos * xWithoutYForMap - 2)) / 2, ScreenCenterHeight - 177 / 2 + (mapYPos * zWithoutYForMap + mapXPos * xWithoutYForMap) / 2);
         NE_SpriteSetRot(TopScreenSprites[1], (int)selectPlayer->Angle);
         NE_SpriteDraw(TopScreenSprites[1]);
 
@@ -1477,7 +1529,7 @@ void initGameMenu()
     AllButtons[0].xSize = 100;
     AllButtons[0].ySize = 24;
     AllButtons[0].OnClick = &initScoreMenu;
-    AllButtons[0].xTextPos = 12;
+    AllButtons[0].xTextPos = 11;
     AllButtons[0].yTextPos = 14;
     if (localPlayer->Team == SPECTATOR)
         AllButtons[0].text = "Choose team";
@@ -1668,14 +1720,14 @@ void initSettingsMenu()
     setQuitButton(true);
 
     // Set rumble checkbox
-    AllCheckBoxs[0].xPos = 58;
+    AllCheckBoxs[0].xPos = 50;
     AllCheckBoxs[0].yPos = 56;
     AllCheckBoxs[0].xSize = 20;
     AllCheckBoxs[0].ySize = 20;
     AllCheckBoxs[0].value = &useRumble;
 
     // Set show ping checkbox
-    AllCheckBoxs[1].xPos = 180;
+    AllCheckBoxs[1].xPos = 175;
     AllCheckBoxs[1].yPos = 56;
     AllCheckBoxs[1].xSize = 20;
     AllCheckBoxs[1].ySize = 20;
@@ -2090,6 +2142,81 @@ void initControlsSettingsMenu()
 }
 
 /**
+ * @brief Init AI settings menu
+ *
+ */
+void initAISettingsMenu()
+{
+
+    SetTwoScreenMode(true);
+
+    startChangeMenu(AI_Set);
+
+    renderFunction = &drawAISettingsMenu;
+
+    lastOpenedMenu = &initSelectionMapImageMenu;
+
+    setQuitButton(true);
+
+    // Set AI Settings
+    AllButtons[0].xPos = 18;
+    AllButtons[0].yPos = 130;
+    AllButtons[0].xSize = 55;
+    AllButtons[0].ySize = 24;
+    AllButtons[0].OnClick = &setBotAmount4;
+    AllButtons[0].xTextPos = 3;
+    AllButtons[0].yTextPos = 17;
+    AllButtons[0].text = "2 vs 2";
+
+    AllButtons[1].xPos = 100;
+    AllButtons[1].yPos = 130;
+    AllButtons[1].xSize = 55;
+    AllButtons[1].ySize = 24;
+    AllButtons[1].OnClick = &setBotAmount6;
+    AllButtons[1].xTextPos = 13;
+    AllButtons[1].yTextPos = 17;
+    AllButtons[1].text = "3 vs 3";
+
+    AllButtons[2].xPos = 180;
+    AllButtons[2].yPos = 130;
+    AllButtons[2].xSize = 55;
+    AllButtons[2].ySize = 24;
+    AllButtons[2].OnClick = &setBotAmount10;
+    AllButtons[2].xTextPos = 23;
+    AllButtons[2].yTextPos = 17;
+    AllButtons[2].text = "5 vs 5";
+
+    AllCheckBoxs[0].xPos = 50;
+    AllCheckBoxs[0].yPos = 58;
+    AllCheckBoxs[0].xSize = 20;
+    AllCheckBoxs[0].ySize = 20;
+    AllCheckBoxs[0].value = &equalTeam;
+
+    // Set show Anim checkbox
+    AllCheckBoxs[1].xPos = 165;
+    AllCheckBoxs[1].yPos = 58;
+    AllCheckBoxs[1].xSize = 20;
+    AllCheckBoxs[1].ySize = 20;
+    AllCheckBoxs[1].value = &PlayerAnim;
+
+    SetButtonToShow(3);
+    SetCheckBoxToShow(2);
+}
+
+void setBotAmount4()
+{
+    amountOfBots = 4;
+}
+void setBotAmount6()
+{
+    amountOfBots = 6;
+}
+void setBotAmount10()
+{
+    amountOfBots = 10;
+}
+
+/**
  * @brief Init controls change menu
  *
  */
@@ -2304,7 +2431,16 @@ void initSelectionMapImageMenu()
     AllButtons[2].yTextPos = 22;
     AllButtons[2].text = "Start";
 
-    SetButtonToShow(3);
+    AllButtons[3].xPos = 5;
+    AllButtons[3].yPos = 26;
+    AllButtons[3].xSize = 25;
+    AllButtons[3].ySize = 20;
+    AllButtons[3].OnClick = &initAISettingsMenu;
+    AllButtons[3].xTextPos = 1;
+    AllButtons[3].yTextPos = 4;
+    AllButtons[3].text = "Mod";
+
+    SetButtonToShow(4);
 }
 
 /**
@@ -2371,17 +2507,41 @@ void initPartyModeSelectionMenu()
 
     // Multiplayer button
     AllButtons[1].xPos = 40;
-    AllButtons[1].yPos = 119;
+    AllButtons[1].yPos = 88;
     AllButtons[1].xSize = ScreenWidth - 80;
     AllButtons[1].ySize = 24;
     AllButtons[1].OnClick = &StartSinglePlayer;
     AllButtons[1].parameter = 0;
     AllButtons[1].isHidden = false;
     AllButtons[1].xTextPos = 11;
-    AllButtons[1].yTextPos = 16;
+    AllButtons[1].yTextPos = 12;
     AllButtons[1].text = "Competitive";
 
-    SetButtonToShow(2);
+    // Deathmatch
+    AllButtons[2].xPos = 40;
+    AllButtons[2].yPos = 120;
+    AllButtons[2].xSize = ScreenWidth - 80;
+    AllButtons[2].ySize = 24;
+    AllButtons[2].OnClick = &StartSinglePlayer;
+    AllButtons[2].parameter = 3;
+    AllButtons[2].isHidden = false;
+    AllButtons[2].xTextPos = 11;
+    AllButtons[2].yTextPos = 16;
+    AllButtons[2].text = "Deathmatch";
+
+    // Deathmatch
+    AllButtons[3].xPos = 40;
+    AllButtons[3].yPos = 152;
+    AllButtons[3].xSize = ScreenWidth - 80;
+    AllButtons[3].ySize = 24;
+    AllButtons[3].OnClick = &StartSinglePlayer;
+    AllButtons[3].parameter = 4;
+    AllButtons[3].isHidden = false;
+    AllButtons[3].xTextPos = 12;
+    AllButtons[3].yTextPos = 20;
+    AllButtons[3].text = "GunGame";
+
+    SetButtonToShow(4);
     setQuitButton(true);
 }
 
@@ -2431,7 +2591,16 @@ void initJoinCreatePartyMenu()
     AllButtons[2].yTextPos = 19;
     AllButtons[2].text = "Create a private party";
 
-    SetButtonToShow(3);
+    AllButtons[3].xPos = 1;
+    AllButtons[3].yPos = 2;
+    AllButtons[3].xSize = 28;
+    AllButtons[3].ySize = 22;
+    AllButtons[3].OnClick = &initEnterIPMenu;
+    AllButtons[3].xTextPos = 1;
+    AllButtons[3].yTextPos = 1;
+    AllButtons[3].text = "IP";
+
+    SetButtonToShow(4);
 }
 
 /**
@@ -2460,6 +2629,33 @@ void initEnterCodeMenu()
     isUpperCase = true;
     strncpy(tempText, "", 21);
 }
+
+/**
+ * @brief Init enter Ip menu
+ *
+ */
+ void initEnterIPMenu()
+ {
+     SetTwoScreenMode(false);
+ 
+     startChangeMenu(ENTER_IP);
+ 
+     renderFunction = &drawEnterCodeMenu;
+ 
+     isShowingKeyBoard = true;
+     returnToMenuOnCancel = JOIN_CREATE_PARTY;
+     returnToMenuOnSucces = JOIN_CREATE_PARTY;
+     keyboardAction = KEYBOARD_ACTION_ENTER_IP;
+ 
+     onKeyboardCloseCancel = &ChangeMenu;
+     onKeyboardCloseSucces = &ChangeMenu;
+ 
+     maxInputLength = 15;
+     minInputLength = 5;
+     SetCanChangeCase(true);
+     isUpperCase = false;
+     strncpy(tempText, IpToGo, 21);
+ }
 
 /**
  * @brief Init online error menu
@@ -2702,8 +2898,9 @@ void drawSettingsMenu()
                  NE_White, // Color
                  "Keyboard mode");
 
-    printLongText(1, 16, 3, "Use Rumble Pak (causes crash on DSi/3DS)");
-    printLongText(17, 32, 4, "Show ping");
+    printLongText(1, 16, 3, "Use Rumble Pack (cause crash on 3DS)");
+    printLongText(17, 31, 4, "Show Ping");
+    // printLongText(23, 31, 4, "Anim. Model");
 
     char gamePadSensitivityText[29];
     sprintf(gamePadSensitivityText, "Crosshair transparency: %d%%", (int)(*AllSliders[0].value * 100));
@@ -2936,6 +3133,27 @@ void drawControlsSettingsMenu()
     char buttonsSensitivityText[33];
     sprintf(buttonsSensitivityText, "Button sensitivity: %0.1f", *AllSliders[1].value);
     printLongText(2, 16, 13, buttonsSensitivityText);
+}
+
+/**
+ * @brief Draw AI settings menu
+ *
+ */
+void drawAISettingsMenu()
+{
+    // Print texts
+    NE_TextPrint(0,        // Font slot
+                 10, 1,    // Coordinates x(column), y(row)
+                 NE_White, // Color
+                 "Mod settings");
+
+    printLongText(4, 12, 4, "Equal teams:");
+    printLongText(12, 31, 4, "(Causes crashes) -Animated model:");
+    printLongText(19, 33, 20, "(May cause crashes)");
+
+    char aiAmountText[26];
+    sprintf(aiAmountText, "The amount of bots: %d", amountOfBots);
+    printLongText(5, 28, 13, aiAmountText);
 }
 
 /**

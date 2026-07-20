@@ -443,7 +443,7 @@ void SetOnlinelPlayersPositions()
                         // Plant/defuse the bomb if needed
                         if (player->haveBomb || (player->Team == COUNTERTERRORISTS && BombPlanted && !BombDefused && bombPlantedAt == player->LastWayPoint))
                         {
-                            if (player->LastWayPoint == 14 || player->LastWayPoint == 29) // TOTO Replace 14 and 29 by bomb point define
+                            if (player->LastWayPoint == SiteAPoint || player->LastWayPoint == SiteBPoint) // TOTO Replace 14 and 29 by bomb point define
                             {
                                 player->isPlantingBomb = true;
                                 if (!BombDefused && BombPlanted) // Set timer

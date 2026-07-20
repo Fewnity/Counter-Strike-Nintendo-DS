@@ -9,6 +9,9 @@
 #include "input.h"
 #include "tutorial.h"
 #include "stats.h"
+#include "player.h"
+#include "stats.h"
+#include "network.h"
 
 // File system
 #include <fat.h>
@@ -41,6 +44,7 @@ void Save()
     char saveText[512];
     sprintf(saveText, "game_version %s\n", GAME_VERSION);
     sprintf(saveText + strlen(saveText), "player_name %s\n", localPlayer->name);
+    sprintf(saveText + strlen(saveText), "player_ip %s\n", IpToGo);
     sprintf(saveText + strlen(saveText), "use_rumble %d\n", useRumble);
     sprintf(saveText + strlen(saveText), "is_azerty %d\n", isAzerty);
     sprintf(saveText + strlen(saveText), "is_left_controls %d\n", isLeftControls);
@@ -111,6 +115,10 @@ void Load()
             else if (strcmp(word, "player_name") == 0) // Read player name
             {
                 fscanf(savefile, "%s", localPlayer->name);
+            }
+            else if (strcmp(word, "player_ip") == 0) // Read player IP
+            {
+                fscanf(savefile, "%s", IpToGo);
             }
             else if (strcmp(word, "use_rumble") == 0) // Read use rumble
             {

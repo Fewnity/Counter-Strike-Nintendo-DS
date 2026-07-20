@@ -577,6 +577,12 @@ void confirmKeyboard()
                 partyCode[i] = tempText[i];
             }
         }
+        else if (keyboardAction == KEYBOARD_ACTION_ENTER_IP) // Set Ip
+        {
+            strncpy(IpToGo, tempText, IP_LENGTH);
+            uiTimer = 8;
+            actionOfUiTimer = SAVE;
+        }
 
         // Call the succes function
         onKeyboardCloseSucces(returnToMenuOnSucces);

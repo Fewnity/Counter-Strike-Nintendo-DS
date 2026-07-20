@@ -79,6 +79,8 @@ enum UiMenu
     ENTER_CODE = 18,
     ONLINE_ERROR = 19,
     STATS = 20,
+    ENTER_IP = 21,
+    AI_Set = 22,
 };
 
 enum shopCategory
@@ -156,6 +158,8 @@ void showDisconnectedText(int disconnectedPlayerIndex);
 int centerPositionOfAText(int xMin, int xMax, int textLength);
 void stopScanForInput();
 
+void showTopKillPlayer();
+
 void changeMapState();
 void closeMap();
 void setQuitButton(bool value);
@@ -183,6 +187,7 @@ void initJoinCreatePartyMenu();
 void initEnterCodeMenu();
 void initOnlineErrorMenu();
 void initStatsMenu();
+void initEnterIPMenu();
 
 void drawKeyboardInput();
 
@@ -204,6 +209,7 @@ void drawServersMenu();
 void drawChangeNameMenu();
 void drawChatMenu();
 void drawControlsSettingsMenu();
+void drawAISettingsMenu();
 void drawControlsChangeMenu();
 void drawSelectionMapImageMenu();
 void drawSelectionMapListMenu();

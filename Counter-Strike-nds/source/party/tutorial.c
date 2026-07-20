@@ -91,6 +91,7 @@ void checkTutorial()
     {
     case TextEmpty:
         nextStep();
+        SetGunInInventory(4, 1);
         roundState = PLAYING;
         canChangeGun = false;
         canShoot = false;

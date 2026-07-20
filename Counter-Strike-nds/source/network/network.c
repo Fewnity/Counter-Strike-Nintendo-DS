@@ -25,6 +25,9 @@
 // Current ping of the nintendo ds
 int ping = 0;
 
+//IP to which player connecting
+char IpToGo[16] = "cs.fewnity.com";
+
 // Socket
 int my_socket = 0;
 
@@ -87,7 +90,7 @@ void initNetwork(int option)
         }
         else if (Connection == ONLINE_SERVER_IP)
         {
-            connectToServer(ONLINE_SERVER_IP_STRING, false, my_socket, option);
+            connectToServer(IpToGo, false, my_socket, option);
         }
         else if (Connection == DEBUG_IP_2)
         {
@@ -562,9 +565,13 @@ void treatData()
                     DisableAim();
                     SetGunInInventory(ConfirmArgumentInt, ConfirmInventoryIndexInt);
                     setSelectedGunInInventory(0, ConfirmInventoryIndexInt);
+
+                    //Buy sound
+                    PlayBasicSound(SFX_MOLOTOV_DETONATE);
                 }
                 else if (ConfirmResultInt == 2) // Not an error
                 {
+                    PlayBasicSound(SFX_MOLOTOV_DETONATE);
                 }
             }
         }
@@ -632,6 +639,11 @@ void treatData()
                 deathCameraAnimation = 0;
                 deathCameraYOffset = 0;
                 redHealthTextCounter = 0;
+            }
+            else if (roundState == PLAYING)
+            {
+                // Play the start round clip
+                PlayBasicSound(SFX_ZOOM);
             }
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "LEAVE") == 0) // When a player leave
@@ -871,6 +883,10 @@ void treatData()
         {
             partyFinished = true;
             initFinalScoreMenu();
+        }
+        else if (strcmp(arr[REQUEST_NAME_INDEX], "CHANGMAP") == 0) // End the party
+        {
+            PlayBasicSound(SFX_GRENADE_HIT1); //changing map announcement
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "ENDUPDATE") == 0) // End the update party sequence
         {

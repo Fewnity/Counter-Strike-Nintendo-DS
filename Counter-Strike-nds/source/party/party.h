@@ -73,7 +73,7 @@ typedef struct //
     bool infiniteGunAmmo;
 } PartyMode;
 
-extern PartyMode allPartyModes[3];
+extern PartyMode allPartyModes[5];
 extern int currentDefuserIndex;
 extern int bombPlantedAt;
 extern int PartyMinutes;
@@ -87,6 +87,8 @@ extern bool bombDropped;
 extern int currentPartyMode;
 extern int currentMap;
 extern bool partyFinished;
+
+extern int TopKill;
 
 void AddAllPartyModes();
 void AddPartyMode(int index, bool MiddlePartyTeamSwap, int MaxRound, int StartMoney, int MaxMoney, int WinTheRoundMoney, int WinTheRoundBombMoney, int LoseTheRoundMoney, int LoseIncrease, int DefuseBombMoneyBonus, int PlantBombMoneyBonus, int PlantedBombLoseMoneyBonus, int KillPenalties, bool NoMoneyOnTimeEnd, bool TeamDamage, bool CanSeeOtherTeamView);
@@ -102,5 +104,6 @@ void QuitParty(int option);
 void OnPartyQuit();
 void StartSinglePlayer(int partyMode);
 void prepareParty(/*bool multiplayerMode*/ int mode);
+void QuitParty(int shooterPlayerIndex1);
 
 #endif // PARTY_H_

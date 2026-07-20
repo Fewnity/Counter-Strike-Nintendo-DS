@@ -15,6 +15,8 @@
 #include "stats.h"
 #include "network.h"
 
+bool PlayerAnim = false;
+
 /**
  * @brief Kill a player
  *
@@ -165,6 +167,7 @@ void buyGun()
             if (!allPartyModes[currentPartyMode].infiniteMoney)
             {
                 reducePlayerMoney(0, AllGuns[GetSelectedGunShop()].Price);
+                PlayBasicSound(SFX_MOLOTOV_DETONATE);
             }
 
             // Set inventory slot
@@ -194,6 +197,7 @@ void buyGun()
                 if (!allPartyModes[currentPartyMode].infiniteMoney)
                 {
                     reducePlayerMoney(0, AllGrenades[grenadeIndex].Price);
+                    PlayBasicSound(SFX_MOLOTOV_DETONATE);
                 }
                 setSelectedGunInInventory(0, grenadeCheckIndex);
                 break;
@@ -248,6 +252,7 @@ void buyGun()
         if (!allPartyModes[currentPartyMode].infiniteMoney && canBuy)
         {
             reducePlayerMoney(0, allEquipments[equipmentIndex].Price);
+            PlayBasicSound(SFX_MOLOTOV_DETONATE);
         }
     }
 }
@@ -424,6 +429,7 @@ void setPlayerHealth(int playerIndex, int health)
             PlayBasicSound(SFX_DEATH);
             // Hide crosshair
             NE_SpriteVisible(TopScreenSprites[0], false);
+            // setNeedRespawn(HittedClient);
         }
         else
         {
@@ -670,22 +676,27 @@ int AddNewPlayer(int NewId, bool IsLocalPlayer, bool isAI)
             }
             else
             {
-                // player->PlayerModel = NE_ModelCreate(NE_Animated); // ANIMATED VERSION
-                player->PlayerModel = NE_ModelCreate(NE_Static);
-                // NE_ModelLoadNEA(player->PlayerModel, (u32 *)playerAnimNea_bin); // ANIMATED VERSION
+                if(PlayerAnim)
+                {
+                    player->PlayerModel = NE_ModelCreate(NE_Animated); // ANIMATED VERSION
+                    NE_ModelAnimInterpolate(player->PlayerModel, false);
+                    NE_ModelAnimStart(player->PlayerModel, 0, 0, 3, NE_ANIM_LOOP, 5);
+                }
+                else
+                player->PlayerModel = NE_ModelCreate(NE_Static); // STATIC VERSION
 
                 if (i == 1)
-                    NE_ModelLoadStaticMesh(player->PlayerModel, (u32 *)GIGNNew_bin);
+                    if(PlayerAnim)
+                    NE_ModelLoadNEA(player->PlayerModel, (u32 *)obj_PlayerAnim_bin);
+                    else
+                    NE_ModelLoadStaticMesh(player->PlayerModel, (u32 *)obj_PlayerStatic_bin);
                 else
                     NE_ModelClone(player->PlayerModel,        // Destination
                                   AllPlayers[1].PlayerModel); // Source model
 
-                // NE_ModelLoadNEA(player->PlayerModel, (u32 *)GIGNAnimNea_bin);
                 NE_ModelSetMaterial(player->PlayerModel, PlayerMaterial);
                 NE_ModelScaleI(player->PlayerModel, 2048, 2090, 2048); // 2048 <- 4096 * 0.5 ANIMATED VERSION
                 // NE_ModelScaleI(player->PlayerModel, 700, 700, 700); // 2048 <- 4096 * 0.5 STATIC VERSION
-                //  NE_ModelAnimInterpolate(player->PlayerModel, false);
-                //  NE_ModelAnimStart(player->PlayerModel, 0, 0, 5, NE_ANIM_LOOP, 3);
 
                 // Select a random name
                 if (isAI)
@@ -926,20 +937,23 @@ void resetPlayer(int index)
         player->grenadeBought[i] = 0;
     }
 
-    if (player->IsDead || (allPartyModes[currentPartyMode].middlePartyTeamSwap && TerroristsScore + CounterScore == floor(allPartyModes[currentPartyMode].maxRound / 2.0)) || TerroristsScore + CounterScore == 0)
+    if(roundState != TRAINING)
     {
-        player->haveDefuseKit = false;
-        player->armor = 0;
-        player->haveHeadset = false;
-
-        if (player->Team == TERRORISTS)
-            player->AllGunsInInventory[1] = DEFAULTTERRORISTGUN;
-        else if (player->Team == COUNTERTERRORISTS)
-            player->AllGunsInInventory[1] = DEFAULTCOUNTERTERRORISTGUN;
-
-        for (int i = 2; i < inventoryCapacity - 1; i++)
+        if (player->IsDead || (allPartyModes[currentPartyMode].middlePartyTeamSwap && TerroristsScore + CounterScore == floor(allPartyModes[currentPartyMode].maxRound / 2.0)) || TerroristsScore + CounterScore == 0)
         {
-            player->AllGunsInInventory[i] = EMPTY;
+            player->haveDefuseKit = false;
+            player->armor = 0;
+            player->haveHeadset = false;
+
+            if (player->Team == TERRORISTS)
+                player->AllGunsInInventory[1] = DEFAULTTERRORISTGUN;
+            else if (player->Team == COUNTERTERRORISTS)
+                player->AllGunsInInventory[1] = DEFAULTCOUNTERTERRORISTGUN;
+
+            for (int i = 2; i < inventoryCapacity - 1; i++)
+            {
+                player->AllGunsInInventory[i] = EMPTY;
+            }
         }
     }
 
@@ -953,7 +967,7 @@ void resetPlayer(int index)
     if (roundState == TRAINING)
     {
         player->invincibilityTimer = 60 * 5; // 5 seconds
-        player->currentGunInInventory = 1;
+        // player->currentGunInInventory = 1;
     }
     player->isPlantingBomb = false; //
     player->bombTimer = 0;

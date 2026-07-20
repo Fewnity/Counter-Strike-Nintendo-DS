@@ -33,6 +33,15 @@ int waypointsSize = 0;
 // Matrices count for the current map
 int MatriceCount = 0;
 
+//The equal team
+bool equalTeam = false;
+int amountOfBots = 6;
+
+//NomberPoint for Sites | Is there two sites or one
+int SiteAPoint = 0;
+int SiteBPoint = 0;
+int TwoSites = 2;
+
 // Timer to check the player's distance between the bot and the player
 int checkPlayerDistanceFromAiTimer = 1;
 Waypoint Waypoints[maxPoint]; // TODO replace this by a malloc
@@ -288,7 +297,7 @@ void AiCheckForAction()
     {
         int currentAiToCheck = checkPlayerDistanceFromAiTimer / 5;
         if (checkPlayerDistanceFromAiTimer == 0)
-            checkPlayerDistanceFromAiTimer = 25 + 1;
+            checkPlayerDistanceFromAiTimer = 5 * amountOfBots + 1;
 
         Player *playerToCheck = &AllPlayers[currentAiToCheck];
         // If current AI is in game, not dead, does not planting the bomb, and raycast cycle is finished
@@ -312,10 +321,10 @@ void AiCheckForAction()
                 int scannedPlayerCount = 1;
                 playerToCheck->allPlayerScanned[currentAiToCheck] = true;
                 // Check every players distances to set a new target if the distance is small enough
-                while (scannedPlayerCount < MaxPlayer)
+                while (scannedPlayerCount < amountOfBots)
                 {
                     // Take a random unscanned player
-                    randomPlayerToCheck = rand() % MaxPlayer;
+                    randomPlayerToCheck = rand() % amountOfBots;
                     if (playerToCheck->allPlayerScanned[randomPlayerToCheck])
                         continue;
 
@@ -336,7 +345,7 @@ void AiCheckForAction()
                     }
                 }
                 // Reset scanned players list
-                for (int playerIndex = 0; playerIndex < MaxPlayer; playerIndex++)
+                for (int playerIndex = 0; playerIndex < amountOfBots; playerIndex++)
                 {
                     playerToCheck->allPlayerScanned[playerIndex] = false;
                 }
@@ -431,17 +440,24 @@ void AiCheckForAction()
 
                 if (playerToCheck->haveBomb)
                 {
-                    float distanceA = GetDistanceBewteenPlayerAndWaypoint(currentAiToCheck, 14);
-                    float distanceB = GetDistanceBewteenPlayerAndWaypoint(currentAiToCheck, 29);
+                    if(TwoSites == 2)
+                    {
+                        float distanceA = GetDistanceBewteenPlayerAndWaypoint(currentAiToCheck, SiteAPoint);
+                        float distanceB = GetDistanceBewteenPlayerAndWaypoint(currentAiToCheck, SiteBPoint);
 
-                    // if (random() % 2 == 0)
-                    if (distanceA < distanceB)
-                    {
-                        StartChecking(currentAiToCheck, 14); // Bomb site A
+                        // if (random() % 2 == 0)
+                        if (distanceA < distanceB)
+                        {
+                            StartChecking(currentAiToCheck, SiteAPoint); // Bomb site A
+                        }
+                        else
+                        {
+                            StartChecking(currentAiToCheck, SiteBPoint); // Bomb site B
+                        }
                     }
-                    else
+                    else if(TwoSites == 1)
                     {
-                        StartChecking(currentAiToCheck, 29); // Bomb site B
+                        StartChecking(currentAiToCheck, SiteAPoint);
                     }
                 }
                 else if (bombDropped && playerToCheck->Team == TERRORISTS)
@@ -475,22 +491,40 @@ void AiCheckForAction()
 
 void GetRandomPoint(int currentAiToCheck)
 {
-    if (IsExplode || (BombPlanted && ((BombSeconds <= 5 && AllPlayers[currentAiToCheck].Team == TERRORISTS) || (BombSeconds <= 3 && AllPlayers[currentAiToCheck].Team == COUNTERTERRORISTS)))) // Run away from the bomb
+    if(TwoSites == 2)
     {
-        StartChecking(currentAiToCheck, random() % waypointsSize);
+        if (IsExplode || (BombPlanted && ((BombSeconds <= 5 && AllPlayers[currentAiToCheck].Team == TERRORISTS) || (BombSeconds <= 3 && AllPlayers[currentAiToCheck].Team == COUNTERTERRORISTS)))) // Run away from the bomb
+        {
+            StartChecking(currentAiToCheck, random() % waypointsSize);
+        }
+        else
+        {
+            int site = random() % 2;
+
+            if (bombPlantedAt == SiteAPoint)
+                site = 0;
+            else if (bombPlantedAt == SiteBPoint)
+                site = 1;
+
+            Site siteRef = allMaps[currentMap].AllBombsTriggersCollisions[site];
+
+            StartChecking(currentAiToCheck, siteRef.nearWaypoints[random() % siteRef.nearWaypointCount]);
+        }   
     }
     else
     {
-        int site = random() % 2;
+        if (IsExplode || (BombPlanted && ((BombSeconds <= 5 && AllPlayers[currentAiToCheck].Team == TERRORISTS) || (BombSeconds <= 3 && AllPlayers[currentAiToCheck].Team == COUNTERTERRORISTS)))) // Run away from the bomb
+        {
+            StartChecking(currentAiToCheck, random() % waypointsSize);
+        }
+        else
+        {
+            int site = 0;
 
-        if (bombPlantedAt == 14)
-            site = 0;
-        else if (bombPlantedAt == 29)
-            site = 1;
+            Site siteRef = allMaps[currentMap].AllBombsTriggersCollisions[site];
 
-        Site siteRef = allMaps[currentMap].AllBombsTriggersCollisions[site];
-
-        StartChecking(currentAiToCheck, siteRef.nearWaypoints[random() % siteRef.nearWaypointCount]);
+            StartChecking(currentAiToCheck, siteRef.nearWaypoints[random() % siteRef.nearWaypointCount]);
+        }
     }
 }
 
@@ -503,7 +537,7 @@ void SetRandomDefuser()
     {
         // Check if there is an AI is able to defuse the bomb
         bool canAffectDefuser = false;
-        for (int playerIndex = 1; playerIndex < MaxPlayer; playerIndex++)
+        for (int playerIndex = 1; playerIndex < amountOfBots; playerIndex++)
         {
             Player *player = &AllPlayers[playerIndex];
             if (player->Team == COUNTERTERRORISTS && !player->IsDead && player->target == NO_PLAYER && player->Id != UNUSED)
@@ -516,13 +550,13 @@ void SetRandomDefuser()
         if (canAffectDefuser)
         {
             // Take a random one and the bot will go to the bomb and defuse it
-            int newDefuser = (random() % 5) + 1;
+            int newDefuser = (random() % amountOfBots -1) + 1;
             Player *defuserPlayer = &AllPlayers[newDefuser];
             while (defuserPlayer->Team != COUNTERTERRORISTS || defuserPlayer->IsDead || defuserPlayer->target != NO_PLAYER || defuserPlayer->Id == UNUSED)
             {
                 defuserPlayer = &AllPlayers[newDefuser];
 
-                newDefuser = (random() % 5) + 1;
+                newDefuser = (random() % amountOfBots -1) + 1;
             }
             defuserPlayer->PathCount = -1;
             defuserPlayer->lastSeenTarget = NO_PLAYER;
@@ -548,7 +582,7 @@ void SetDefuser(int defuserIndex)
  */
 void checkAiShoot()
 {
-    for (int i = 1; i < MaxPlayer; i++)
+    for (int i = 1; i < amountOfBots; i++)
     {
         Player *player = &AllPlayers[i];
         if (player->target != NO_PLAYER && player->isAi && !player->IsDead)
@@ -561,6 +595,11 @@ void checkAiShoot()
             Direction.y = targetPlayer->PlayerModel->y - (player->PlayerModel->y + CameraOffsetYMultiplied);
             Direction.z = targetPlayer->PlayerModel->z - player->PlayerModel->z;
             player->AngleDestination = atan2f(Direction.x, Direction.z) * 512.0 / (M_TWOPI) + 256.0;
+            if(PlayerAnim)
+            {
+                NE_ModelAnimSetSpeed(player->PlayerModel, 0);
+                NE_ModelAnimSetFrame(player->PlayerModel, 0);
+            }
 
             if (player->AllGunsInInventory[player->currentGunInInventory] < GunCount && !player->isReloading && player->GunWaitCount >= getPlayerCurrentGun(player).fireRate)
             {
@@ -604,6 +643,13 @@ void checkAiShoot()
                         startReloadGun(i);
                     }
                 }
+            }
+        }
+        else if (player->target == NO_PLAYER && player->isAi && !player->IsDead)
+        {
+            if(PlayerAnim)
+            {
+                NE_ModelAnimSetSpeed(player->PlayerModel, 5);
             }
         }
     }
@@ -674,7 +720,7 @@ void CheckShopForBot(int playerIndex)
  */
 void checkShopForBots()
 {
-    for (int i = 1; i < MaxPlayer; i++)
+    for (int i = 1; i < amountOfBots; i++)
     {
         CheckShopForBot(i);
     }

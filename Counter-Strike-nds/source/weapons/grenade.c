@@ -62,11 +62,11 @@ PhysicalGrenade *CreateGrenade(int id, int ownerId)
 
             // Create the model and apply material
             grenade->Model = NE_ModelCreate(NE_Static);
-            NE_ModelLoadStaticMesh(grenade->Model, (u32 *)grenade_3ds_bin);
-            NE_ModelSetMaterial(grenade->Model, GroundMaterial);
+            NE_ModelLoadStaticMesh(grenade->Model, (u32 *)grenade_bin);
+            NE_ModelSetMaterial(grenade->Model, GeneralMaterial);
 
             // Set scale and rotation
-            NE_ModelScaleI(grenade->Model, 8, 8, 8);
+            NE_ModelScaleI(grenade->Model, 120, 120, 120);
             grenade->Model->rx = 128;
             grenade->Model->ry = 256;
 
@@ -96,7 +96,7 @@ PhysicalGrenade *CreateGrenade(int id, int ownerId)
                 // Create the explosion model and apply material
                 grenade->EffectModel = NE_ModelCreate(NE_Static);
                 NE_ModelLoadStaticMesh(grenade->EffectModel, (u32 *)explosion_bin);
-                NE_ModelSetMaterial(grenade->EffectModel, GroundMaterial);
+                NE_ModelSetMaterial(grenade->EffectModel, GeneralMaterial);
 
                 // Set scale and rotation
                 NE_ModelScaleI(grenade->EffectModel, 0, 0, 0);
@@ -104,7 +104,7 @@ PhysicalGrenade *CreateGrenade(int id, int ownerId)
                 grenade->EffectModel->ry = 256;
 
                 // Set grenade values
-                grenade->Timer = 240;      // 4s * 60 frames
+                grenade->Timer = 85;      // 4s * 60 frames
                 grenade->EffectTimer = 30; // 0,5s * 60 frames
             }
             else if (grenade->GrenadeType == SMOKE) // If the grenade is a smoke grenade
@@ -112,7 +112,7 @@ PhysicalGrenade *CreateGrenade(int id, int ownerId)
                 // Create the explosion model and apply material
                 grenade->EffectModel = NE_ModelCreate(NE_Static);
                 NE_ModelLoadStaticMesh(grenade->EffectModel, (u32 *)smokeSphere_bin);
-                NE_ModelSetMaterial(grenade->EffectModel, GroundMaterial);
+                NE_ModelSetMaterial(grenade->EffectModel, GeneralMaterial);
 
                 // Set scale and rotation
                 NE_ModelScaleI(grenade->EffectModel, 0, 0, 0);
@@ -305,7 +305,7 @@ void UpdateGrenades()
                     coef = 1040;
 
                 // if (coef >= 1040)
-                Scale = 5 * (1080 - coef);
+                Scale = 80 * (1080 - coef);
 
                 // Set effect alpha and scale
                 grenade->effectAlpha = alpha;

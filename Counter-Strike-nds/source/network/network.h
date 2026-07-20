@@ -8,6 +8,7 @@
 #define NETWORK_H_
 
 #define PARTY_CODE_LENGTH 5
+#define IP_LENGTH 15
 enum ErrorType
 {
     Ban = 0,
@@ -80,7 +81,9 @@ enum RequestType
 
 #define DEBUG_IP_1_STRING ""
 #define DEBUG_IP_2_STRING ""
-#define ONLINE_SERVER_IP_STRING "cs.fewnity.com"
+// #define ONLINE_SERVER_IP_STRING "cs.fewnity.com"
+extern char IpToGo[16];
+
 #define SERVER_PORT 6003
 #define LOCAL_SERVER_PORT 1080 // For the android server version (but this is not used)
 
