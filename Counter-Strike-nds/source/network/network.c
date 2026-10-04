@@ -199,24 +199,46 @@ void resetNetworkVariables()
 
 void treatData()
 {
-    int StartPosition, EndPosition;
     // printf("a:%s\n", Values);
 
-    // If a complete packet is detected
-    while ((StartPosition = strstr(Values, "{") - Values + 1) > 0 && (EndPosition = strstr(Values + StartPosition, "}") - Values) > 0)
+    // While a complete packet is detected
+    while (true)
     {
-        char currentPacket[256] = "";
-        strncpy(currentPacket, Values + StartPosition, EndPosition - StartPosition);
+        char *packetStart = strchr(Values, '{');
+        if (packetStart == NULL)
+            break;
+        char *packetEnd = strchr(packetStart + 1, '}');
+        if (packetEnd == NULL)
+            break;
+
+        // Copy the packet content (without the brackets) if it's not too long
+        char currentPacket[MAX_REQUEST_LENGTH] = "";
+        int packetLength = packetEnd - (packetStart + 1);
+        bool packetTooLong = packetLength >= (int)sizeof(currentPacket);
+        if (!packetTooLong)
+        {
+            memcpy(currentPacket, packetStart + 1, packetLength);
+            currentPacket[packetLength] = '\0';
+        }
+
+        // Remove the packet from "Values" (with all characters before it)
+        memmove(Values, packetEnd + 1, strlen(packetEnd + 1) + 1);
+
+        if (packetTooLong)
+        {
+            printf("PACKET TOO LONG, DROPPED\n");
+            continue;
+        }
 
         //   Start spliting incoming data
         char *ptr = strtok(currentPacket, ";");
         int SplitCount = 0;
-        char arr[10][64] = {0};
+        char arr[MAX_REQUEST_PARAM_COUNT][MAX_REQUEST_PARAM_LENGTH] = {0};
 
-        // Split data
-        while (ptr != NULL)
+        // Split data (extra params are ignored and too long params are cut)
+        while (ptr != NULL && SplitCount < MAX_REQUEST_PARAM_COUNT)
         {
-            strcpy(arr[SplitCount], ptr);
+            snprintf(arr[SplitCount], sizeof(arr[SplitCount]), "%s", ptr);
             SplitCount++;
             ptr = strtok(NULL, ";");
         }
@@ -231,7 +253,7 @@ void treatData()
                     printf("%s SEARCH FOR ROOM\n", arr[2]);
 
                     // Get the mac address of the client
-                    sprintf(tempMacAddress, arr[2]);
+                    snprintf(tempMacAddress, sizeof(tempMacAddress), "%s", arr[2]);
                     addClient(EMPTY, false);
                 }
                 else if (strcmp(arr[1], "CONFIRM_LISTEN") == 0) // If the client has received host's data
@@ -270,7 +292,7 @@ void treatData()
                     int clientId = intParse(arr[2]);
                     // If the host wants to communicate with the local client
 
-                    if (localPlayer->Id == clientId)
+                    if (localPlayer->Id == clientId && hostIndex != EMPTY)
                     {
                         lastCommunication = 0;
                         int messageId = intParse(arr[3]);
@@ -600,10 +622,11 @@ void treatData()
 
             if (!isNifiMode || destinatorId == localPlayer->Id)
             {
-                Client *client = &GetPlayer(ParsedPlayerId)->client;
+                Player *player = GetPlayer(ParsedPlayerId);
                 bool canChange = true;
-                if (isNifiMode && isHost)
+                if (isNifiMode && isHost && player != NULL)
                 {
+                    Client *client = &player->client;
                     tempTeam = ParsedIsCounter;
                     createRequest(client, client, TEAM);
                 }
@@ -643,8 +666,8 @@ void treatData()
                         WaitForTeamResponse = false;
                     }
                 }
-                if (isHost)
-                    shareRequest(client, TEAM);
+                if (isHost && player != NULL)
+                    shareRequest(&player->client, TEAM);
             }
         }
         else if (strcmp(arr[REQUEST_NAME_INDEX], "BOMBPLACE") == 0) // Bomb place update
@@ -1103,6 +1126,13 @@ void treatData()
                 float XDirection = floatParse(arr[1]);
                 float YDirection = floatParse(arr[2]);
                 float ZDirection = floatParse(arr[3]);
+                // In nifi mode, the direction is sent in fixed point (x4096)
+                if (isNifiMode)
+                {
+                    XDirection /= 4096.0;
+                    YDirection /= 4096.0;
+                    ZDirection /= 4096.0;
+                }
                 int XInt = intParse(arr[4]);
                 int YInt = intParse(arr[5]);
                 int ZInt = intParse(arr[6]);
@@ -1115,22 +1145,13 @@ void treatData()
                     lanchGrenade(newGrenade, XDirection, YDirection, ZDirection, XInt, YInt, ZInt);
                 }
 
-                if (isHost)
+                Player *player = GetPlayer(playerId);
+                if (isHost && player != NULL)
                 {
-                    Client *client = &GetPlayer(playerId)->client;
-                    shareRequest(client, GRENADE);
+                    shareRequest(&player->client, GRENADE);
                 }
             }
         }
-
-        // Clear "TempValues"
-        for (int i = 0; i < sizeof(TempValues); i++)
-            TempValues[i] = '\0';
-        // Values[strlen(Values)] = '\0';
-        //  Add all characters after current data packet to "TempValues"
-        strcat(TempValues, Values + EndPosition + 1);
-        // Copy "TempValues" to "Values"
-        strcpy(Values, TempValues);
     }
 }
 
@@ -1159,6 +1180,9 @@ void ReadServerData()
                 printf("BREAK");
                 break;
             }
+            // Treat received data and manage the server (never in the wifi interrupt)
+            nifiUpdate();
+
             if (tryJoinRoom)
             {
                 joinRoomTimer--;
@@ -1167,7 +1191,7 @@ void ReadServerData()
                     printf("SCAN %d", tryJoinRoom);
                     scanForRoom();
                     // Reset the timer
-                    joinRoomTimer = WIFI_TIMEOUT * 5;
+                    joinRoomTimer = JOIN_ROOM_RETRY_DELAY;
                 }
             }
         }
@@ -1177,7 +1201,7 @@ void ReadServerData()
             timeOut = 0;
             incoming_buffer[recvd_len] = 0; // null-terminate
             // add incoming_buffer to Values
-            strncat(Values, incoming_buffer, recvd_len);
+            appendToValues(incoming_buffer, recvd_len);
             treatData();
         }
         else if (recvd_len == -1)
